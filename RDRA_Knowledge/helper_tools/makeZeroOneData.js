@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
-const os = require('os');
 
 const tsvFiles = [
     'アクター.tsv',
@@ -63,62 +61,12 @@ function integrateRDRAFiles() {
         }
     }
     
-    // fs.writeFileSync(outputFile, integratedContent, 'utf-8');
-    //console.log(`統合ファイル ${outputFile} を作成しました`);
+    // ZeroOne.txtファイルに出力
+    fs.writeFileSync(outputFile, integratedContent, 'utf-8');
+    console.log(`統合ファイル ${outputFile} を作成しました`);
     
-    // クリップボードにコピー
-    copyToClipboard(integratedContent);
+    return outputFile;
 }
 
-function copyToClipboard(content) {
-    // 空の内容の場合はコピーを実行しない
-    if (!content || content.trim() === '') {
-        console.log('Warning: コンテンツが空のため、クリップボードにコピーしませんでした');
-        return;
-    }
-
-    if (process.platform === 'win32') {
-        // Windows: UTF-8の一時ファイル経由でPowerShell → 失敗時はclip
-        const tempFilePath = path.join(os.tmpdir(), 'rdra_clipboard.txt');
-        try {
-            fs.writeFileSync(tempFilePath, content, { encoding: 'utf8' });
-        } catch (_) {}
-
-        const psCommand = `powershell.exe -NoProfile -Command "Get-Content -LiteralPath '${tempFilePath.replace(/'/g, "''")}' -Raw -Encoding UTF8 | Set-Clipboard"`;
-        exec(psCommand, (error) => {
-            try { fs.unlinkSync(tempFilePath); } catch (_) {}
-
-            if (error) {
-                const clipProcess = exec('clip', (clipErr) => {
-                    if (clipErr) {
-                        console.log('Warning: クリップボードへのコピーに失敗しました');
-                    } else {
-                        console.log('クリップボードにコピーしました (fallback: clip)');
-                    }
-                });
-
-                if (clipProcess.stdin) {
-                    clipProcess.stdin.write(content, 'utf8');
-                    clipProcess.stdin.end();
-                }
-            }
-        });
-    } else if (process.platform === 'darwin') {
-        // macOS: pbcopy にパイプ
-        const pb = exec('pbcopy', (err) => {
-            if (err) {
-                console.log('Warning: クリップボードへのコピーに失敗しました (pbcopy)');
-            } else {
-                console.log('クリップボードにコピーしました');
-            }
-        });
-        if (pb.stdin) {
-            pb.stdin.write(content, 'utf8');
-            pb.stdin.end();
-        }
-    } else {
-        console.log('Warning: 未対応のプラットフォームです (Windows/macOS をサポート)');
-    }
-}
-
+// 実行
 integrateRDRAFiles();

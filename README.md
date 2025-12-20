@@ -12,6 +12,8 @@ RDRAAgentは、RDRA（Relationship Driven Requirement Analysis）手法を用い
 Zipでダウンロードする：
 「Download Zip」を選択する
 
+### 部分的にJavaScriptを使っているので、Node.jsのインストールが必要です
+
 ### 方法2: リポジトリをクローンして直接使用（開発・カスタマイズ向け）
 
 開発やカスタマイズを行う場合は、リポジトリを直接クローンします：
@@ -23,7 +25,6 @@ node menu.js
 ```
 
 **この方法の特徴：**
-- Node.jsのインストールが必要です
 - `npm install` は不要（外部依存関係がないため）
 - ダウンロードかクローンするだけですぐに使用可能
 
@@ -32,7 +33,6 @@ node menu.js
 RDRAAgent0.6/
 ├── RDRA_Knowledge/       # ナレッジベース
 ├── .claude/              # Claude Code設定
-├── .cursor/rules/rdrarules # Curser設定
 ├── Samples/              # サンプルプロジェクト
 ├── 初期要望.txt
 └── 妥当性検証環境.csv
@@ -66,28 +66,23 @@ RDRAAgent0.6/
 - **Node.js**: バージョン18以上推奨
 - **Model**:Claude code(default)
 
-## 要件定義方法
-
-### 実行方法は２通りで実現できます
-- メニュー起動：nodeでメニューを実行する方法
-- Cursor: / Command：Cursorの「/」AIで生成する処理をコマンドで実行
-
-## メニュー起動
-
-```bash
+## メニュー起動 Terminal
+```bash/command
 node menu.js
 ```
+## メニュー起動 Cursor
+「/」スラッシュコマンドでメニュー表示
 
 ### 主な特徴
 - **段階的な要件定義**: 4つのフェーズで段階的にRDRA定義を作成
-- **LLM連携**: Claude（大規模言語モデル）を活用して自動生成
+- **AI連携**: Claude（大規模言語モデル）を活用して自動生成
 - **可視化機能**: RDRAGraphによる要件の関連性の可視化
 - **画面プロトタイプ**: ブラウザで画面定義を確認
 - **妥当性検証**: 要件と仕様の整合性を自動検証
 
 ## メニュー構成
 
-### ■ZeroOne（要件定義）
+### ■要件定義
 
 **1. フェーズ単位の要件定義**
 - RDRA定義をフェーズ毎に段階的に実行
@@ -101,6 +96,7 @@ node menu.js
 **2. 一括要件定義**
 - RDRA定義を一括で実行
 - 全フェーズを自動で連続実行
+- Phase別のフォルダーに成果物が無いフォルダー（Phase）から実行する
 
 ### ■RDRA（RDRA定義の可視化・管理）
 
@@ -108,22 +104,26 @@ node menu.js
 - 関連データを生成し、RDRAGraphで可視化
 - 処理内容：
   1. `makeGraphData.js` で関連データ生成
-  2. データをクリップボードにコピー
+  2. `copyToClipboard.js` データをクリップボードにコピー
   3. ブラウザで https://vsa.co.jp/rdratool/graph/v0.94/index.html?clipboard を開く
   4. 自動的にクリップボードのデータを読込み、グラフ表示
 
 **12. Spreadsheetに展開**
 - RDRA定義をクリップボードにコピー
-- Google SpreadsheetのZeroOneシートに貼り付けて活用
+- 処理内容：
+  1. `makeZemakeZeroOneDataroOne.js` で関連データ生成
+  2. `copyToClipboard.js` データをクリップボードにコピー
+  3. ブラウザでGoogle Spreadsheetを開く
+  4. SpreadsheetのZeroOneシートに貼り付けて活用
 
 **13. RDRA定義の説明を作成**
 - RDRA定義の各要素について説明文書を生成
 
 **14. RDRA定義の妥当性を検証**
-- `妥当性検証環境.csv` を使用してRDRA定義を検証
+- `システム導入環境.md` を使用してRDRA定義を検証
 - 要件の整合性や漏れをチェック
 
-### ■RDRASpec（非システムアーキテクチャ依存の仕様作成）
+### ■仕様
 
 **21. 仕様の作成**
 - 論理データ構造、画面定義、ビジネスルールを生成
@@ -148,7 +148,7 @@ node menu.js
   2. `actorUI_server.js` でサーバー起動（ポート3001）
   3. ブラウザで http://localhost:3001/ を開く
 
-### ■全般（maintenance）
+### ■全般
 
 **0. メニュー終了**
 - プログラムを終了
@@ -184,12 +184,12 @@ node menu.js
    - メニュー「21」で仕様を生成
    - データモデル、画面、ビジネスルールを作成
 
-6. **仕様確認**
-   - メニュー「23」で画面仕様を確認
-   - メニュー「24」でアクター別画面を確認
-
-7. **仕様検証**
+6. **仕様検証**
    - メニュー「22」で仕様の妥当性を検証
+
+7. **画面の確認**
+   - メニュー「23」で画面の項目を見直す
+   - メニュー「24」でアクター別画面を確認
 
 ## 使用例
 
@@ -197,7 +197,7 @@ node menu.js
 
 ```bash
 # 1. サンプルの初期要望をコピー
-copy Samples\図書館システム\初期要望.txt 初期要望.txt
+copy Samples\図書館システム\初期要望.md 初期要望.md
 
 # 2. メニューシステムを起動
 node menu.js
@@ -254,15 +254,15 @@ node menu.js
 ## ファイル構成
 
 ### 入力ファイル
-- `初期要望.txt` - システムの初期要求
-- `妥当性検証環境.csv` - 検証用データ（オプション）
+- `初期要望.md` - システムの初期要求
+- `システム導入環境.md` - 検証用データ（オプション）
 
 ### サンプルフォルダー
 - `Samples/` - 参考となるサンプルプロジェクト
   - `介護事業者向けシステム/` - 介護事業者向けシステムのサンプル
   - `図書館システム/` - 図書館システムのサンプル
   - `貸し会議室SaaS/` - 貸し会議室SaaSのサンプル
-  - 各サンプルには `初期要望.txt` が含まれています
+  - 各サンプルには `初期要望.md` が含まれています
 
 ### 出力フォルダー
 - `0_RDRAZeroOne/phase1~4/` - フェーズ別のTSVファイル
@@ -272,7 +272,8 @@ node menu.js
 ### ヘルパーツール
 - `RDRA_Knowledge/helper_tools/` - 各種支援スクリプト
   - `makeGraphData.js` - グラフデータ生成
-  - `makeZeroOneData.js` - クリップボードデータ生成
+  - `makeZeroOneData.js` - RDRASheetに生成
+  - `copyToClipboard.js` - データをクリップボードにコピー
   - `convertUI2ActorUI.js` - アクター別UI変換
   - `deleteFiles.js` - 成果物削除
   - `web_tool/ui_server.js` - UI表示サーバー

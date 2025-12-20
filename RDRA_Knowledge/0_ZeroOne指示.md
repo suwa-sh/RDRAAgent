@@ -37,7 +37,9 @@
 
 ## Phase5
 ### 以下のコマンドでPhase3,Phase4の生成ファイルを「1_RDRA」フォルダー内にコピーする
-- start process RDRA_Knowledge/helper_tools/rdraFileCopy.js
+```cmd(Windows) or bash(mac/linux)
+node RDRA_Knowledge/helper_tools/rdraFileCopy.js
+```
 
 ### システム名とシステム概要の作成
 #### システム名の洗出し

@@ -47,6 +47,7 @@ RDRAAgent is a Node.js-based system that implements the **RDRA (Relationship Dri
 3. **Helper Tools** (RDRA_Knowledge/helper_tools/**)
    - `makeGraphData.js` - Generates relationship data for RDRAGraph visualization
    - `makeZeroOneData.js` - Prepares data for Google Spreadsheet export
+   - `copyToClipboard.js` - Copy data to the clipboard
    - `convertUI2ActorUI.js` - Transforms UI definitions by actor role
    - `deleteFiles.js` - Cleanup utility
    - `rdraFileCopy.js` - Consolidates outputs from phases

@@ -395,6 +395,7 @@ function showRDRAGraph() {
  * ZeroOneデータをクリップボードにコピーする
  */
 function makeZeroOneData() {
+    console.log('ZeroOneデータをクリップボードにコピーします...');
     exec('node RDRA_Knowledge/helper_tools/makeZeroOneData.js', (error, stdout, stderr) => {
         if (error) {
             console.error(`エラー: ${error}`);
@@ -407,10 +408,33 @@ function makeZeroOneData() {
         if (stderr) {
             console.error(stderr);
         }
-    })
-    console.log('ZeroOneデータの処理が完了しました。');
-    console.log('データはクリップボードにコピーされました。スプレッドシートに貼り付けてください。');
-    console.log('https://docs.google.com/spreadsheets/d/1h7J70l6DyXcuG0FKYqIpXXfdvsaqjdVFwc6jQXSh9fM/edit?gid=1240873646#gid=1240873646');
+        console.log('ZeroOneデータの処理が完了しました。');
+    });
+    exec('node RDRA_Knowledge/helper_tools/copyToClipboard.js zeroone', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`エラー: ${error}`);
+            promptUser();
+            return;
+        }
+        if (stdout) {
+            console.log(stdout);
+        }
+        if (stderr) {
+            console.error(stderr);
+        }
+        console.log('データはクリップボードにコピーされました。スプレッドシートに貼り付けてください。');
+    });
+    const browserCmd = getBrowserCommand('https://docs.google.com/spreadsheets/d/1h7J70l6DyXcuG0FKYqIpXXfdvsaqjdVFwc6jQXSh9fM/edit?gid=1240873646#gid=1240873646');
+    if (browserCmd) {
+        exec(browserCmd, (browserError) => {
+            if (browserError) {
+                console.error(`ブラウザ起動エラー: ${browserError}`);
+            } else {
+                console.log('スプレッドシートをブラウザで開きました。');
+            }
+        });
+    }
+    promptUser();
 }
 /**
  * 生成したファイルをRDRAフォルダーにコピーする
