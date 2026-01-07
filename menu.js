@@ -23,7 +23,7 @@ function getLLMTerminalCommand(runPprompt) {
         // macOSの場合：専用シェルスクリプトを呼び出す
         const scriptPath = 'RDRA_Knowledge/helper_tools/command/commandRun.sh';
         const currentDir = process.cwd();
-        const prompt = `osascript -e 'tell application "Terminal" to do script "cd \\"${currentDir}\\" && bash ${scriptPath} claude \\"${runPprompt}\\""'`;
+        const prompt = `osascript -e 'tell application "Terminal" to do script "cd \\"${currentDir}\\" && bash ${scriptPath} claude -p --permission-mode bypassPermissions\\"${runPprompt}\\""'`;
         console.log(prompt);
         return prompt;
     } else {
