@@ -18,6 +18,9 @@ const {
     specFiles,
 } = require('./settings/rdraConfig');
 
+// System Prompt生成関数をインポート
+const { generateSystemPrompt, generateSpecSystemPrompt } = require('./tokenOptimization/generateSystemPrompt');
+
 // Phase5：システム概要生成プロンプト
 const phase5SystemOverviewPrompt = 'RDRA_Knowledge/0_RDRAZeroOne/phase5/システム概要生成.md';
 
@@ -150,13 +153,30 @@ function createMenuAction({ rl, promptUser, waitForEnterThenNext }) {
 	        return;
 	    }
 	    
-	    // parallel-runner.jsに渡す引数を構築（プロンプトファイルのパスのみ）
+	    // System Promptを動的生成
+	    let systemPromptPath = null;
+	    try {
+	        console.log(`Phase${phaseNumber}用のSystem Promptを生成中...`);
+	        systemPromptPath = generateSystemPrompt(phaseNumber);
+	    } catch (err) {
+	        console.warn(`System Prompt生成をスキップ: ${err.message}`);
+	    }
+	    
+	    // parallel-runner.jsに渡す引数を構築
 	    const args = config.promptMap.map(pair => pair.prompt);
+	    
+	    // System Promptオプションを追加
+	    if (systemPromptPath) {
+	        args.push('--system-prompt', systemPromptPath);
+	    }
 	    
 	    console.log('実行するプロンプトファイル:');
 	    config.promptMap.forEach(pair => {
 	        console.log(`  ${pair.prompt}`);
 	    });
+	    if (systemPromptPath) {
+	        console.log(`System Prompt: ${systemPromptPath}`);
+	    }
 	    console.log('');
 	    
 	    const child = spawn('node', [
@@ -381,12 +401,38 @@ function createMenuAction({ rl, promptUser, waitForEnterThenNext }) {
             fs.mkdirSync(outputDir, { recursive: true });
             console.log(`出力フォルダを作成しました: ${outputDir}`);
         }
+        
+        // phase1のサブフォルダも作成
+        const phase1Dir = '2_RDRASpec/phase1';
+        if (!fs.existsSync(phase1Dir)) {
+            fs.mkdirSync(phase1Dir, { recursive: true });
+            console.log(`出力フォルダを作成しました: ${phase1Dir}`);
+        }
 
-        const runParallel = async (promptMap, label) => {
+        const runParallel = async (promptMap, specPhaseNumber) => {
+            // System Promptを動的生成
+            let systemPromptPath = null;
+            try {
+                console.log(`specPhase${specPhaseNumber}用のSystem Promptを生成中...`);
+                systemPromptPath = generateSpecSystemPrompt(specPhaseNumber);
+            } catch (err) {
+                console.warn(`System Prompt生成をスキップ: ${err.message}`);
+            }
+            
             const args = promptMap.map(pair => pair.prompt);
+            
+            // System Promptオプションを追加
+            if (systemPromptPath) {
+                args.push('--system-prompt', systemPromptPath);
+            }
+            
+            console.log('実行するプロンプトファイル:');
             promptMap.forEach(pair => {
                 console.log(`  ${pair.prompt}`);
             });
+            if (systemPromptPath) {
+                console.log(`System Prompt: ${systemPromptPath}`);
+            }
             console.log('');
 
             try {
@@ -411,16 +457,16 @@ function createMenuAction({ rl, promptUser, waitForEnterThenNext }) {
             }
         };
 
-        // Phase1（論理データ/ビジネスルール）を先に実行し、成功したら Phase2（画面生成）を実行する
+        // Phase1（論理データ/ビジネスルール/画面一覧等）を先に実行し、成功したら Phase2（画面照会）を実行する
         (async () => {
-            const code1 = await runParallel(specPhase1PromptMap, 'spec-phase1');
+            const code1 = await runParallel(specPhase1PromptMap, 1);
             if (code1 !== 0) {
                 console.error(`仕様(phase1)がエラーで終了しました。`);
                 waitForEnterThenNext();
                 return;
             }
 
-            const code2 = await runParallel(specPhase2PromptMap, 'spec-phase2');
+            const code2 = await runParallel(specPhase2PromptMap, 2);
             if (code2 === 0) {
                 console.log('');
                 console.log('仕様の作成が完了しました。');

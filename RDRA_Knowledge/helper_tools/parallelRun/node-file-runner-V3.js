@@ -82,11 +82,13 @@ function buildArgsFromTemplate(providerConfig, prompt, runtimeOptions) {
         ? providerConfig.vars
         : {};
 
-    // 実行時の補助変数（必要最低限）
+    // 実行時の補助変数
+    // systemPrompt を明示的に取り出し、優先順位を明確化
     const vars = {
         ...providerVars,
         prompt,
-        // 将来拡張：設定や呼び出し側から渡したい場合に備え、optionsも拾えるようにしておく
+        // runtimeOptions から systemPrompt を優先的に取得
+        systemPrompt: runtimeOptions?.systemPrompt || providerVars.systemPrompt || '',
         ...(runtimeOptions || {}),
     };
 

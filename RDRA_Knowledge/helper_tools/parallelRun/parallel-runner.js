@@ -26,16 +26,24 @@ function showHelp() {
   {input.md,output.tsv}       互換用（output 側は無視されます）
 
 オプション:
-  --timeout <ms>          タイムアウト（ミリ秒、デフォルト: 120000）
-  --help, -h              このヘルプを表示
+  --timeout <ms>              タイムアウト（ミリ秒、デフォルト: 180000）
+  --system-prompt <path>      System Promptファイルパス（全タスク共通）
+  --help, -h                  このヘルプを表示
 
 例:
   node parallel-runner.js file1.txt file2.txt file3.txt
+  node parallel-runner.js file1.txt file2.txt --system-prompt shared.md
   node parallel-runner.js {prompt/run1.md,output/run1.tsv} {prompt/run2.md,output/run2.tsv}   # output 側は無視（互換用）
 
 モデル/プロバイダー設定:
   モデル/プロバイダーおよび各種オプションは、プロジェクトルート（初期要望.txtと同じ階層）の
   「モデル設定.json」から読み込みます（CLIからは指定しません）。
+  
+System Prompt:
+  --system-prompt で指定されたファイルは、全並列タスクの共通コンテキストとして使用されます。
+  Claude: --system-prompt オプションで渡されます
+  Gemini: --system-instruction オプションで渡されます
+  共通コンテキストがキャッシュされることで、トークン消費を大幅に削減できます。
 `);
 }
 
@@ -59,6 +67,7 @@ function parseArgs(argv) {
         filePairs: [],  // { input } の配列（{input,output} 形式は互換用で input のみ使用）
         options: {
             timeout: 180000, // 3分
+            systemPrompt: null,  // System Promptファイルパス
         },
     };
 
@@ -70,6 +79,8 @@ function parseArgs(argv) {
             process.exit(0);
         } else if (arg === '--timeout') {
             config.options.timeout = parseInt(args[++i], 10);
+        } else if (arg === '--system-prompt') {
+            config.options.systemPrompt = args[++i];
         } else if (!arg.startsWith('-')) {
             config.filePairs.push(parseFilePair(arg));
         }
@@ -139,6 +150,11 @@ async function executeParallel(filePairs, options = {}) {
     console.log('\n🚀 並行実行開始');
     const inputFiles = filePairs.map(fp => fp.input).join(', ');
     console.log(`対象ファイル: ${inputFiles}`);
+    
+    // System Prompt情報を表示
+    if (options.systemPrompt) {
+        console.log(`System Prompt: ${options.systemPrompt}`);
+    }
     
     const startTime = Date.now();
     
