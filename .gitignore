@@ -21,3 +21,8 @@ Thumbs.db
 *.swo
 *~
 
+# このプロジェクト固有のフォルダー
+_no_use/
+_graph_script/
+_script_Prompt/
+
