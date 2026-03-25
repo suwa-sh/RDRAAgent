@@ -1,14 +1,12 @@
-# Node modules
-node_modules/
-
 # 作業用フォルダー（生成されるファイル）
-# 0_RDRAZeroOne/
-# 1_RDRA/
-# 2_RDRASpec/
+0_RDRAZeroOne/
+1_RDRA/
+2_RDRASpec/
 
 # ログファイル
 *.log
 *.err
+logs/
 
 # OS固有
 .DS_Store
@@ -21,8 +19,7 @@ Thumbs.db
 *.swo
 *~
 
-# このプロジェクト固有のフォルダー
-_no_use/
-_graph_script/
-_script_Prompt/
-
+# 作業用
+tmp/
+rdra-workspace/
+初期要望分析.md

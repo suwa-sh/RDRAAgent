@@ -1,0 +1,23 @@
+{
+  "skill_name": "rdra",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "初期要望.txt に図書館システムの要望があります。RDRAで要件定義してください。Phase1だけ実行してください。",
+      "expected_output": "0_RDRAZeroOne/phase1/ に11ファイル（初期要望分析.md, アクター.tsv, 外部システム.tsv, ビジネスポリシー.tsv, ビジネスパラメータ.tsv, 業務.tsv, 情報.tsv, 状態.tsv, バリエーション.tsv, 条件.tsv, 要求.tsv）が生成される。アクター.tsvには図書館職員、図書館司書、利用者、配送担当者が含まれる。外部システム.tsvには書籍販売システムが含まれる。",
+      "files": ["Samples/図書館システム/初期要望.txt"]
+    },
+    {
+      "id": 2,
+      "prompt": "訪問介護システムの初期要望からRDRAモデルを作成してください。Phase1とPhase2まで実行してください。",
+      "expected_output": "0_RDRAZeroOne/phase1/ と phase2/ にファイルが生成される。Phase2の業務.tsvにはアクティビティとUCのカラムが追加されている。情報.tsvには属性と関連情報のカラムが追加されている。状態.tsvは状態遷移形式（状態→遷移先状態）に分解されている。",
+      "files": ["Samples/介護事業者向けシステム/初期要望.txt"]
+    },
+    {
+      "id": 3,
+      "prompt": "貸し会議室SaaSの初期要望があります。RDRAで全フェーズ（Phase1〜5）を実行して、1_RDRA/ に統合してください。",
+      "expected_output": "0_RDRAZeroOne/phase1〜4/ と 1_RDRA/ にファイルが生成される。1_RDRA/ にはシステム概要.json, アクター.tsv, 外部システム.tsv, 情報.tsv, 状態.tsv, 条件.tsv, バリエーション.tsv, BUC.tsv が揃う。BUC.tsvはPhase4形式（関連モデル1/関連オブジェクト1/関連モデル2/関連オブジェクト2）になっている。",
+      "files": ["Samples/貸し会議室SaaS/初期要望.txt"]
+    }
+  ]
+}
