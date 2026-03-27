@@ -1,0 +1,433 @@
+{
+  "businesses": [
+    {
+      "business_name": "オーナー管理業務",
+      "BUCs": [
+        {
+          "buc_name": "オーナー登録フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "規約参照画面",
+                "オーナー登録申請画面",
+                "プロフィール登録画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "オーナー申請受付画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "オーナー退会フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "退会申請画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "退会処理画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "オーナー審査フロー",
+          "actors": [
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "オーナー審査画面",
+                "審査結果確認画面"
+              ]
+            },
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "審査結果通知画面"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "business_name": "会議室管理業務",
+      "BUCs": [
+        {
+          "buc_name": "会議室登録フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "会議室登録画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "会議室公開管理画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "運用ルール設定フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "キャンセルポリシー設定画面",
+                "貸出可否設定画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "運用ルール反映画面"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "business_name": "会議室貸出業務",
+      "BUCs": [
+        {
+          "buc_name": "利用者使用許諾フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "利用評価確認画面",
+                "使用許諾判断画面"
+              ]
+            },
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "許諾結果通知画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "鍵貸出フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "鍵貸出管理画面",
+                "鍵返却受付画面"
+              ]
+            },
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "鍵受取確認画面",
+                "鍵返却申請画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "利用者問合せ対応フロー",
+          "actors": [
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "問合せ登録画面"
+              ]
+            },
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "問合せ回答画面"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "business_name": "会議室予約業務",
+      "BUCs": [
+        {
+          "buc_name": "会議室照会フロー",
+          "actors": [
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "会議室検索画面",
+                "会議室詳細画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "会議室情報管理画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "会議室予約フロー",
+          "actors": [
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "会議室予約画面",
+                "決済手段登録画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "予約確定管理画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "予約変更取消フロー",
+          "actors": [
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "予約変更画面",
+                "予約取消画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "予約変更取消処理画面"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "business_name": "評価管理業務",
+      "BUCs": [
+        {
+          "buc_name": "利用者評価登録フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "利用者評価入力画面"
+              ]
+            },
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "利用者評価通知画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "会議室評価登録フロー",
+          "actors": [
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "会議室評価入力画面"
+              ]
+            },
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "会議室評価通知画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "会議室評価確認フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "会議室評価一覧画面"
+              ]
+            },
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "評価公開画面"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "business_name": "利用実績管理業務",
+      "BUCs": [
+        {
+          "buc_name": "売上実績管理フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "売上実績確認画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "売上実績集計画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "利用履歴管理フロー",
+          "actors": [
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "利用履歴ダッシュボード画面",
+                "利用履歴詳細画面"
+              ]
+            },
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "マイ利用履歴画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "会議室利用状況分析フロー",
+          "actors": [
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "利用状況ダッシュボード画面",
+                "利用状況分析画面"
+              ]
+            },
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "会議室利用状況画面"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "business_name": "サービス運営業務",
+      "BUCs": [
+        {
+          "buc_name": "手数料売上分析フロー",
+          "actors": [
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "手数料売上確認画面",
+                "手数料売上分析画面"
+              ]
+            },
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "手数料明細画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "運用管理フロー",
+          "actors": [
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "運用状況ダッシュボード画面",
+                "サービス運用管理画面"
+              ]
+            },
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "オーナー運用状況画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "サービス問合せ対応フロー",
+          "actors": [
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "サービス問合せ画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "サービス問合せ回答画面"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "business_name": "決済清算業務",
+      "BUCs": [
+        {
+          "buc_name": "利用料決済フロー",
+          "actors": [
+            {
+              "actor_name": "利用者",
+              "screen_names": [
+                "利用料明細画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "利用料引落管理画面"
+              ]
+            }
+          ]
+        },
+        {
+          "buc_name": "オーナー清算フロー",
+          "actors": [
+            {
+              "actor_name": "会議室オーナー",
+              "screen_names": [
+                "精算額確認画面"
+              ]
+            },
+            {
+              "actor_name": "サービス運営担当者",
+              "screen_names": [
+                "精算額算出画面",
+                "精算実行管理画面"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
