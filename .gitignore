@@ -22,4 +22,7 @@ Thumbs.db
 # 作業用
 tmp/
 rdra-workspace/
-初期要望分析.md
+usdm-rdra-workspace/
+
+!samples/02_rdra/0_RDRAZeroOne
+!samples/02_rdra/1_RDRA
