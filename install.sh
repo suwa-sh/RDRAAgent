@@ -5,8 +5,8 @@ set -euo pipefail
 # .claude/skills/ 配下の各スキルを、指定先にシンボリックリンクで配置する。
 #
 # Usage:
-#   ./setup.sh              # ~/.claude/skills/ にリンク（グローバル）
-#   ./setup.sh /path/to/project  # <project>/.claude/skills/ にリンク（プロジェクト固有）
+#   ./install.sh              # ~/.claude/skills/ にリンク（グローバル）
+#   ./install.sh /path/to/project  # <project>/.claude/skills/ にリンク（プロジェクト固有）
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOURCE_SKILLS_DIR="${SCRIPT_DIR}/.claude/skills"
