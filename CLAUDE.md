@@ -65,6 +65,55 @@ RDRAAgent は RDRA（Relationship Driven Requirement Analysis）2.0 の要件定
 | `1_RDRA/` | 統合出力（最終TSV + 関連データ） |
 | `2_RDRASpec/` | 仕様出力（Markdown + JSON） |
 
+## usdm-rdra スキル（差分パイプライン型）
+
+USDM x Event Sourcing による差分更新パイプライン。既存 `rdra` スキルのフルビルドに加え、変更要望単位での差分更新をサポートする。
+
+### Skill 構成
+
+```
+.claude/skills/usdm-rdra/
+├── SKILL.md                          # パイプラインオーケストレーション
+├── references/
+│   ├── usdm-schema.md                # USDM YAML スキーマ定義
+│   ├── event-sourcing-rules.md       # イベントソーシングルール
+│   ├── usdm/
+│   │   ├── usdm-decompose.md         # USDM 分解タスク
+│   │   └── usdm-snapshot-update.md   # USDM スナップショット更新
+│   ├── rdra/
+│   │   ├── rdra-diff-generate.md     # RDRA 差分生成
+│   │   ├── rdra-snapshot-update.md   # RDRA スナップショット更新
+│   │   └── rdra-initial-build.md     # RDRA 初期構築
+│   ├── specs/
+│   │   ├── spec-template.md          # Spec テンプレート定義
+│   │   ├── spec-generate.md          # Spec 生成
+│   │   └── spec-snapshot-update.md   # Spec スナップショット更新
+│   └── sync/
+│       └── sync-check.md             # 実装同期確認
+```
+
+### Data Flow（差分更新モード）
+
+```
+変更要望テキスト
+  → Step1: USDM 分解      → docs/usdm/events/{id}/requirements.yaml
+  → Step2: RDRA 差分生成   → docs/rdra/events/{id}/*.tsv
+  → Step3: スナップショット → docs/rdra/latest/*.tsv
+  → Step4: Spec 生成       → docs/specs/events/{id}/{UC名}/
+  → Step5: Spec 更新       → docs/specs/latest/{UC名}/
+```
+
+### docs ディレクトリ構成
+
+| パス | 用途 |
+|------|------|
+| `docs/usdm/events/` | USDM イベント履歴 |
+| `docs/usdm/latest/` | USDM 最新スナップショット |
+| `docs/rdra/events/` | RDRA 差分イベント履歴 |
+| `docs/rdra/latest/` | RDRA 最新スナップショット（TSV + 関連データ） |
+| `docs/specs/events/` | Spec イベント履歴 |
+| `docs/specs/latest/` | Spec 最新スナップショット（UC 単位） |
+
 ## External Resources
 
 - **RDRAGraph**: https://vsa.co.jp/rdratool/graph/v0.94/

@@ -32,7 +32,12 @@
       "Read(RDRA_Knowledge/helper_tools/web_tool/**)",
       "Read(RDRA_Knowledge/0_RDRAZeroOne/**)",
       "Read(RDRA_Knowledge/1_RDRA/**)",
-      "Read(RDRA_Knowledge/2_RDRASpec/**)"
+      "Read(RDRA_Knowledge/2_RDRASpec/**)",
+      "Bash(EVENT_ID=\"20260327_000000_initial_build\")",
+      "Bash(BASE=\"/Users/suwa_sh/src/github.com/suwa-sh/RDRAAgent/test\")",
+      "Bash(mkdir -p \"$BASE/docs/rdra/events/$EVENT_ID\")",
+      "Bash(cp \"$BASE/1_RDRA/\"*.tsv \"$BASE/docs/rdra/latest/\")",
+      "Bash(cp \"$BASE/1_RDRA/システム概要.json\" \"$BASE/docs/rdra/latest/\")"
     ],
     "deny": [],
     "ask": []
