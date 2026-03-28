@@ -1,0 +1,53 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Overview/Introduction" />
+
+<img src="/assets/logo-full.svg" alt="RoomConnect" style={{ height: 48, marginBottom: 16 }} />
+
+# RoomConnect Design System
+
+貸し会議室マッチングSaaS のデザインシステム。
+RDRA/NFR/Arch モデルから導出した、3ポータル対応のコンポーネントライブラリ。
+
+## System Context
+
+<table>
+  <tbody>
+    <tr><td><strong>アクター</strong></td><td>利用者、会議室オーナー、サービス運営担当者</td></tr>
+    <tr><td><strong>ポータル</strong></td><td>User (Blue), Owner (Teal), Admin (Slate)</td></tr>
+    <tr><td><strong>会議室タイプ</strong></td><td>物理会議室, バーチャル会議室</td></tr>
+    <tr><td><strong>Tech Stack</strong></td><td>Next.js + TypeScript + Tailwind CSS</td></tr>
+  </tbody>
+</table>
+
+## Design Principles
+
+1. **ポータル識別性** - 各ポータルはプライマリカラーで即座に識別可能
+2. **信頼性** - 決済・審査フローには明確なステータス表示と確認ステップ
+3. **レスポンシブ** - 利用者ポータルはモバイルファースト、管理系はデスクトップ最適化
+4. **アクセシビリティ** - WCAG 2.1 AA 準拠、コントラスト比 4.5:1 以上
+
+## Portal Theming
+
+Storybook ツールバーの **Portal** セレクターで切替可能。
+
+<table>
+  <thead>
+    <tr><th>Portal</th><th>Primary Color</th><th>対象</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>User</td><td>Blue <code>#2563EB</code></td><td>会議室検索・予約・利用</td></tr>
+    <tr><td>Owner</td><td>Teal <code>#0D9488</code></td><td>会議室管理・貸出・精算</td></tr>
+    <tr><td>Admin</td><td>Slate <code>#334155</code></td><td>審査・分析・運営管理</td></tr>
+  </tbody>
+</table>
+
+## Component Categories
+
+### UI (汎用)
+Button, Badge, Card, Input
+
+### Domain (ドメイン特化)
+RoomCard, BookingCalendar, ReservationStatusBadge, StarRating,
+OwnerVerificationBadge, PriceDisplay, KeyHandoverTracker,
+SettlementSummaryCard, InquiryThread, SearchFilter

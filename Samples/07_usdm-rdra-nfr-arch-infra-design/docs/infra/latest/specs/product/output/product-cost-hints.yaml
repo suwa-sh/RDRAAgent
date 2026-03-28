@@ -1,0 +1,143 @@
+schema_version: "1.0"
+artifact_type: "cost_hints"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-saas-cost-hints"
+title: "貸し会議室SaaS コスト最適化ヒント"
+status: "draft"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+decision_refs: []
+inputs_ref:
+  - "product-kashikaigishitsu-saas-impl-aws"
+
+cost_posture: "balanced"
+
+monthly_estimate:
+  production:
+    total_range: "$1,500 - $2,500"
+    breakdown:
+      - service: "Amazon EKS (共有クラスター按分)"
+        estimate: "$200 - $400"
+        notes: "コントロールプレーン費用は共有プラットフォームで按分。ノード費用はワークロード使用量に応じる"
+      - service: "EC2 (EKS ノード)"
+        estimate: "$300 - $500"
+        notes: "m6g.large x 2-3 ノード（Karpenter による自動スケーリング）"
+      - service: "Amazon RDS for PostgreSQL"
+        estimate: "$350 - $500"
+        notes: "db.r6g.large Multi-AZ、gp3 100GB"
+      - service: "Amazon ElastiCache Serverless"
+        estimate: "$50 - $100"
+        notes: "低トラフィック時の最小課金"
+      - service: "Amazon CloudFront"
+        estimate: "$50 - $100"
+        notes: "SPA + 画像配信、PriceClass_200"
+      - service: "Amazon S3"
+        estimate: "$20 - $50"
+        notes: "画像ストレージ + SPA ホスティング + ログ保管"
+      - service: "Amazon SQS"
+        estimate: "$10 - $20"
+        notes: "Standard + FIFO キュー、低〜中トラフィック"
+      - service: "AWS Lambda"
+        estimate: "$10 - $30"
+        notes: "イベントワーカー、arm64、低頻度実行"
+      - service: "Amazon Cognito"
+        estimate: "$50 - $100"
+        notes: "MAU ベース課金（最初 50,000 MAU は無料）"
+      - service: "AWS WAF"
+        estimate: "$30 - $50"
+        notes: "WebACL + マネージドルール 3 セット"
+      - service: "オブザーバビリティ（按分）"
+        estimate: "$50 - $100"
+        notes: "Managed Prometheus/Grafana/X-Ray は共有プラットフォーム按分"
+      - service: "データ転送"
+        estimate: "$30 - $80"
+        notes: "CloudFront → インターネット、AZ 間通信"
+  non_production:
+    staging_multiplier: 0.5
+    development_multiplier: 0.3
+    notes: "ステージング: 本番の縮小構成（Single-AZ、小型インスタンス）。開発: 最小構成"
+
+optimization_strategies:
+  - id: "opt-001"
+    name: "Karpenter によるノードライトサイジング"
+    category: "rightsizing"
+    impact: "medium"
+    description: "Karpenter の Consolidation ポリシーにより、使用率の低いノードを自動的に統合。Graviton（arm64）インスタンスを優先し 20% コスト削減"
+    action: "Karpenter NodePool で arm64 を weight 100 に設定"
+
+  - id: "opt-002"
+    name: "RDS リザーブドインスタンス"
+    category: "commitment_discount"
+    impact: "high"
+    description: "本番 RDS を 1年リザーブドインスタンス（All Upfront）で最大 40% 割引"
+    action: "サービス安定後（3-6ヶ月運用実績後）にリザーブド購入を検討"
+    prerequisite: "3ヶ月以上の安定運用実績"
+
+  - id: "opt-003"
+    name: "ElastiCache Serverless の自動スケーリング"
+    category: "autoscaling"
+    impact: "medium"
+    description: "Serverless モードにより、トラフィック減少時に自動的にスケールダウン。固定ノードに比べ閑散時のコストを削減"
+    action: "既に Serverless 構成を採用済み"
+
+  - id: "opt-004"
+    name: "S3 Intelligent-Tiering"
+    category: "storage_tiering"
+    impact: "low"
+    description: "会議室画像の低アクセス分を自動的に低コストティアに移動"
+    action: "ライフサイクルルールで 90 日後に Intelligent-Tiering を設定済み"
+
+  - id: "opt-005"
+    name: "CloudFront キャッシュ最適化"
+    category: "data_transfer"
+    impact: "medium"
+    description: "会議室画像に長い TTL（24h）を設定し、オリジンへのリクエストを削減。データ転送コストを低減"
+    action: "Cache-Control ヘッダーの適切な設定"
+
+  - id: "opt-006"
+    name: "非本番環境の縮小構成"
+    category: "environment_optimization"
+    impact: "high"
+    description: "ステージング/開発は Single-AZ、小型インスタンスで運用。開発は夜間/週末に自動停止"
+    action: |
+      - RDS: db.t4g.medium、Single-AZ
+      - ElastiCache: ノードベース cache.t4g.micro
+      - EKS: replica 1、小型ノード
+      - 開発環境のスケジュール停止（平日 9-21時のみ稼働）
+
+  - id: "opt-007"
+    name: "ログ保管の階層化"
+    category: "storage_tiering"
+    impact: "low"
+    description: "CloudWatch Logs の保持期間を 90 日に設定し、それ以降は S3 → Glacier Deep Archive に階層化"
+    action: "CloudWatch Logs サブスクリプション + S3 ライフサイクル"
+
+  - id: "opt-008"
+    name: "Savings Plans（コンピュート）"
+    category: "commitment_discount"
+    impact: "high"
+    description: "Compute Savings Plans により EKS ノード + Lambda の利用料を最大 30% 割引"
+    action: "6ヶ月運用実績後に 1年 Compute Savings Plans を検討"
+    prerequisite: "6ヶ月以上の安定運用実績"
+
+tagging_compliance:
+  required_tags:
+    - key: "cost-center"
+      value: "development"
+    - key: "environment"
+      value: "{env}"
+    - key: "owner"
+      value: "kashikaigishitsu-team"
+  notes: "Foundation ガードレール（SCP）により必須タグが強制される"
+
+budget_alerts:
+  - environment: "production"
+    monthly_budget: 2500
+    thresholds: [80, 100, 120]
+  - environment: "staging"
+    monthly_budget: 1250
+    thresholds: [80, 100, 120]
+  - environment: "development"
+    monthly_budget: 750
+    thresholds: [80, 100, 120]

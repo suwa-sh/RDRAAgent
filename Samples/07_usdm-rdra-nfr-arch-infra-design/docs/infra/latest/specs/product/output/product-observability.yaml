@@ -1,0 +1,218 @@
+schema_version: "1.0"
+artifact_type: "observability_spec"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-saas-observability"
+title: "貸し会議室SaaS オブザーバビリティ仕様"
+status: "draft"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+decision_refs: []
+inputs_ref:
+  - "product-kashikaigishitsu-saas-workload-model"
+  - "shared-platform-context"
+
+# 共有プラットフォームのオブザーバビリティ標準に準拠
+platform_ref: "svc-observability"
+
+metrics:
+  collection:
+    method: "ADOT Collector (DaemonSet)"
+    destination: "Amazon Managed Prometheus"
+    scrape_interval: "30s"
+  application_metrics:
+    - name: "http_requests_total"
+      type: "counter"
+      labels: ["method", "path", "status_code"]
+      description: "HTTP リクエスト総数"
+    - name: "http_request_duration_seconds"
+      type: "histogram"
+      labels: ["method", "path"]
+      buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5]
+      description: "HTTP リクエスト処理時間"
+    - name: "db_query_duration_seconds"
+      type: "histogram"
+      labels: ["query_type", "table"]
+      buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]
+      description: "DB クエリ処理時間"
+    - name: "cache_hit_ratio"
+      type: "gauge"
+      labels: ["cache_name"]
+      description: "キャッシュヒット率"
+    - name: "external_api_duration_seconds"
+      type: "histogram"
+      labels: ["service", "operation"]
+      buckets: [0.1, 0.5, 1, 5, 10, 30]
+      description: "外部 API 呼び出し時間（決済機関等）"
+    - name: "sqs_messages_processed_total"
+      type: "counter"
+      labels: ["queue", "status"]
+      description: "SQS メッセージ処理数"
+    - name: "authz_check_duration_seconds"
+      type: "histogram"
+      labels: ["check_type"]
+      buckets: [0.001, 0.005, 0.01, 0.05]
+      description: "認可チェック処理時間"
+  infrastructure_metrics:
+    - "container_cpu_usage_seconds_total"
+    - "container_memory_working_set_bytes"
+    - "kube_pod_status_phase"
+    - "kube_pod_container_status_restarts_total"
+    - "node_disk_io_time_seconds_total"
+    - "node_network_transmit_bytes_total"
+
+sli_slo:
+  - name: "API 可用性"
+    sli: "成功リクエスト数 / 全リクエスト数（5xx を除外）"
+    slo: "99.9%"
+    window: "30 日ローリング"
+    error_budget: "0.1%（月間約 43 分）"
+    measurement: "http_requests_total{status_code!~'5..'} / http_requests_total"
+  - name: "API レイテンシ"
+    sli: "p99 レスポンスタイム"
+    slo: "500ms 以内"
+    window: "30 日ローリング"
+    measurement: "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))"
+  - name: "API エラーレート"
+    sli: "5xx レスポンス率"
+    slo: "0.1% 以下"
+    window: "30 日ローリング"
+    measurement: "rate(http_requests_total{status_code=~'5..'}[5m]) / rate(http_requests_total[5m])"
+  - name: "API スループット"
+    sli: "1秒あたりリクエスト数"
+    slo: "~100 TPS"
+    window: "ピーク時1時間"
+    measurement: "sum(rate(http_requests_total[1m]))"
+
+logs:
+  format: "構造化 JSON"
+  fields:
+    - "timestamp"
+    - "level"
+    - "trace_id"
+    - "span_id"
+    - "service"
+    - "message"
+    - "error"
+  categories:
+    access:
+      description: "HTTP リクエスト/レスポンスのメタデータ"
+      level: "INFO"
+      retention_days: 90
+      fields: ["method", "path", "status_code", "duration_ms", "client_ip", "user_agent"]
+    audit:
+      description: "状態遷移を伴うビジネスイベント"
+      level: "INFO"
+      retention_days: 365
+      fields: ["actor_id", "actor_type", "action", "resource_type", "resource_id", "old_state", "new_state"]
+    diagnostic:
+      description: "アプリケーション内部の診断情報"
+      level: "DEBUG"
+      retention_days: 30
+      fields: ["component", "detail"]
+    dependency:
+      description: "外部依存（DB/API/キャッシュ）への呼び出し"
+      level: "INFO"
+      retention_days: 90
+      fields: ["dependency_type", "endpoint", "duration_ms", "status", "error"]
+  destination:
+    primary: "CloudWatch Logs"
+    archive: "S3 エクスポート（90 日後）"
+    long_term: "S3 Glacier Deep Archive（365 日後）"
+
+traces:
+  collection: "ADOT Collector"
+  destination: "AWS X-Ray"
+  sampling:
+    default_rate: 0.05
+    error_rate: 1.0
+    high_latency_threshold: "2s"
+    high_latency_rate: 1.0
+  propagation: "W3C Trace Context"
+  instrumentation:
+    - "HTTP リクエスト（自動）"
+    - "DB クエリ（自動）"
+    - "Redis 操作（自動）"
+    - "SQS メッセージ送受信（自動）"
+    - "外部 API 呼び出し（手動スパン）"
+    - "認可チェック（手動スパン）"
+
+dashboards:
+  - name: "サービス概要"
+    panels:
+      - "リクエストレート（RPS）"
+      - "エラーレート（%）"
+      - "レイテンシ分布（p50/p95/p99）"
+      - "SLO バーンレート"
+      - "Pod 数・CPU・メモリ使用率"
+  - name: "データベース"
+    panels:
+      - "RDS CPU 使用率"
+      - "RDS 接続数"
+      - "RDS IOPS"
+      - "スロークエリ数"
+      - "レプリケーションラグ"
+  - name: "キャッシュ"
+    panels:
+      - "ElastiCache ヒット率"
+      - "ElastiCache メモリ使用量"
+      - "ElastiCache 接続数"
+      - "キャッシュ TTL 分布"
+  - name: "メッセージキュー"
+    panels:
+      - "SQS メッセージ送信数"
+      - "SQS メッセージ処理数"
+      - "SQS DLQ メッセージ数"
+      - "SQS 処理レイテンシ"
+  - name: "外部連携"
+    panels:
+      - "決済機関 API レイテンシ"
+      - "決済機関 API エラーレート"
+      - "サーキットブレーカー状態"
+  visualization: "Amazon Managed Grafana"
+  auth: "Entra ID SAML SSO（共有プラットフォーム標準）"
+
+alerting:
+  rules:
+    - name: "高エラーレート"
+      condition: "5xx 率 > 1% が 5分間持続"
+      severity: "critical"
+      action: "PagerDuty → オンコール"
+    - name: "高レイテンシ"
+      condition: "p99 > 2s が 5分間持続"
+      severity: "warning"
+      action: "Slack 通知 → #kashikaigishitsu-alerts"
+    - name: "SLO バーンレート超過"
+      condition: "1時間バーンレート > 14.4"
+      severity: "critical"
+      action: "PagerDuty → オンコール"
+    - name: "Pod 再起動"
+      condition: "Pod 再起動 > 3回/5分"
+      severity: "warning"
+      action: "Slack 通知"
+    - name: "RDS CPU 高負荷"
+      condition: "CPU > 80% が 10分間持続"
+      severity: "warning"
+      action: "Slack 通知"
+    - name: "RDS 接続数枯渇"
+      condition: "接続数 > 180（上限200の90%）"
+      severity: "critical"
+      action: "PagerDuty → オンコール"
+    - name: "DLQ メッセージ増加"
+      condition: "DLQ メッセージ > 0"
+      severity: "warning"
+      action: "Slack 通知"
+    - name: "サーキットブレーカー Open"
+      condition: "決済機関サーキットブレーカーが Open"
+      severity: "critical"
+      action: "PagerDuty → オンコール + Slack 通知"
+    - name: "ヘルスチェック失敗"
+      condition: "ALB ターゲットグループの健全ホスト数 < 1"
+      severity: "critical"
+      action: "PagerDuty → オンコール"
+  notification_channels:
+    - type: "slack"
+      channel: "#kashikaigishitsu-alerts"
+    - type: "pagerduty"
+      service: "kashikaigishitsu-oncall"
+  templates: "共有プラットフォーム標準アラートルール（CPU/メモリ/Pod再起動/エラーレート）を継承"

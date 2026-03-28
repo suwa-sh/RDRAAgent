@@ -1,0 +1,1767 @@
+version: "1.0"
+event_id: "20260328_213000_arch_infra_feedback_20260328_210000_infra_product_design"
+created_at: "2026-03-28T21:30:00"
+source: "インフラ設計 20260328_210000_infra_product_design に基づくアーキテクチャフィードバック"
+
+technology_context:
+  languages:
+    - "Go"
+    - "TypeScript"
+  frameworks:
+    - "Echo / Gin / Chi（Go Web Framework）"
+    - "React / Next.js（TypeScript SPA）"
+  constraints:
+    - "RDB 接続プール上限 200（マネージド RDB 共通制約）"
+    - "FaaS 実行時間上限 300秒（サーバーレスランタイム共通制約）"
+    - "MQ メッセージ可視性タイムアウトは FaaS タイムアウトと一致させること（300秒）"
+
+system_architecture:
+  tiers:
+    - id: "tier-frontend-user"
+      name: "利用者・オーナー向けフロントエンド"
+      description: "外部アクター「利用者」「会議室オーナー」向け Web UI。会議室検索・予約・管理・評価・精算確認等の機能を提供する"
+      technology_candidates:
+        - "SPA"
+        - "レスポンシブデザイン"
+      policies:
+        - id: "SP-001"
+          name: "レスポンシブデザイン"
+          description: "モバイル・デスクトップ両対応のレスポンシブ UI を提供する"
+          reason: "NFR F.1.1.2 主要ブラウザ全対応+モバイルブラウザ(Lv3)、F.1.1.3 PC+スマートフォン(Lv2)"
+          source_model: "NFR F.1.1.1, NFR F.1.1.2, NFR F.1.1.3"
+          confidence: "high"
+      rules:
+        - id: "SR-001"
+          name: "API 経由のデータアクセス"
+          description: "フロントエンドからデータストアへの直接アクセスを禁止し、必ず API Gateway 経由で Backend API にアクセスする"
+          reason: "セキュリティとデータ整合性の確保"
+          source_model: "なし"
+          confidence: "default"
+
+    - id: "tier-frontend-admin"
+      name: "管理者向けフロントエンド"
+      description: "社内アクター「サービス運営担当者」向け管理画面。オーナー審査・利用状況分析・手数料売上分析・精算管理・問合せ対応の機能を提供する"
+      technology_candidates:
+        - "SPA"
+      policies:
+        - id: "SP-002"
+          name: "IP 制限アクセス"
+          description: "管理画面は社内ネットワークからのみアクセス可能とする"
+          reason: "NFR E.5.3.1 IPアドレス制限（管理画面のみ）(Lv1)"
+          source_model: "NFR E.5.3.1, アクター: サービス運営担当者（社内）"
+          confidence: "medium"
+      rules:
+        - id: "SR-002"
+          name: "API 経由のデータアクセス"
+          description: "管理画面からデータストアへの直接アクセスを禁止し、必ず API Gateway 経由で Backend API にアクセスする"
+          reason: "セキュリティとデータ整合性の確保"
+          source_model: "なし"
+          confidence: "default"
+
+    - id: "tier-api-gateway"
+      name: "API Gateway"
+      description: "全フロントエンドからのリクエストを受け付け、認証・認可・レート制限・TLS 終端を一元的に処理するリバースプロキシ"
+      technology_candidates:
+        - "API Gateway"
+        - "リバースプロキシ"
+      policies:
+        - id: "SP-003"
+          name: "OAuth2/OIDC トークン検証"
+          description: "全リクエストに対して OAuth2/OIDC トークンを検証し、無効なトークンは Backend API に到達させない"
+          reason: "ユーザー指定: 認証・認可・セッション管理を API Gateway に集約"
+          source_model: "アクター: 利用者, 会議室オーナー（社外）, NFR E.5.1.1"
+          confidence: "user"
+        - id: "SP-004"
+          name: "粗粒度 RBAC"
+          description: "パスベースのロール制御により、管理者 API は運営ロールのみアクセス可能とする（ReBAC 外部サービスとは独立して API Gateway で実施）"
+          reason: "ユーザー指定: オーナー/利用者/運営の3ロールを Gateway で粗粒度制御"
+          source_model: "アクター: 3種, NFR E.5.2.1 RBAC(Lv2)"
+          confidence: "user"
+        - id: "SP-005"
+          name: "レート制限"
+          description: "API 呼出しのレート制限を一元管理し、過剰なリクエストを抑制する"
+          reason: "ユーザー指定: 外部公開 Web サービスの保護"
+          source_model: "アクター: 利用者, 会議室オーナー（社外）"
+          confidence: "user"
+      rules:
+        - id: "SR-003"
+          name: "TLS 終端"
+          description: "API Gateway で TLS を終端し、内部通信は平文または mTLS とする"
+          reason: "NFR E.6.1.2 全通信暗号化(Lv2)"
+          source_model: "NFR E.6.1.2"
+          confidence: "high"
+        - id: "SR-004"
+          name: "管理画面 IP 制限"
+          description: "管理者向けエンドポイントへのアクセスを許可 IP アドレスに限定する"
+          reason: "NFR E.5.3.1 IPアドレス制限（管理画面のみ）(Lv1)"
+          source_model: "NFR E.5.3.1, アクター: サービス運営担当者（社内）"
+          confidence: "medium"
+        - id: "SR-011"
+          name: "ファイアウォール"
+          description: "API Gateway の前段にファイアウォールを配置し、不正なトラフィックをブロックする"
+          reason: "NFR E.8.1.1 ファイアウォール(Lv2) への対応"
+          source_model: "NFR E.8.1.1"
+          confidence: "medium"
+        - id: "SR-012"
+          name: "WAF"
+          description: "Web Application Firewall を API Gateway の前段に配置し、OWASP Top 10 等の一般的な Web 攻撃を防御する"
+          reason: "NFR E.10.1.1 WAF(Lv2) への対応"
+          source_model: "NFR E.10.1.1"
+          confidence: "medium"
+
+    - id: "tier-idp"
+      name: "IdP（アイデンティティプロバイダー）"
+      description: "利用者・会議室オーナー・サービス運営担当者の認証基盤。トークン発行・ユーザー登録・パスワードリセット・MFA 管理を担う"
+      technology_candidates:
+        - "マネージド IdP"
+      policies:
+        - id: "SP-017"
+          name: "MFA 対応"
+          description: "管理操作（オーナー登録審査、精算実行等）を行うサービス運営担当者に MFA を必須とする"
+          reason: "NFR E.5.1.1 認証方式(Lv2) への対応。管理権限の不正利用防止"
+          source_model: "アクター: サービス運営担当者, NFR E.5.1.1"
+          confidence: "medium"
+        - id: "SP-018"
+          name: "ユーザープロビジョニング"
+          description: "オーナー登録審査の承認をトリガーに IdP ユーザーを自動作成する。退会時は IdP ユーザーを無効化する"
+          reason: "BUC「オーナー登録管理フロー」の審査承認・退会に連動したアカウントライフサイクル管理"
+          source_model: "BUC: オーナー登録管理フロー, 状態: オーナー"
+          confidence: "medium"
+      rules:
+        - id: "SR-013"
+          name: "トークン仕様"
+          description: "アクセストークンは JWT 形式、有効期限15分。リフレッシュトークンはローテーション方式で発行する"
+          reason: "NFR E.5.1.1 認証方式(Lv2) への対応。セッションハイジャック防止"
+          source_model: "NFR E.5.1.1"
+          confidence: "medium"
+
+    - id: "tier-authz-service"
+      name: "認可サービス"
+      description: "リソースレベルのアクセス制御を担う ReBAC 外部サービス。オーナー→会議室、利用者→予約等の所有権関係を管理し、Backend API からの認可問い合わせに応答する"
+      technology_candidates:
+        - "ReBAC サービス（OpenFGA / SpiceDB）"
+      policies:
+        - id: "SP-019"
+          name: "関係性モデル定義"
+          description: "RDRA の情報モデルに基づき、owner→room, user→reservation, owner→settlement 等の関係性タプルを定義する"
+          reason: "情報.tsv のエンティティ間関連（オーナー情報→会議室情報、利用者情報→予約情報等）を認可モデルに反映"
+          source_model: "情報: オーナー情報, 会議室情報, 予約情報, 利用者情報, 精算情報, NFR E.5.2.1"
+          confidence: "user"
+        - id: "SP-020"
+          name: "認可判定のレイテンシ目標"
+          description: "認可判定のレスポンスタイムを 10ms 以内に維持する。キャッシュ層の活用を検討する"
+          reason: "全 API リクエストで認可判定が発生するため、NFR B.2.1.1 レスポンスタイム 5秒以内への影響を最小化"
+          source_model: "NFR B.2.1.1"
+          confidence: "medium"
+      rules:
+        - id: "SR-014"
+          name: "関係性タプルの同期"
+          description: "Backend API でのリソース作成・削除時に認可サービスの関係性タプルを同期更新する。トランザクションとの整合性を確保する"
+          reason: "データストアと認可サービスの関係性データの一貫性確保"
+          source_model: "なし"
+          confidence: "default"
+
+    - id: "tier-backend-api"
+      name: "バックエンド API"
+      description: "6業務（オーナー管理・会議室管理・会議室貸出・会議室利用・サービス運営・精算）のビジネスロジックを提供する REST API サーバー"
+      technology_candidates:
+        - "CaaS(k8s)"
+      policies:
+        - id: "SP-006"
+          name: "モジュール分割"
+          description: "6業務ドメインに基づくモジュール分割（オーナー管理・会議室管理・会議室貸出・会議室利用・サービス運営・精算）"
+          reason: "BUC 6業務・UC 40件超で単一モジュールでは複雑化するため"
+          source_model: "BUC: 6業務"
+          confidence: "medium"
+        - id: "SP-007"
+          name: "細粒度認可"
+          description: "リソースレベルのアクセス制御を認可サービスティア（tier-authz-service）への問い合わせで実施する（例: Check('user:123', 'editor', 'room:456')）。条件ベースの認可（使用許諾条件等）は Domain 層で判定する"
+          reason: "所有権ベースの認可パターンが多く、ReBAC で関係性を一元管理することで Backend の作り込みを最小化"
+          source_model: "条件: 使用許諾条件, オーナー登録審査条件, NFR E.5.2.1"
+          confidence: "user"
+        - id: "SP-014"
+          name: "24時間運用"
+          description: "Backend API は24時間365日の連続運用に対応する。CaaS(k8s) のローリングアップデートによりダウンタイムを最小化する"
+          reason: "NFR A.1.1.1 運用時間（通常）24h運用(Lv4) への対応"
+          source_model: "NFR A.1.1.1"
+          confidence: "medium"
+        - id: "SP-015"
+          name: "スケーラビリティ"
+          description: "同時アクセス数 ~10,000、ピーク時2倍、オンラインリクエスト ~100,000/日 に対応するため、CaaS(k8s) の水平スケーラビリティ（Pod オートスケーリング）を活用する"
+          reason: "NFR B.1.1.1 同時アクセス数(Lv3)、B.1.1.3 オンラインリクエスト件数(Lv3)、B.1.2.1 ピーク時同時アクセス数(Lv2)、B.3.1.1 CPU拡張性(Lv2) への対応"
+          source_model: "NFR B.1.1.1, NFR B.1.1.3, NFR B.1.2.1, NFR B.3.1.1"
+          confidence: "medium"
+      rules:
+        - id: "SR-005"
+          name: "API バージョニング"
+          description: "URL パスベースのバージョニング（例: /v1/rooms）で後方互換性を維持する"
+          reason: "一般的なベストプラクティスとして適用"
+          source_model: "なし"
+          confidence: "default"
+        - id: "SR-010"
+          name: "スループット目標"
+          description: "Backend API は ~100 TPS のスループットを達成する。負荷テストにより継続的に計測する"
+          reason: "NFR B.2.1.2 スループット ~100 TPS(Lv3) への対応"
+          source_model: "NFR B.2.1.2"
+          confidence: "medium"
+
+    - id: "tier-cronjob-worker"
+      name: "CronJob ワーカー"
+      description: "タイマートリガー（バーチャル会議室利用開始/終了）およびバッチ処理（月末精算額計算・精算実行）を定期実行するワーカー。Backend API と同一コードベースで CaaS(k8s) 上に動作し、長時間処理にも対応する"
+      technology_candidates:
+        - "CronJob(k8s)"
+      policies:
+        - id: "SP-016"
+          name: "バッチ処理時間制約"
+          description: "月末精算額計算等のバッチ処理は8時間以内に完了させる。処理時間が超過しないようジョブの並列度とタイムアウトを管理する"
+          reason: "NFR B.2.2.1 バッチ処理時間 8時間以内(Lv2) への対応"
+          source_model: "NFR B.2.2.1"
+          confidence: "medium"
+      rules: []
+
+    - id: "tier-faas-worker"
+      name: "FaaS ワーカー"
+      description: "MQ メッセージをトリガーに通知処理（会議URL通知等）を実行するサーバーレスワーカー。短時間・低頻度の処理に特化し、FaaS 実行時間上限の制約を受ける"
+      technology_candidates:
+        - "FaaS"
+        - "MQ"
+      policies:
+        - id: "SP-021"
+          name: "FaaS 通知処理方針"
+          description: "MQ トリガーの通知処理（会議URL通知等）は FaaS で実行する。短時間・低頻度の処理に特化し、コスト効率と運用負荷の軽減を図る。FaaS 実行時間上限（technology_context.constraints 参照）内で完了する処理のみを対象とする"
+          reason: "インフラ設計（MCL product-design）の結果に基づく: 通知処理は短時間・低頻度で FaaS のメリットが大きい"
+          source_model: "infra: product-impl-aws.yaml → comp-lambda-event-worker"
+          confidence: "medium"
+        - id: "SP-008"
+          name: "リトライ・デッドレターキュー"
+          description: "MQ メッセージ処理の失敗時はリトライし、上限超過時はデッドレターキューに退避する"
+          reason: "非同期処理の信頼性確保。通知処理の失敗時に確実に再送するため"
+          source_model: "BUC: 会議室貸出管理フロー（会議URL通知）"
+          confidence: "medium"
+      rules: []
+
+    - id: "tier-datastore-rdb"
+      name: "データストア（RDB）"
+      description: "予約・決済・精算等の金銭取引を含む18エンティティのトランザクション整合性を保証するリレーショナルデータベース"
+      technology_candidates:
+        - "RDB"
+      policies:
+        - id: "SP-009"
+          name: "ポイントインタイムリカバリ"
+          description: "継続的バックアップによるポイントインタイムリカバリを実施する"
+          reason: "NFR C.1.2.1 継続的バックアップ(Lv3)、NFR A.4.1.1 RPO 障害直前(Lv3)"
+          source_model: "NFR C.1.2.1, NFR A.4.1.1, NFR A.4.1.2"
+          confidence: "high"
+        - id: "SP-010"
+          name: "機密データ暗号化"
+          description: "個人情報（オーナー情報・利用者情報）および決済情報を保管時に暗号化する"
+          reason: "NFR E.6.1.1 機密データのみ暗号化(Lv1)"
+          source_model: "NFR E.6.1.1, 情報: オーナー情報, 利用者情報, 決済情報"
+          confidence: "high"
+      rules:
+        - id: "SR-007"
+          name: "Multi-AZ 冗長構成"
+          description: "RDB は Multi-AZ 構成で同期レプリケーションを行い、自動フェイルオーバーを実現する"
+          reason: "NFR A.2.1.1 N+1冗長自動切替(Lv4)、NFR A.2.5.1 ミラーリング以上(Lv3)"
+          source_model: "NFR A.1.2.1, NFR A.2.1.1, NFR A.2.5.1, NFR A.3.1.1"
+          confidence: "high"
+
+    - id: "tier-datastore-objectstorage"
+      name: "データストア（Object Storage）"
+      description: "会議室画像ファイルを保管するオブジェクトストレージ"
+      technology_candidates:
+        - "Object Storage"
+      policies: []
+      rules:
+        - id: "SR-008"
+          name: "CDN 配信"
+          description: "会議室画像は CDN 経由で配信し、フロントエンドの表示速度を向上させる"
+          reason: "NFR B.2.1.1 レスポンスタイム 5秒以内(Lv3)。画像ファイルの配信最適化"
+          source_model: "NFR B.2.1.1, 情報: 会議室情報（画像属性）"
+          confidence: "medium"
+
+    - id: "tier-datastore-kvs"
+      name: "データストア（KVS）"
+      description: "会議室検索結果キャッシュ、セッション管理、トークン管理に使用するキーバリューストア"
+      technology_candidates:
+        - "KVS"
+      policies:
+        - id: "SP-011"
+          name: "キャッシュ TTL 管理"
+          description: "キャッシュデータに適切な TTL を設定し、データ鮮度を確保する"
+          reason: "NFR B.2.1.1 レスポンスタイム 5秒以内(Lv3)。会議室検索結果のキャッシュ"
+          source_model: "NFR B.2.1.1, BUC: 会議室予約フロー（会議室検索）"
+          confidence: "medium"
+      rules: []
+
+    - id: "tier-external-integration"
+      name: "外部連携"
+      description: "決済機関との連携を担うアダプタ層。精算実行時の支払処理および利用料の引き落とし処理を仲介する"
+      technology_candidates:
+        - "アダプタパターン"
+      policies:
+        - id: "SP-012"
+          name: "冪等性確保"
+          description: "決済機関への支払リクエストに冪等キーを付与し、重複支払を防止する"
+          reason: "外部システム「決済機関」が決済系であり、二重支払の防止が必須"
+          source_model: "外部システム: 決済機関, BUC: オーナー精算フロー（精算実行）"
+          confidence: "high"
+        - id: "SP-013"
+          name: "サーキットブレーカー"
+          description: "決済機関との通信障害時にサーキットブレーカーを適用し、障害の連鎖を防止する"
+          reason: "外部システム障害時のシステム全体への影響を局所化する"
+          source_model: "外部システム: 決済機関"
+          confidence: "medium"
+      rules:
+        - id: "SR-009"
+          name: "通信ログ記録"
+          description: "決済機関との全通信をリクエスト/レスポンス含めてログに記録する"
+          reason: "NFR E.7.1.1 監査ログ+データアクセスログ(Lv2)。金銭取引の追跡"
+          source_model: "NFR E.7.1.1, 外部システム: 決済機関"
+          confidence: "high"
+
+  cross_tier_policies:
+    - id: "CTP-001"
+      name: "認証方式"
+      description: "OAuth2/OIDC ベースの認証を採用し、API Gateway でトークン検証を一元実施する。Backend API は細粒度認可に集中する"
+      reason: "外部アクター「利用者」「会議室オーナー」が利用するため標準的な認証プロトコルが必要。NFR E.5.1.1 Lv2"
+      source_model: "アクター: 利用者, 会議室オーナー（社外）, NFR E.5.1.1"
+      confidence: "high"
+    - id: "CTP-002"
+      name: "認可方式"
+      description: "粗粒度ロール制御は API Gateway で RBAC、リソースレベルのアクセス制御は ReBAC 外部サービス（OpenFGA/SpiceDB 等）で実施する。状態ベースの認可は Domain 層のビジネスルールとして実装する"
+      reason: "ユーザー指定: 所有権ベースの認可パターンが多い（オーナー→会議室、利用者→予約、オーナー→精算）ため ReBAC が適合。Backend の作り込みを最小化し、認可ポリシーを一元管理する"
+      source_model: "アクター: 会議室オーナー, 利用者, サービス運営担当者, NFR E.5.2.1, 条件: 使用許諾条件"
+      confidence: "user"
+    - id: "CTP-003"
+      name: "API スタイル"
+      description: "REST + キャッシュヘッダを採用し、レスポンス改善を図る"
+      reason: "NFR B.2.1.1 レスポンスタイム 5秒以内(Lv3)"
+      source_model: "NFR B.2.1.1"
+      confidence: "medium"
+    - id: "CTP-004"
+      name: "構造化ログと相関ID"
+      description: "全ティアで JSON 形式の構造化ログを出力する。フロントエンドでリクエストごとに trace_id を生成し、全ティアに伝播して横断的なトレーサビリティを確保する。trace_id は冪等キー（CTP-012 参照）と共にリクエストヘッダーに含め、ログ・監査証跡から特定リクエストの全処理経路を追跡可能にする"
+      reason: "NFR C.1.3.1 アプリケーション監視(Lv3)、NFR C.6.1.1 ログ保管1年(Lv4)"
+      source_model: "NFR C.1.3.1, NFR C.6.1.1"
+      confidence: "medium"
+    - id: "CTP-005"
+      name: "ヘルスチェック"
+      description: "全ティアにヘルスチェックエンドポイントを実装し、LB/オーケストレーターからの死活監視に対応する"
+      reason: "NFR A.2.1.1 N+1冗長自動切替(Lv4)。自動フェイルオーバーの基盤"
+      source_model: "NFR A.2.1.1, NFR C.1.1.1, NFR C.3.1.1"
+      confidence: "medium"
+    - id: "CTP-006"
+      name: "業務継続計画"
+      description: "災害・大規模障害時に24時間以内の業務復旧を目標とする。Multi-AZ 自動フェイルオーバーおよびバックアップからのリストア手順を整備する"
+      reason: "NFR A.3.1.2 業務継続の要否 24時間以内に復旧(Lv1) への対応"
+      source_model: "NFR A.3.1.2"
+      confidence: "medium"
+    - id: "CTP-007"
+      name: "サポート体制"
+      description: "24時間365日のサポート体制を構築する。オンコール対応と障害エスカレーションフローを整備する"
+      reason: "NFR C.5.1.1 サポート時間 24時間365日(Lv4) への対応"
+      source_model: "NFR C.5.1.1"
+      confidence: "medium"
+    - id: "CTP-008"
+      name: "セキュリティポリシー準拠"
+      description: "組織のセキュリティポリシーに準拠し、定期的なセキュリティレビューを実施する"
+      reason: "NFR E.1.1.1 セキュリティポリシー 組織ポリシー準拠(Lv2) への対応"
+      source_model: "NFR E.1.1.1"
+      confidence: "medium"
+    - id: "CTP-009"
+      name: "IdP 方式"
+      description: "IdP ティアを認証基盤として採用し、API Gateway と連携してトークン検証を行う。IdP の具体的な方針は tier-idp を参照"
+      reason: "外部アクター2種が利用する商用SaaSのため、ソーシャルログイン対応・運用負荷軽減の観点からマネージド IdP が適切。NFR E.5.1.1 認証方式(Lv2)"
+      source_model: "アクター: 利用者, 会議室オーナー（社外）, サービス運営担当者, NFR E.5.1.1"
+      confidence: "medium"
+    - id: "CTP-010"
+      name: "SLI/SLO ベースのオブザーバビリティ方針"
+      description: "API 可用性 SLO 99.9%（30日ローリング）、p99 レイテンシ SLO 500ms、エラーレート SLO 0.1% 以下を定義し、エラーバジェットで運用判断（リリース可否・障害対応優先度）を行う"
+      reason: "インフラ設計（MCL product-design）の結果に基づく: SLI/SLO を明示的に定義しエラーバジェットで運用を制御する"
+      source_model: "infra: product-observability.yaml → sli_slo"
+      confidence: "medium"
+    - id: "CTP-011"
+      name: "コスト最適化方針"
+      description: "balanced コストポスチャに基づき、コミット割引（6ヶ月運用実績後に検討）、ノードライトサイジング（arm64 優先）、非本番環境縮小構成（Single-AZ、小型インスタンス、開発環境は夜間停止）を適用する"
+      reason: "インフラ設計（MCL product-design）の結果に基づく: コスト最適化戦略をアーキテクチャ方針として明示"
+      source_model: "infra: product-cost-hints.yaml → optimization_strategies"
+      confidence: "medium"
+    - id: "CTP-012"
+      name: "冪等性方針"
+      description: "全ティアで冪等性を確保する。(1) フロントエンド: リクエストごとに冪等キー（UUID）を生成しリクエストヘッダー X-Idempotency-Key に付与する。UI でのダブルクリック防止（ボタン無効化）も併用する。(2) Backend API: 冪等キーを KVS で管理し、重複リクエストを検知して前回レスポンスを返却する。状態変更を伴う操作（POST/PUT/DELETE）が対象。(3) データストア（RDB）: 冪等キーカラムに UNIQUE 制約を設定し、ON CONFLICT（UPSERT）で重複挿入を防止する。(4) CronJob ワーカー: ジョブ実行 ID で重複実行を検知する。(5) FaaS ワーカー: MQ の MessageId で重複メッセージを検知する"
+      reason: "予約・決済・精算など金銭に関わる操作が多く、ネットワーク障害やリトライによる重複処理が深刻な影響を及ぼすため、全ティアで一貫した冪等性保証が必要"
+      source_model: "BUC: 会議室予約フロー, オーナー精算フロー, 外部システム: 決済機関, infra: product-impl-aws.yaml"
+      confidence: "medium"
+
+  cross_tier_rules:
+    - id: "CTR-001"
+      name: "通信暗号化"
+      description: "全ティア間の通信を TLS で暗号化する。API Gateway で TLS 終端し、内部通信も暗号化する"
+      reason: "NFR E.6.1.2 全通信暗号化（内部通信含む）(Lv2)"
+      source_model: "NFR E.6.1.2"
+      confidence: "high"
+    - id: "CTR-002"
+      name: "監査ログ"
+      description: "金銭取引（決済・精算）および個人情報アクセスの操作ログを記録し、1年間保管する"
+      reason: "NFR E.7.1.1 監査ログ+データアクセスログ(Lv2)、NFR C.6.1.1 ログ保管1年(Lv4)"
+      source_model: "NFR E.7.1.1, NFR C.6.1.1, 情報: 決済情報, 精算情報, オーナー情報, 利用者情報"
+      confidence: "medium"
+    - id: "CTR-003"
+      name: "API バージョニング"
+      description: "URL パスベースのバージョニング方式を全 API に適用する"
+      reason: "一般的なベストプラクティスとして適用"
+      source_model: "なし"
+      confidence: "default"
+    - id: "CTR-004"
+      name: "計画停止ルール"
+      description: "計画停止を実施する場合は3日前までに利用者へ事前通知する。メンテナンスウィンドウを設定し影響を最小化する"
+      reason: "NFR A.1.1.3 計画停止の有無 事前通知3日前(Lv3) への対応"
+      source_model: "NFR A.1.1.3"
+      confidence: "medium"
+    - id: "CTR-005"
+      name: "ネットワーク冗長化"
+      description: "ネットワーク機器はマネージドサービスの冗長化機能を活用し、単一障害点を排除する"
+      reason: "NFR A.2.3.1 ネットワーク機器の冗長化 マネージド冗長(Lv3) への対応"
+      source_model: "NFR A.2.3.1"
+      confidence: "medium"
+    - id: "CTR-006"
+      name: "電源冗長化"
+      description: "インフラ層の電源冗長化はクラウドベンダーのデータセンター設備（UPS 等）に依拠する"
+      reason: "NFR A.2.6.2 電源の冗長化 UPS(Lv2) への対応"
+      source_model: "NFR A.2.6.2"
+      confidence: "medium"
+    - id: "CTR-007"
+      name: "負荷テスト実施"
+      description: "本番リリース前およびスケール変更時に負荷テストを実施し、性能目標（レスポンスタイム・スループット・同時接続数）の達成を検証する"
+      reason: "NFR B.4.1.1 性能テスト 負荷テスト(Lv3) への対応"
+      source_model: "NFR B.4.1.1"
+      confidence: "medium"
+    - id: "CTR-008"
+      name: "パッチ適用方針"
+      description: "OS・ミドルウェア・ライブラリのセキュリティパッチを四半期ごとに評価・適用する。緊急パッチは随時対応する"
+      reason: "NFR C.2.1.2 パッチ適用方針 四半期(Lv2) への対応"
+      source_model: "NFR C.2.1.2"
+      confidence: "medium"
+    - id: "CTR-009"
+      name: "テスト環境方針"
+      description: "本番環境の縮小構成でテスト環境を構築し、リリース前の検証に使用する"
+      reason: "NFR C.4.1.1 テスト環境 本番縮小構成(Lv2) への対応"
+      source_model: "NFR C.4.1.1"
+      confidence: "medium"
+    - id: "CTR-010"
+      name: "初期データ投入方針"
+      description: "新規構築のため一括移行方式を採用する。データ移行量は ~100GB を想定し、初期データ投入スクリプトを整備する。移行リハーサルは不要"
+      reason: "NFR D.2.1.1 移行方式 一括移行(Lv1)、D.4.1.1 データ移行量 ~100GB(Lv1)、D.5.1.1 移行リハーサル 不要(Lv0) への対応"
+      source_model: "NFR D.2.1.1, NFR D.4.1.1, NFR D.5.1.1"
+      confidence: "medium"
+    - id: "CTR-011"
+      name: "セキュリティリスク分析"
+      description: "設計・開発フェーズでセキュリティリスク分析を実施し、脅威モデリングにより対策を導出する"
+      reason: "NFR E.2.1.1 セキュリティリスク分析(Lv2) への対応"
+      source_model: "NFR E.2.1.1"
+      confidence: "medium"
+    - id: "CTR-012"
+      name: "セキュリティ診断"
+      description: "本番リリース前にセキュリティ診断（脆弱性スキャン・ペネトレーションテスト）を実施する"
+      reason: "NFR E.3.1.1 セキュリティ診断(Lv2) への対応"
+      source_model: "NFR E.3.1.1"
+      confidence: "medium"
+    - id: "CTR-013"
+      name: "マルウェア対策"
+      description: "コンテナイメージのスキャンおよびランタイム保護により、マルウェアの混入・実行を防止する"
+      reason: "NFR E.9.1.1 マルウェア対策(Lv2) への対応"
+      source_model: "NFR E.9.1.1"
+      confidence: "medium"
+    - id: "CTR-014"
+      name: "インシデント対応計画"
+      description: "セキュリティインシデント発生時の対応手順（検知・封じ込め・復旧・報告）を策定し、定期的に訓練する"
+      reason: "NFR E.11.1.1 インシデント対応計画(Lv2) への対応"
+      source_model: "NFR E.11.1.1"
+      confidence: "medium"
+
+  diagram_mermaid: |
+    graph TD
+      FE_USER[利用者・オーナー向け Frontend] -->|HTTPS| GW[API Gateway / LB]
+      FE_ADMIN[管理者向け Frontend] -->|HTTPS + IP制限| GW
+      GW -->|認証済みリクエスト| API[Backend API]
+      GW --> KVS[(KVS Cache)]
+      API --> RDB[(RDB)]
+      API --> OBJ[(Object Storage)]
+      API --> KVS
+      API -->|非同期| MQ[MQ]
+      MQ -->|通知| FAAS[FaaS Worker]
+      FAAS --> RDB
+      CRON[CronJob Worker] --> RDB
+      CRON -->|連携| EXT[決済機関]
+      API -->|認可問合せ| AuthZ[ReBAC Service]
+      API -->|連携| EXT
+      IdP[IdP] -->|トークン発行| GW
+      IdP[IdP] -->|トークン発行| GW
+
+app_architecture:
+  tier_layers:
+    - tier_id: "tier-frontend-user"
+      layers:
+        - id: "L-frontend-user-view"
+          name: "View / Component 層"
+          responsibility: "UI 描画、ユーザー操作のハンドリング、レスポンシブレイアウト"
+          allowed_dependencies:
+            - "L-frontend-user-state"
+          policies: []
+          rules: []
+        - id: "L-frontend-user-state"
+          name: "State Management 層"
+          responsibility: "アプリケーション状態管理、画面間の状態共有、ビジネスロジック"
+          allowed_dependencies:
+            - "L-frontend-user-api"
+          policies: []
+          rules: []
+        - id: "L-frontend-user-api"
+          name: "API Client 層"
+          responsibility: "Backend API との通信、認証トークン管理、レスポンスキャッシュ"
+          allowed_dependencies: []
+          policies: []
+          rules: []
+      cross_layer_policies:
+        - id: "CLP-001"
+          name: "コンポーネント分割"
+          description: "業務ドメインごとにコンポーネントを分割し、再利用性を高める"
+          reason: "UC 数 30件超のため、コンポーネントの整理が必要"
+          source_model: "BUC: 6業務"
+          confidence: "medium"
+      cross_layer_rules: []
+      diagram_mermaid: |
+        graph TD
+          V[View / Component] --> S[State Management]
+          S --> A[API Client]
+
+    - tier_id: "tier-frontend-admin"
+      layers:
+        - id: "L-frontend-admin-view"
+          name: "View / Component 層"
+          responsibility: "管理画面の UI 描画、分析・集計の可視化"
+          allowed_dependencies:
+            - "L-frontend-admin-state"
+          policies: []
+          rules: []
+        - id: "L-frontend-admin-state"
+          name: "State Management 層"
+          responsibility: "管理画面の状態管理、フィルタ・集計ロジック"
+          allowed_dependencies:
+            - "L-frontend-admin-api"
+          policies: []
+          rules: []
+        - id: "L-frontend-admin-api"
+          name: "API Client 層"
+          responsibility: "Backend API との通信、認証トークン管理"
+          allowed_dependencies: []
+          policies: []
+          rules: []
+      cross_layer_policies: []
+      cross_layer_rules: []
+      diagram_mermaid: |
+        graph TD
+          V[View / Component] --> S[State Management]
+          S --> A[API Client]
+
+    - tier_id: "tier-backend-api"
+      layers:
+        - id: "L-backend-api-presentation"
+          name: "プレゼンテーション層"
+          responsibility: "HTTP リクエスト/レスポンスの変換、入力バリデーション、レスポンスフォーマット"
+          allowed_dependencies:
+            - "L-backend-api-usecase"
+          policies:
+            - id: "LP-001"
+              name: "入力バリデーション"
+              description: "API 境界で全入力をバリデーションする。条件モデル（キャンセルポリシー・精算ルール等10件）に基づくビジネスバリデーションも実施"
+              reason: "外部入力の安全性確保。条件 10件がバリデーションルールの根拠"
+              source_model: "条件: キャンセルポリシー, 精算ルール, 支払精算ポリシー, 会議室利用ポリシー, オーナー登録審査条件, 使用許諾条件, 会議室公開条件, 会議室種別別登録条件, バーチャル会議室利用ポリシー"
+              confidence: "high"
+            - id: "LP-005"
+              name: "アクセスログ出力"
+              description: "HTTP リクエスト/レスポンスのメタデータ（メソッド、パス、ステータスコード、処理時間）を構造化ログで出力する。trace_id を発行し後続レイヤーに伝播する"
+              reason: "NFR C.1.3.1 アプリケーション監視(Lv3) への対応。アクセスパターンの把握と異常検知"
+              source_model: "NFR C.1.3.1, アクター: 利用者, 会議室オーナー（社外）"
+              confidence: "medium"
+          rules: []
+        - id: "L-backend-api-usecase"
+          name: "ユースケース層"
+          responsibility: "ビジネスフロー制御、トランザクション境界の管理、ドメインサービスの協調"
+          allowed_dependencies:
+            - "L-backend-api-domain"
+            - "L-backend-api-gateway"
+          policies:
+            - id: "LP-002"
+              name: "トランザクション整合性"
+              description: "金銭処理（決済・精算）のトランザクション整合性をユースケース層で保証する"
+              reason: "情報「決済情報」「精算情報」「オーナー精算」に金銭取引があるため"
+              source_model: "情報: 決済情報, 精算情報, オーナー精算"
+              confidence: "high"
+            - id: "LP-006"
+              name: "監査ログ出力"
+              description: "状態遷移を伴うビジネスイベント（予約申請、決済実行、精算実行等）を監査ログとして構造化ログで記録する。誰が、何を、どうしたかを含める"
+              reason: "NFR E.7.1.1 監査ログ(Lv2) への対応。8種の状態遷移に対する監査証跡"
+              source_model: "NFR E.7.1.1, 状態: オーナー, 会議室, 予約, 会議室利用, 問合せ, 精算, 鍵, 決済"
+              confidence: "high"
+          rules: []
+        - id: "L-backend-api-domain"
+          name: "ドメイン層"
+          responsibility: "ビジネスルール、エンティティ、値オブジェクト、ドメインイベント、状態遷移の整合性保証"
+          allowed_dependencies: []
+          policies:
+            - id: "LP-003"
+              name: "状態遷移の整合性"
+              description: "8状態モデル（オーナー・会議室・予約・会議室利用・問合せ・精算・鍵・決済）の状態遷移をドメインモデル内で保証する"
+              reason: "状態遷移が8種・遷移パスが30以上あり、ドメイン層での一元管理が必要"
+              source_model: "状態: オーナー, 会議室, 予約, 会議室利用, 問合せ, 精算, 鍵, 決済"
+              confidence: "high"
+          rules:
+            - id: "LR-001"
+              name: "ログ出力禁止"
+              description: "domain 層は直接的なロギングを行わない。状態変化はドメインイベントの発行または例外のスローで上位レイヤーに通知する"
+              reason: "domain 層をロギングライブラリから独立させ、ビジネスロジックの純粋性を維持する"
+              source_model: "なし"
+              confidence: "default"
+        - id: "L-backend-api-gateway"
+          name: "ゲートウェイ層"
+          responsibility: "Driven Side の入出力。データストアアクセス（RDB/KVS/Object Storage）、外部システム連携（決済機関アダプタ）、ReBAC サービス連携、MQ 発行"
+          allowed_dependencies:
+            - "L-backend-api-domain"
+          policies:
+            - id: "LP-004"
+              name: "外部連携の冪等性"
+              description: "決済機関への外部呼出しの冪等性を gateway 層で保証する"
+              reason: "外部システム「決済機関」との連携で二重処理を防止する必要があるため"
+              source_model: "外部システム: 決済機関, BUC: オーナー精算フロー（精算実行）"
+              confidence: "high"
+            - id: "LP-007"
+              name: "依存関係ログ出力"
+              description: "外部 DB/API 呼び出しの開始・終了、処理時間、成否ステータスを構造化ログで出力する。DEBUG レベルで SQL クエリやリクエスト/レスポンス本文を出力可能にする"
+              reason: "NFR C.1.3.1 アプリケーション監視(Lv3) への対応。外部システム連携のボトルネック特定"
+              source_model: "NFR C.1.3.1, 外部システム: 決済機関"
+              confidence: "medium"
+          rules: []
+      cross_layer_policies:
+        - id: "CLP-002"
+          name: "IF なし（直接依存）"
+          description: "レイヤー間は直接依存とし、開発スピードを優先する。外部サービス API 変更や DB 製品乗り換え時に凹型（IF 導入）で依存を内側に向ける"
+          reason: "新規構築のため IF による疎結合化は過剰。前提条件（外部サービスのそうそう乗り換えない等）が崩れた場合に凹型へ移行"
+          source_model: "なし"
+          confidence: "default"
+        - id: "CLP-003"
+          name: "ロギング方針"
+          description: "レイヤーごとに責務に応じたログカテゴリを出力する。presentation=アクセスログ、usecase=監査ログ、domain=ログ出力禁止（イベント/例外で通知）、gateway=依存関係ログ。全ログは JSON 構造化形式で trace_id を含める"
+          reason: "NFR C.1.3.1 アプリケーション監視(Lv3)、NFR E.7.1.1 監査ログ(Lv2)。レイヤーの責務に応じたログ分離で可観測性を確保"
+          source_model: "NFR C.1.3.1, NFR E.7.1.1"
+          confidence: "medium"
+      cross_layer_rules:
+        - id: "CLR-001"
+          name: "エラーハンドリング方針"
+          description: "domain の例外は usecase でキャッチし、presentation で HTTP ステータスに変換する"
+          reason: "レイヤー責務の分離"
+          source_model: "なし"
+          confidence: "default"
+      diagram_mermaid: |
+        graph TD
+          P[presentation] --> U[usecase]
+          U --> D[domain]
+          U --> G[gateway]
+          G --> D
+
+    - tier_id: "tier-cronjob-worker"
+      layers:
+        - id: "L-cronjob-worker-handler"
+          name: "ハンドラー層"
+          responsibility: "CronJob エントリポイント、ジョブパラメータの解析"
+          allowed_dependencies:
+            - "L-cronjob-worker-usecase"
+          policies: []
+          rules: []
+        - id: "L-cronjob-worker-usecase"
+          name: "ユースケース層"
+          responsibility: "バッチ処理のビジネスフロー制御、トランザクション境界。精算額計算・精算実行・バーチャル会議室利用開始/終了"
+          allowed_dependencies:
+            - "L-cronjob-worker-domain"
+            - "L-cronjob-worker-gateway"
+          policies: []
+          rules: []
+        - id: "L-cronjob-worker-domain"
+          name: "ドメイン層"
+          responsibility: "状態遷移（会議室利用・精算・決済）、精算ルール等のビジネスルール。Backend API と共有"
+          allowed_dependencies: []
+          policies: []
+          rules: []
+        - id: "L-cronjob-worker-gateway"
+          name: "ゲートウェイ層"
+          responsibility: "Driven Side の入出力。データストアアクセス、決済機関連携。Backend API と共有"
+          allowed_dependencies:
+            - "L-cronjob-worker-domain"
+          policies: []
+          rules: []
+      cross_layer_policies:
+        - id: "CLP-004"
+          name: "IF なし（直接依存）"
+          description: "レイヤー間は直接依存とし、開発スピードを優先する。外部サービス API 変更や DB 製品乗り換え時に凹型（IF 導入）で依存を内側に向ける"
+          reason: "新規構築のため IF による疎結合化は過剰。前提条件（外部サービスのそうそう乗り換えない等）が崩れた場合に凹型へ移行"
+          source_model: "なし"
+          confidence: "default"
+        - id: "CLP-005"
+          name: "ロギング方針"
+          description: "レイヤーごとに責務に応じたログカテゴリを出力する。handler=診断ログ（ジョブ起動/終了）、usecase=監査ログ+診断ログ（処理件数サマリー）、domain=ログ出力禁止、gateway=依存関係ログ+診断ログ（エラーアイテム、ハートビート）"
+          reason: "NFR C.1.3.1 アプリケーション監視(Lv3)。バッチ処理の可観測性確保"
+          source_model: "NFR C.1.3.1"
+          confidence: "medium"
+      cross_layer_rules: []
+      diagram_mermaid: |
+        graph TD
+          H[handler] --> U[usecase]
+          U --> D[domain]
+          U --> G[gateway]
+          G --> D
+
+    - tier_id: "tier-faas-worker"
+      layers:
+        - id: "L-faas-worker-handler"
+          name: "ハンドラー層"
+          responsibility: "MQ メッセージ受信、メッセージデシリアライズ、FaaS エントリポイント"
+          allowed_dependencies:
+            - "L-faas-worker-usecase"
+          policies: []
+          rules: []
+        - id: "L-faas-worker-usecase"
+          name: "ユースケース層"
+          responsibility: "通知処理のビジネスフロー制御。会議URL通知・予約確認通知等"
+          allowed_dependencies:
+            - "L-faas-worker-gateway"
+          policies: []
+          rules: []
+        - id: "L-faas-worker-gateway"
+          name: "ゲートウェイ層"
+          responsibility: "Driven Side の入出力。データストア読み取り、通知送信（メール/プッシュ）"
+          allowed_dependencies: []
+          policies: []
+          rules: []
+      cross_layer_policies:
+        - id: "CLP-006"
+          name: "ロギング方針"
+          description: "handler=診断ログ（メッセージ受信/処理完了）、usecase=監査ログ（通知送信記録）、gateway=依存関係ログ（外部通知サービス呼び出し）。全ログは JSON 構造化形式で trace_id を含める"
+          reason: "NFR C.1.3.1 アプリケーション監視(Lv3)。FaaS ワーカーの可観測性確保"
+          source_model: "NFR C.1.3.1"
+          confidence: "medium"
+      cross_layer_rules: []
+      diagram_mermaid: |
+        graph TD
+          H[handler] --> U[usecase]
+          U --> G[gateway]
+
+data_architecture:
+  entities:
+    - id: "E-001"
+      name: "オーナー情報"
+      source_info: "情報: オーナー情報"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "owner_id"
+          type: "string"
+          description: "オーナーID"
+          nullable: false
+          primary_key: true
+        - name: "name"
+          type: "string"
+          description: "氏名"
+          nullable: false
+          primary_key: false
+        - name: "contact"
+          type: "string"
+          description: "連絡先"
+          nullable: false
+          primary_key: false
+        - name: "email"
+          type: "string"
+          description: "メールアドレス"
+          nullable: false
+          primary_key: false
+        - name: "registered_at"
+          type: "datetime"
+          description: "登録日"
+          nullable: false
+          primary_key: false
+        - name: "review_status"
+          type: "string"
+          description: "審査状態（状態モデル「オーナー」: 審査待ち/登録済み/却下/退会）"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-002"
+          type: "1:N"
+          description: "オーナーが複数の会議室を所有"
+        - target_entity: "E-017"
+          type: "1:N"
+          description: "オーナーが複数のオーナー精算を受領"
+        - target_entity: "E-014"
+          type: "1:N"
+          description: "オーナーの売上実績"
+        - target_entity: "E-011"
+          type: "1:N"
+          description: "オーナーが利用者を評価"
+
+    - id: "E-002"
+      name: "会議室情報"
+      source_info: "情報: 会議室情報"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: true
+        - name: "room_name"
+          type: "string"
+          description: "会議室名"
+          nullable: false
+          primary_key: false
+        - name: "room_type"
+          type: "string"
+          description: "会議室種別（物理/バーチャル）"
+          nullable: false
+          primary_key: false
+        - name: "location"
+          type: "string"
+          description: "所在地"
+          nullable: true
+          primary_key: false
+        - name: "area"
+          type: "decimal"
+          description: "広さ"
+          nullable: true
+          primary_key: false
+        - name: "capacity"
+          type: "integer"
+          description: "収容人数"
+          nullable: true
+          primary_key: false
+        - name: "price"
+          type: "decimal"
+          description: "価格"
+          nullable: false
+          primary_key: false
+        - name: "facilities"
+          type: "text"
+          description: "設備・機能"
+          nullable: true
+          primary_key: false
+        - name: "image_url"
+          type: "string"
+          description: "画像（Object Storage URI）"
+          nullable: true
+          primary_key: false
+        - name: "publish_status"
+          type: "string"
+          description: "公開状態（状態モデル「会議室」: 非公開/公開可能/公開中）"
+          nullable: false
+          primary_key: false
+        - name: "meeting_tool_type"
+          type: "string"
+          description: "会議ツール種別（バーチャル会議室用）"
+          nullable: true
+          primary_key: false
+        - name: "max_connections"
+          type: "integer"
+          description: "同時接続数（バーチャル会議室用）"
+          nullable: true
+          primary_key: false
+        - name: "recording_enabled"
+          type: "boolean"
+          description: "録画可否（バーチャル会議室用）"
+          nullable: true
+          primary_key: false
+      relationships:
+        - target_entity: "E-001"
+          type: "N:1"
+          description: "会議室はオーナーに属する"
+        - target_entity: "E-003"
+          type: "1:N"
+          description: "会議室に複数の運用ルール"
+        - target_entity: "E-004"
+          type: "1:N"
+          description: "会議室に複数のキャンセルポリシー"
+        - target_entity: "E-005"
+          type: "1:N"
+          description: "会議室に複数の鍵"
+        - target_entity: "E-006"
+          type: "1:N"
+          description: "会議室に複数の予約"
+        - target_entity: "E-010"
+          type: "1:N"
+          description: "会議室に複数の評価"
+        - target_entity: "E-018"
+          type: "1:N"
+          description: "会議室に複数の会議URL"
+
+    - id: "E-003"
+      name: "運用ルール"
+      source_info: "情報: 運用ルール"
+      model_type: "resource_mutable"
+      attributes:
+        - name: "rule_id"
+          type: "string"
+          description: "ルールID"
+          nullable: false
+          primary_key: true
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "available_hours"
+          type: "string"
+          description: "利用可能時間帯"
+          nullable: false
+          primary_key: false
+        - name: "min_usage_time"
+          type: "integer"
+          description: "最低利用時間"
+          nullable: false
+          primary_key: false
+        - name: "max_usage_time"
+          type: "integer"
+          description: "最大利用時間"
+          nullable: false
+          primary_key: false
+        - name: "rental_available"
+          type: "boolean"
+          description: "貸出可否"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "運用ルールは会議室に属する"
+        - target_entity: "E-004"
+          type: "1:N"
+          description: "運用ルールにキャンセルポリシーが紐づく"
+
+    - id: "E-004"
+      name: "キャンセルポリシー"
+      source_info: "情報: キャンセルポリシー"
+      model_type: "resource_mutable"
+      attributes:
+        - name: "policy_id"
+          type: "string"
+          description: "ポリシーID"
+          nullable: false
+          primary_key: true
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "cancel_deadline"
+          type: "datetime"
+          description: "キャンセル期限"
+          nullable: false
+          primary_key: false
+        - name: "cancel_rate"
+          type: "decimal"
+          description: "キャンセル料率"
+          nullable: false
+          primary_key: false
+        - name: "refund_rule"
+          type: "text"
+          description: "返金ルール"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-003"
+          type: "N:1"
+          description: "キャンセルポリシーは運用ルールに紐づく"
+
+    - id: "E-005"
+      name: "鍵"
+      source_info: "情報: 鍵"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "key_id"
+          type: "string"
+          description: "鍵ID"
+          nullable: false
+          primary_key: true
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "rental_status"
+          type: "string"
+          description: "貸出状態（状態モデル「鍵」: 保管中/貸出中）"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "鍵は会議室に属する"
+
+    - id: "E-006"
+      name: "予約情報"
+      source_info: "情報: 予約情報"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "reservation_id"
+          type: "string"
+          description: "予約ID"
+          nullable: false
+          primary_key: true
+        - name: "user_id"
+          type: "string"
+          description: "利用者ID"
+          nullable: false
+          primary_key: false
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "room_type"
+          type: "string"
+          description: "会議室種別"
+          nullable: false
+          primary_key: false
+        - name: "reserved_at"
+          type: "datetime"
+          description: "予約日時"
+          nullable: false
+          primary_key: false
+        - name: "usage_start_at"
+          type: "datetime"
+          description: "利用開始日時"
+          nullable: false
+          primary_key: false
+        - name: "usage_end_at"
+          type: "datetime"
+          description: "利用終了日時"
+          nullable: false
+          primary_key: false
+        - name: "reservation_status"
+          type: "string"
+          description: "予約状態（状態モデル「予約」: 申請/確定/変更/取消）"
+          nullable: false
+          primary_key: false
+        - name: "payment_method"
+          type: "string"
+          description: "決済方法"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-007"
+          type: "N:1"
+          description: "予約は利用者が行う"
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "予約は会議室に対して行う"
+        - target_entity: "E-008"
+          type: "1:1"
+          description: "予約に決済情報が紐づく"
+        - target_entity: "E-009"
+          type: "1:N"
+          description: "予約から会議室利用が発生"
+
+    - id: "E-007"
+      name: "利用者情報"
+      source_info: "情報: 利用者情報"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "user_id"
+          type: "string"
+          description: "利用者ID"
+          nullable: false
+          primary_key: true
+        - name: "name"
+          type: "string"
+          description: "氏名"
+          nullable: false
+          primary_key: false
+        - name: "contact"
+          type: "string"
+          description: "連絡先"
+          nullable: false
+          primary_key: false
+        - name: "email"
+          type: "string"
+          description: "メールアドレス"
+          nullable: false
+          primary_key: false
+        - name: "registered_at"
+          type: "datetime"
+          description: "登録日"
+          nullable: false
+          primary_key: false
+        - name: "version"
+          type: "integer"
+          description: "楽観ロック用バージョン"
+          nullable: false
+          primary_key: false
+        - name: "updated_at"
+          type: "datetime"
+          description: "最終更新日時"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-006"
+          type: "1:N"
+          description: "利用者が複数の予約を行う"
+        - target_entity: "E-010"
+          type: "1:N"
+          description: "利用者が会議室を評価"
+        - target_entity: "E-011"
+          type: "1:N"
+          description: "利用者がオーナーから評価される"
+        - target_entity: "E-012"
+          type: "1:N"
+          description: "利用者が問合せを送信"
+        - target_entity: "E-013"
+          type: "1:N"
+          description: "利用者の利用履歴"
+
+    - id: "E-008"
+      name: "決済情報"
+      source_info: "情報: 決済情報"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "payment_id"
+          type: "string"
+          description: "決済ID"
+          nullable: false
+          primary_key: true
+        - name: "reservation_id"
+          type: "string"
+          description: "予約ID"
+          nullable: false
+          primary_key: false
+        - name: "payment_method"
+          type: "string"
+          description: "決済方法（クレジットカード/電子マネー）"
+          nullable: false
+          primary_key: false
+        - name: "payment_status"
+          type: "string"
+          description: "決済状態（状態モデル「決済」: 未登録/決済手段登録済み/引き落とし済み）"
+          nullable: false
+          primary_key: false
+        - name: "payment_amount"
+          type: "decimal"
+          description: "決済金額"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-006"
+          type: "N:1"
+          description: "決済は予約に紐づく"
+
+    - id: "E-009"
+      name: "会議室利用"
+      source_info: "情報: 会議室利用"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "usage_id"
+          type: "string"
+          description: "利用ID"
+          nullable: false
+          primary_key: true
+        - name: "reservation_id"
+          type: "string"
+          description: "予約ID"
+          nullable: false
+          primary_key: false
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "user_id"
+          type: "string"
+          description: "利用者ID"
+          nullable: false
+          primary_key: false
+        - name: "usage_start_at"
+          type: "datetime"
+          description: "利用開始日時"
+          nullable: false
+          primary_key: false
+        - name: "usage_end_at"
+          type: "datetime"
+          description: "利用終了日時"
+          nullable: true
+          primary_key: false
+        - name: "usage_status"
+          type: "string"
+          description: "利用状態（状態モデル「会議室利用」: 利用開始/利用中/利用終了）"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-006"
+          type: "N:1"
+          description: "会議室利用は予約から発生"
+        - target_entity: "E-013"
+          type: "1:N"
+          description: "会議室利用から利用履歴を記録"
+
+    - id: "E-010"
+      name: "会議室評価"
+      source_info: "情報: 会議室評価"
+      model_type: "event"
+      attributes:
+        - name: "rating_id"
+          type: "string"
+          description: "評価ID"
+          nullable: false
+          primary_key: true
+        - name: "user_id"
+          type: "string"
+          description: "利用者ID"
+          nullable: false
+          primary_key: false
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "owner_id"
+          type: "string"
+          description: "オーナーID"
+          nullable: false
+          primary_key: false
+        - name: "room_type"
+          type: "string"
+          description: "会議室種別"
+          nullable: false
+          primary_key: false
+        - name: "rating_score"
+          type: "decimal"
+          description: "評価スコア"
+          nullable: false
+          primary_key: false
+        - name: "comment"
+          type: "text"
+          description: "コメント"
+          nullable: true
+          primary_key: false
+        - name: "rated_at"
+          type: "datetime"
+          description: "評価日時"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-007"
+          type: "N:1"
+          description: "利用者が評価を登録"
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "会議室に対する評価"
+
+    - id: "E-011"
+      name: "利用者評価"
+      source_info: "情報: 利用者評価"
+      model_type: "event"
+      attributes:
+        - name: "rating_id"
+          type: "string"
+          description: "評価ID"
+          nullable: false
+          primary_key: true
+        - name: "owner_id"
+          type: "string"
+          description: "オーナーID"
+          nullable: false
+          primary_key: false
+        - name: "user_id"
+          type: "string"
+          description: "利用者ID"
+          nullable: false
+          primary_key: false
+        - name: "rating_score"
+          type: "decimal"
+          description: "評価スコア"
+          nullable: false
+          primary_key: false
+        - name: "comment"
+          type: "text"
+          description: "コメント"
+          nullable: true
+          primary_key: false
+        - name: "rated_at"
+          type: "datetime"
+          description: "評価日時"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-001"
+          type: "N:1"
+          description: "オーナーが利用者を評価"
+        - target_entity: "E-007"
+          type: "N:1"
+          description: "評価対象の利用者"
+
+    - id: "E-012"
+      name: "問合せ"
+      source_info: "情報: 問合せ"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "inquiry_id"
+          type: "string"
+          description: "問合せID"
+          nullable: false
+          primary_key: true
+        - name: "user_id"
+          type: "string"
+          description: "利用者ID"
+          nullable: false
+          primary_key: false
+        - name: "inquiry_target_type"
+          type: "string"
+          description: "問合せ先区分（オーナー宛/サービス運営宛）"
+          nullable: false
+          primary_key: false
+        - name: "inquiry_target_id"
+          type: "string"
+          description: "問合せ先ID"
+          nullable: false
+          primary_key: false
+        - name: "inquiry_content"
+          type: "text"
+          description: "問合せ内容"
+          nullable: false
+          primary_key: false
+        - name: "response_content"
+          type: "text"
+          description: "回答内容"
+          nullable: true
+          primary_key: false
+        - name: "inquiry_status"
+          type: "string"
+          description: "問合せ状態（状態モデル「問合せ」: 未対応/回答済み/対応済み）"
+          nullable: false
+          primary_key: false
+        - name: "inquired_at"
+          type: "datetime"
+          description: "問合せ日時"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-007"
+          type: "N:1"
+          description: "利用者が問合せを送信"
+
+    - id: "E-013"
+      name: "利用履歴"
+      source_info: "情報: 利用履歴"
+      model_type: "event"
+      attributes:
+        - name: "history_id"
+          type: "string"
+          description: "履歴ID"
+          nullable: false
+          primary_key: true
+        - name: "user_id"
+          type: "string"
+          description: "利用者ID"
+          nullable: false
+          primary_key: false
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "used_at"
+          type: "datetime"
+          description: "利用日時"
+          nullable: false
+          primary_key: false
+        - name: "usage_duration"
+          type: "integer"
+          description: "利用時間"
+          nullable: false
+          primary_key: false
+        - name: "usage_fee"
+          type: "decimal"
+          description: "利用料金"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-007"
+          type: "N:1"
+          description: "利用者の利用履歴"
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "会議室の利用履歴"
+        - target_entity: "E-009"
+          type: "N:1"
+          description: "会議室利用から記録"
+
+    - id: "E-014"
+      name: "売上実績"
+      source_info: "情報: 売上実績"
+      model_type: "resource_mutable"
+      attributes:
+        - name: "record_id"
+          type: "string"
+          description: "実績ID"
+          nullable: false
+          primary_key: true
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "owner_id"
+          type: "string"
+          description: "オーナーID"
+          nullable: false
+          primary_key: false
+        - name: "period"
+          type: "string"
+          description: "集計期間"
+          nullable: false
+          primary_key: false
+        - name: "usage_count"
+          type: "integer"
+          description: "利用回数"
+          nullable: false
+          primary_key: false
+        - name: "sales_amount"
+          type: "decimal"
+          description: "売上金額"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "会議室ごとの売上実績"
+        - target_entity: "E-001"
+          type: "N:1"
+          description: "オーナーの売上実績"
+
+    - id: "E-015"
+      name: "手数料売上"
+      source_info: "情報: 手数料売上"
+      model_type: "event"
+      attributes:
+        - name: "fee_id"
+          type: "string"
+          description: "手数料ID"
+          nullable: false
+          primary_key: true
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "rental_id"
+          type: "string"
+          description: "貸出ID"
+          nullable: false
+          primary_key: false
+        - name: "fee_rate"
+          type: "decimal"
+          description: "手数料率"
+          nullable: false
+          primary_key: false
+        - name: "fee_amount"
+          type: "decimal"
+          description: "手数料金額"
+          nullable: false
+          primary_key: false
+        - name: "recorded_at"
+          type: "date"
+          description: "計上日"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "会議室ごとの手数料"
+        - target_entity: "E-013"
+          type: "N:1"
+          description: "利用履歴に基づく手数料計算"
+
+    - id: "E-016"
+      name: "精算情報"
+      source_info: "情報: 精算情報"
+      model_type: "event_snapshot"
+      attributes:
+        - name: "settlement_id"
+          type: "string"
+          description: "精算ID"
+          nullable: false
+          primary_key: true
+        - name: "owner_id"
+          type: "string"
+          description: "オーナーID"
+          nullable: false
+          primary_key: false
+        - name: "target_month"
+          type: "string"
+          description: "精算対象月"
+          nullable: false
+          primary_key: false
+        - name: "total_usage_fee"
+          type: "decimal"
+          description: "利用料合計"
+          nullable: false
+          primary_key: false
+        - name: "total_commission"
+          type: "decimal"
+          description: "手数料合計"
+          nullable: false
+          primary_key: false
+        - name: "settlement_amount"
+          type: "decimal"
+          description: "精算額"
+          nullable: false
+          primary_key: false
+        - name: "settlement_status"
+          type: "string"
+          description: "精算状態（状態モデル「精算」: 未精算/精算計算済み/支払済み）"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-001"
+          type: "N:1"
+          description: "オーナーへの精算"
+        - target_entity: "E-017"
+          type: "1:N"
+          description: "精算実行の記録"
+
+    - id: "E-017"
+      name: "オーナー精算"
+      source_info: "情報: オーナー精算"
+      model_type: "event"
+      attributes:
+        - name: "execution_id"
+          type: "string"
+          description: "精算実行ID"
+          nullable: false
+          primary_key: true
+        - name: "settlement_id"
+          type: "string"
+          description: "精算ID"
+          nullable: false
+          primary_key: false
+        - name: "payment_gateway_ref"
+          type: "string"
+          description: "決済機関連携ID"
+          nullable: false
+          primary_key: false
+        - name: "payment_amount"
+          type: "decimal"
+          description: "支払金額"
+          nullable: false
+          primary_key: false
+        - name: "payment_status"
+          type: "string"
+          description: "支払状態"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-016"
+          type: "N:1"
+          description: "精算情報に基づく支払実行"
+        - target_entity: "E-001"
+          type: "N:1"
+          description: "オーナーへの支払"
+
+    - id: "E-018"
+      name: "会議URL"
+      source_info: "情報: 会議URL"
+      model_type: "resource_mutable"
+      attributes:
+        - name: "meeting_url_id"
+          type: "string"
+          description: "会議URL_ID"
+          nullable: false
+          primary_key: true
+        - name: "room_id"
+          type: "string"
+          description: "会議室ID"
+          nullable: false
+          primary_key: false
+        - name: "meeting_tool_type"
+          type: "string"
+          description: "会議ツール種別"
+          nullable: false
+          primary_key: false
+        - name: "meeting_url"
+          type: "string"
+          description: "会議URL"
+          nullable: false
+          primary_key: false
+        - name: "expires_at"
+          type: "datetime"
+          description: "有効期限"
+          nullable: false
+          primary_key: false
+      relationships:
+        - target_entity: "E-002"
+          type: "N:1"
+          description: "会議URLは会議室に紐づく"
+        - target_entity: "E-006"
+          type: "N:1"
+          description: "会議URLは予約時に利用者へ通知"
+
+    - id: "E-019"
+      name: "セッション情報"
+      source_info: "アーキテクチャ設計: API Gateway セッション管理"
+      model_type: "resource_mutable"
+      attributes:
+        - name: "session_id"
+          type: "string"
+          description: "セッションID"
+          nullable: false
+          primary_key: true
+        - name: "user_id"
+          type: "string"
+          description: "利用者/オーナーID"
+          nullable: false
+          primary_key: false
+        - name: "access_token"
+          type: "string"
+          description: "アクセストークン"
+          nullable: false
+          primary_key: false
+        - name: "refresh_token"
+          type: "string"
+          description: "リフレッシュトークン"
+          nullable: false
+          primary_key: false
+        - name: "role"
+          type: "string"
+          description: "ロール（利用者/オーナー/運営）"
+          nullable: false
+          primary_key: false
+        - name: "expires_at"
+          type: "datetime"
+          description: "有効期限"
+          nullable: false
+          primary_key: false
+      relationships: []
+
+  storage_mapping:
+    - entity_id: "E-001"
+      storage_type: "rdb"
+      reason: "状態モデル「オーナー」を持ち、個人情報を含むためトランザクション管理が必要"
+      confidence: "high"
+    - entity_id: "E-002"
+      storage_type: "rdb"
+      reason: "状態モデル「会議室」を持ち、予約・評価等の複数エンティティとの外部キー関係がある"
+      confidence: "high"
+    - entity_id: "E-003"
+      storage_type: "rdb"
+      reason: "会議室情報との外部キー関係。会議室公開条件の判定に使用"
+      confidence: "high"
+    - entity_id: "E-004"
+      storage_type: "rdb"
+      reason: "金銭関連（キャンセル料率・返金ルール）。予約取消時の精算処理に使用"
+      confidence: "high"
+    - entity_id: "E-005"
+      storage_type: "rdb"
+      reason: "状態モデル「鍵」を持つ。会議室利用の開始・終了を制御"
+      confidence: "high"
+    - entity_id: "E-006"
+      storage_type: "rdb"
+      reason: "状態モデル「予約」を持ち、金銭取引（決済）と直結"
+      confidence: "high"
+    - entity_id: "E-007"
+      storage_type: "rdb"
+      reason: "個人情報を含み、予約・評価・問合せ等の複数エンティティとの外部キー関係がある"
+      confidence: "high"
+    - entity_id: "E-008"
+      storage_type: "rdb"
+      reason: "状態モデル「決済」を持ち、金銭取引のトランザクション整合性が必要"
+      confidence: "high"
+    - entity_id: "E-009"
+      storage_type: "rdb"
+      reason: "状態モデル「会議室利用」を持つ"
+      confidence: "high"
+    - entity_id: "E-010"
+      storage_type: "rdb"
+      reason: "複数エンティティ（利用者・会議室・オーナー）との外部キー関係"
+      confidence: "medium"
+    - entity_id: "E-011"
+      storage_type: "rdb"
+      reason: "使用許諾条件の判定に使用。オーナー・利用者との外部キー関係"
+      confidence: "medium"
+    - entity_id: "E-012"
+      storage_type: "rdb"
+      reason: "状態モデル「問合せ」を持つ"
+      confidence: "high"
+    - entity_id: "E-013"
+      storage_type: "rdb"
+      reason: "精算計算の基礎データ。金銭関連（利用料金）"
+      confidence: "high"
+    - entity_id: "E-014"
+      storage_type: "rdb"
+      reason: "集計データ。会議室・オーナーとの外部キー関係"
+      confidence: "medium"
+    - entity_id: "E-015"
+      storage_type: "rdb"
+      reason: "金銭取引（手数料）。精算の基礎データ"
+      confidence: "high"
+    - entity_id: "E-016"
+      storage_type: "rdb"
+      reason: "状態モデル「精算」を持ち、金銭取引のトランザクション整合性が必要"
+      confidence: "high"
+    - entity_id: "E-017"
+      storage_type: "rdb"
+      reason: "決済機関連携。金銭取引のトランザクション整合性が必要"
+      confidence: "high"
+    - entity_id: "E-018"
+      storage_type: "rdb"
+      reason: "会議室・予約との外部キー関係"
+      confidence: "medium"
+    - entity_id: "E-019"
+      storage_type: "cache"
+      reason: "API Gateway でのセッション管理・トークン検証。低レイテンシが求められるため KVS に保管"
+      confidence: "user"
+    - entity_id: "E-002"
+      storage_type: "cache"
+      reason: "会議室検索結果のキャッシュ。NFR B.2.1.1 レスポンスタイム 5秒以内(Lv3) 対応"
+      confidence: "medium"
+    - entity_id: "E-003"
+      storage_type: "cache"
+      reason: "運用ルール（利用可能時間帯等）のキャッシュ。会議室検索・予約時に頻繁に参照"
+      confidence: "medium"
+
+  diagram_mermaid: |
+    erDiagram
+      OWNER_INFO ||--o{ ROOM_INFO : owns
+      OWNER_INFO ||--o{ OWNER_SETTLEMENT : receives
+      OWNER_INFO ||--o{ SALES_RECORD : has
+      OWNER_INFO ||--o{ USER_RATING : rates
+      OWNER_INFO ||--o{ SETTLEMENT : settles
+      ROOM_INFO ||--o{ OPERATION_RULE : has
+      ROOM_INFO ||--o{ CANCEL_POLICY : has
+      ROOM_INFO ||--o{ KEY : has
+      ROOM_INFO ||--o{ RESERVATION : reserved
+      ROOM_INFO ||--o{ ROOM_RATING : rated
+      ROOM_INFO ||--o{ USAGE_HISTORY : tracked
+      ROOM_INFO ||--o{ FEE_REVENUE : generates
+      ROOM_INFO ||--o{ SALES_RECORD : aggregated
+      ROOM_INFO ||--o{ MEETING_URL : has
+      OPERATION_RULE ||--o{ CANCEL_POLICY : includes
+      RESERVATION ||--|| PAYMENT : pays
+      RESERVATION ||--o{ ROOM_USAGE : triggers
+      USER_INFO ||--o{ RESERVATION : makes
+      USER_INFO ||--o{ ROOM_RATING : writes
+      USER_INFO ||--o{ USER_RATING : received
+      USER_INFO ||--o{ INQUIRY : sends
+      USER_INFO ||--o{ USAGE_HISTORY : has
+      ROOM_USAGE ||--o{ USAGE_HISTORY : records
+      SETTLEMENT ||--o{ OWNER_SETTLEMENT : executes
+      USAGE_HISTORY ||--o{ FEE_REVENUE : calculates
+      MEETING_URL }o--|| RESERVATION : notifies
+      SESSION_INFO {
+        string session_id PK
+        string user_id
+        string role
+      }

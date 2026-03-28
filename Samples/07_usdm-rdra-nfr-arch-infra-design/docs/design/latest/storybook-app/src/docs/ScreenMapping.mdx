@@ -1,0 +1,64 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Overview/Screen Mapping" />
+
+# RDRA Screen Mapping
+
+RDRA で定義された **43画面** をコンポーネントとルートにマッピング。
+
+## 利用者ポータル (15画面)
+
+<table>
+  <thead>
+    <tr><th>画面名</th><th>ルート</th><th>主要コンポーネント</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>会議室検索画面</td><td><code>/rooms</code></td><td>SearchFilter, RoomCard</td></tr>
+    <tr><td>会議室詳細画面</td><td><code>/rooms/:id</code></td><td>StarRating, BookingCalendar, PriceDisplay</td></tr>
+    <tr><td>予約申請画面</td><td><code>/rooms/:id/book</code></td><td>BookingCalendar, PriceDisplay</td></tr>
+    <tr><td>バーチャル会議室予約画面</td><td><code>/rooms/:id/book</code></td><td>BookingCalendar (virtual)</td></tr>
+    <tr><td>決済方法設定画面</td><td><code>/settings/payment</code></td><td>Input, Button</td></tr>
+    <tr><td>予約変更画面</td><td><code>/reservations/:id/edit</code></td><td>BookingCalendar</td></tr>
+    <tr><td>予約取消画面</td><td><code>/reservations/:id/cancel</code></td><td>PriceDisplay, Button</td></tr>
+    <tr><td>会議室評価登録画面</td><td><code>/reservations/:id/review</code></td><td>StarRating (interactive)</td></tr>
+    <tr><td>オーナー評価登録画面</td><td><code>/reservations/:id/review-owner</code></td><td>StarRating (interactive)</td></tr>
+    <tr><td>問合せ送信画面</td><td><code>/inquiries/new</code></td><td>InquiryThread</td></tr>
+    <tr><td>オーナー問合せ画面</td><td><code>/rooms/:id/inquiry</code></td><td>InquiryThread</td></tr>
+    <tr><td>サービス問合せ画面</td><td><code>/support/inquiry</code></td><td>InquiryThread</td></tr>
+    <tr><td>会議URL通知画面</td><td><code>/reservations/:id/meeting-url</code></td><td>Badge (virtual)</td></tr>
+  </tbody>
+</table>
+
+## オーナーポータル (20画面)
+
+<table>
+  <thead>
+    <tr><th>画面名</th><th>ルート</th><th>主要コンポーネント</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>オーナー登録申請画面</td><td><code>/owner/register</code></td><td>Input, Button</td></tr>
+    <tr><td>会議室登録画面</td><td><code>/owner/rooms/new</code></td><td>Input, Card</td></tr>
+    <tr><td>バーチャル会議室登録画面</td><td><code>/owner/rooms/new?type=virtual</code></td><td>Input, Badge (virtual)</td></tr>
+    <tr><td>予約審査画面</td><td><code>/owner/reservations/:id/review</code></td><td>ReservationStatusBadge, StarRating</td></tr>
+    <tr><td>鍵貸出記録画面</td><td><code>/owner/rentals/:id/key-out</code></td><td>KeyHandoverTracker</td></tr>
+    <tr><td>鍵返却記録画面</td><td><code>/owner/rentals/:id/key-return</code></td><td>KeyHandoverTracker</td></tr>
+    <tr><td>精算結果確認画面</td><td><code>/owner/settlements</code></td><td>SettlementSummaryCard</td></tr>
+    <tr><td>売上実績確認画面</td><td><code>/owner/analytics/revenue</code></td><td>Card (stat)</td></tr>
+  </tbody>
+</table>
+
+## 管理者ポータル (8画面)
+
+<table>
+  <thead>
+    <tr><th>画面名</th><th>ルート</th><th>主要コンポーネント</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>オーナー審査画面</td><td><code>/admin/owners/:id/review</code></td><td>OwnerVerificationBadge</td></tr>
+    <tr><td>オーナー審査管理画面</td><td><code>/admin/owners/reviews</code></td><td>OwnerVerificationBadge, Table</td></tr>
+    <tr><td>手数料売上分析画面</td><td><code>/admin/analytics/commission</code></td><td>Card (stat)</td></tr>
+    <tr><td>利用履歴管理画面</td><td><code>/admin/usage/history</code></td><td>Table</td></tr>
+    <tr><td>精算額計算画面</td><td><code>/admin/settlements/calculate</code></td><td>SettlementSummaryCard</td></tr>
+    <tr><td>精算実行画面</td><td><code>/admin/settlements/execute</code></td><td>Button, Badge</td></tr>
+  </tbody>
+</table>

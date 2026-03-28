@@ -1,0 +1,117 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Overview/Design Tokens" />
+
+# Design Tokens
+
+3層構造のトークンアーキテクチャ。
+
+```
+Primitive (生の値)  →  Semantic (意味)  →  Component (固有)
+```
+
+## Color Palette
+
+### Portal Primary Colors
+
+<table>
+  <thead>
+    <tr><th>Portal</th><th>Token</th><th>Value</th><th>Preview</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>User</td><td><code>--primary</code> (default)</td><td><code>#2563EB</code></td><td><span style={{display:'inline-block',width:16,height:16,borderRadius:4,background:'#2563EB'}} /></td></tr>
+    <tr><td>Owner</td><td><code>--primary</code> (owner)</td><td><code>#0D9488</code></td><td><span style={{display:'inline-block',width:16,height:16,borderRadius:4,background:'#0D9488'}} /></td></tr>
+    <tr><td>Admin</td><td><code>--primary</code> (admin)</td><td><code>#334155</code></td><td><span style={{display:'inline-block',width:16,height:16,borderRadius:4,background:'#334155'}} /></td></tr>
+  </tbody>
+</table>
+
+### Semantic Colors
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Light</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--background</code></td><td><code>#FFFFFF</code></td><td>ページ背景</td></tr>
+    <tr><td><code>--foreground</code></td><td><code>#0F172A</code></td><td>テキスト</td></tr>
+    <tr><td><code>--border</code></td><td><code>#E2E8F0</code></td><td>ボーダー</td></tr>
+    <tr><td><code>--success</code></td><td><span style={{display:'inline-block',width:12,height:12,borderRadius:3,background:'#16A34A',marginRight:6}} /><code>#16A34A</code></td><td>成功・承認</td></tr>
+    <tr><td><code>--warning</code></td><td><span style={{display:'inline-block',width:12,height:12,borderRadius:3,background:'#F97316',marginRight:6}} /><code>#F97316</code></td><td>警告・審査中</td></tr>
+    <tr><td><code>--destructive</code></td><td><span style={{display:'inline-block',width:12,height:12,borderRadius:3,background:'#DC2626',marginRight:6}} /><code>#DC2626</code></td><td>エラー・却下</td></tr>
+    <tr><td><code>--info</code></td><td><span style={{display:'inline-block',width:12,height:12,borderRadius:3,background:'#3B82F6',marginRight:6}} /><code>#3B82F6</code></td><td>情報</td></tr>
+    <tr><td><code>--rating-star</code></td><td><span style={{display:'inline-block',width:12,height:12,borderRadius:3,background:'#FBBF24',marginRight:6}} /><code>#FBBF24</code></td><td>評価星</td></tr>
+    <tr><td><code>--virtual-accent</code></td><td><span style={{display:'inline-block',width:12,height:12,borderRadius:3,background:'#8B5CF6',marginRight:6}} /><code>#8B5CF6</code></td><td>バーチャル会議室</td></tr>
+  </tbody>
+</table>
+
+### Status Color Mapping
+
+<table>
+  <thead>
+    <tr><th>ドメイン状態</th><th>Color Token</th><th>用途</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>申請中 / 審査中</td><td><code>amber</code></td><td>処理待ち</td></tr>
+    <tr><td>確定 / 承認 / 認証済</td><td><code>green</code></td><td>完了・有効</td></tr>
+    <tr><td>利用中 / 確定</td><td><code>blue</code></td><td>アクティブ</td></tr>
+    <tr><td>完了 / 退会</td><td><code>gray</code></td><td>非アクティブ</td></tr>
+    <tr><td>取消 / 却下 / 失敗</td><td><code>red</code></td><td>否定・エラー</td></tr>
+    <tr><td>バーチャル</td><td><code>violet</code></td><td>種別区分</td></tr>
+  </tbody>
+</table>
+
+## Spacing
+
+4px ベースグリッド。
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Value</th><th>Use Case</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--space-1</code></td><td>4px</td><td>アイコン間隔</td></tr>
+    <tr><td><code>--space-2</code></td><td>8px</td><td>インライン要素間</td></tr>
+    <tr><td><code>--space-3</code></td><td>12px</td><td>コンポーネント内</td></tr>
+    <tr><td><code>--space-4</code></td><td>16px</td><td>セクション間</td></tr>
+    <tr><td><code>--space-6</code></td><td>24px</td><td>カードパディング</td></tr>
+    <tr><td><code>--space-8</code></td><td>32px</td><td>セクション間隔</td></tr>
+  </tbody>
+</table>
+
+## Typography
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Value</th><th>Use Case</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--text-xs</code></td><td>0.75rem</td><td>キャプション、バッジ</td></tr>
+    <tr><td><code>--text-sm</code></td><td>0.875rem</td><td>本文、ボタン</td></tr>
+    <tr><td><code>--text-base</code></td><td>1rem</td><td>デフォルト</td></tr>
+    <tr><td><code>--text-lg</code></td><td>1.125rem</td><td>サブ見出し</td></tr>
+    <tr><td><code>--text-xl</code></td><td>1.25rem</td><td>価格表示</td></tr>
+    <tr><td><code>--text-3xl</code></td><td>1.875rem</td><td>ページタイトル</td></tr>
+    <tr><td><code>--font-sans</code></td><td>Noto Sans JP, Inter</td><td>全テキスト</td></tr>
+    <tr><td><code>--font-mono</code></td><td>JetBrains Mono</td><td>コード</td></tr>
+  </tbody>
+</table>
+
+## Shadows
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Use Case</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--shadow-xs</code></td><td>サブタイルUI</td></tr>
+    <tr><td><code>--shadow-sm</code></td><td>カード (default)</td></tr>
+    <tr><td><code>--shadow-md</code></td><td>カード (hover)</td></tr>
+    <tr><td><code>--shadow-lg</code></td><td>ドロップダウン</td></tr>
+    <tr><td><code>--shadow-xl</code></td><td>モーダル</td></tr>
+  </tbody>
+</table>
+
+## Dark Mode
+
+Storybook ツールバーの **Theme** セレクターで切替可能。
+`prefers-color-scheme: dark` または `.dark` クラスで自動適用。

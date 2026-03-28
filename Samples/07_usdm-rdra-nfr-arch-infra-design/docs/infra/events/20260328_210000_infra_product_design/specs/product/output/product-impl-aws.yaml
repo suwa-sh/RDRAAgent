@@ -1,0 +1,535 @@
+schema_version: "1.0"
+artifact_type: "implementation_spec"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-saas-impl-aws"
+title: "貸し会議室SaaS AWS 実装仕様"
+status: "draft"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-eks-over-ecs"
+  - "product-decision-rds-postgresql"
+  - "product-decision-elasticache-redis"
+inputs_ref:
+  - "product-kashikaigishitsu-saas-mapping-aws"
+
+vendor: "aws"
+canonical_ref: "product-kashikaigishitsu-saas-workload-model"
+mapping_ref: "product-kashikaigishitsu-saas-mapping-aws"
+
+components:
+  - id: "comp-eks-backend-api"
+    name: "Backend API (EKS)"
+    canonical_element_id: "compute_backend_api"
+    vendor_service: "Amazon EKS"
+    configuration:
+      namespace: "kashikaigishitsu-{env}"
+      deployment:
+        replicas_min: 2
+        replicas_max: 10
+        strategy: "RollingUpdate"
+        max_unavailable: 0
+        max_surge: 1
+      container:
+        image: "kashikaigishitsu/backend-api"
+        port: 8080
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        probes:
+          liveness:
+            path: "/healthz"
+            port: 8080
+            initial_delay_seconds: 10
+            period_seconds: 15
+          readiness:
+            path: "/readyz"
+            port: 8080
+            initial_delay_seconds: 5
+            period_seconds: 5
+      hpa:
+        target_cpu_utilization: 70
+        target_memory_utilization: 80
+        scale_down_stabilization: 300
+      pdb:
+        min_available: 1
+      service_account:
+        eks_pod_identity: true
+        iam_role: "kashikaigishitsu-backend-api-{env}"
+      network_policy:
+        ingress:
+          - from: "alb-controller"
+            port: 8080
+        egress:
+          - to: "rds"
+            port: 5432
+          - to: "elasticache"
+            port: 6379
+          - to: "sqs"
+            port: 443
+          - to: "cognito"
+            port: 443
+          - to: "openfga"
+            port: 8081
+          - to: "external-payment"
+            port: 443
+    dependencies:
+      - "comp-rds"
+      - "comp-elasticache"
+      - "comp-sqs"
+      - "comp-cognito"
+      - "comp-openfga"
+    iac_module: "infra/product/aws/modules/eks-workload"
+    validation_rules:
+      - rule: "Pod が Ready 状態であること"
+        type: "runtime"
+        description: "kubectl get pods -n kashikaigishitsu-{env} で全 Pod が Running/Ready"
+      - rule: "HPA が正常に動作していること"
+        type: "runtime"
+        description: "kubectl get hpa -n kashikaigishitsu-{env} で TARGETS が取得できている"
+
+  - id: "comp-eks-worker"
+    name: "Backend Worker (EKS CronJob)"
+    canonical_element_id: "compute_backend_worker"
+    vendor_service: "Amazon EKS (CronJob)"
+    configuration:
+      namespace: "kashikaigishitsu-{env}"
+      cronjobs:
+        - name: "virtual-room-start"
+          schedule: "*/1 * * * *"
+          concurrency_policy: "Forbid"
+          active_deadline_seconds: 300
+        - name: "virtual-room-end"
+          schedule: "*/1 * * * *"
+          concurrency_policy: "Forbid"
+          active_deadline_seconds: 300
+        - name: "monthly-settlement"
+          schedule: "0 0 1 * *"
+          concurrency_policy: "Forbid"
+          active_deadline_seconds: 28800
+      container:
+        image: "kashikaigishitsu/backend-worker"
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
+    dependencies:
+      - "comp-rds"
+      - "comp-sqs"
+    iac_module: "infra/product/aws/modules/eks-workload"
+    validation_rules:
+      - rule: "CronJob が正常にスケジュールされていること"
+        type: "runtime"
+        description: "kubectl get cronjob -n kashikaigishitsu-{env}"
+
+  - id: "comp-lambda-event-worker"
+    name: "Event Worker (Lambda)"
+    canonical_element_id: "compute_backend_worker"
+    vendor_service: "AWS Lambda"
+    configuration:
+      function_name: "kashikaigishitsu-event-worker-{env}"
+      runtime: "provided.al2023"
+      architecture: "arm64"
+      memory: 512
+      timeout: 300
+      vpc_config:
+        subnet_ids: "private-subnet-ids"
+        security_group_ids: "lambda-sg"
+      environment_variables:
+        DB_HOST: "rds-endpoint"
+        REDIS_HOST: "elasticache-endpoint"
+      event_source:
+        type: "sqs"
+        batch_size: 10
+        maximum_concurrency: 5
+      reserved_concurrency: 20
+    dependencies:
+      - "comp-rds"
+      - "comp-elasticache"
+      - "comp-sqs"
+    iac_module: "infra/product/aws/modules/lambda-worker"
+    validation_rules:
+      - rule: "Lambda 関数が Active であること"
+        type: "runtime"
+        description: "aws lambda get-function --function-name で State=Active"
+
+  - id: "comp-alb"
+    name: "Application Load Balancer"
+    canonical_element_id: "api_gateway"
+    vendor_service: "AWS ALB + AWS WAF"
+    configuration:
+      alb:
+        scheme: "internet-facing"
+        type: "application"
+        listeners:
+          - port: 443
+            protocol: "HTTPS"
+            certificate: "acm-arn"
+            default_action: "forward-to-target-group"
+          - port: 80
+            protocol: "HTTP"
+            default_action: "redirect-to-https"
+        target_group:
+          protocol: "HTTP"
+          port: 8080
+          health_check:
+            path: "/healthz"
+            interval: 30
+            timeout: 5
+            healthy_threshold: 2
+            unhealthy_threshold: 3
+        access_logs:
+          enabled: true
+          bucket: "kashikaigishitsu-alb-logs-{env}"
+      waf:
+        web_acl:
+          rules:
+            - name: "AWSManagedRulesCommonRuleSet"
+              priority: 1
+              override_action: "none"
+            - name: "AWSManagedRulesSQLiRuleSet"
+              priority: 2
+              override_action: "none"
+            - name: "AWSManagedRulesKnownBadInputsRuleSet"
+              priority: 3
+              override_action: "none"
+            - name: "RateLimit"
+              priority: 4
+              rate_limit: 1000
+              aggregate_key: "IP"
+            - name: "AdminIPRestriction"
+              priority: 5
+              ip_set: "admin-allowed-ips"
+              action: "allow"
+              scope: "/admin/*"
+    dependencies:
+      - "comp-eks-backend-api"
+    iac_module: "infra/product/aws/modules/alb-waf"
+    validation_rules:
+      - rule: "ALB が active 状態であること"
+        type: "runtime"
+        description: "aws elbv2 describe-load-balancers で State.Code=active"
+      - rule: "WAF WebACL がアタッチされていること"
+        type: "runtime"
+        description: "aws wafv2 get-web-acl-for-resource"
+
+  - id: "comp-cloudfront"
+    name: "CloudFront CDN"
+    canonical_element_id: "cdn"
+    vendor_service: "Amazon CloudFront"
+    configuration:
+      origins:
+        - id: "spa-user"
+          domain: "kashikaigishitsu-spa-user-{env}.s3.amazonaws.com"
+          oac: true
+        - id: "spa-admin"
+          domain: "kashikaigishitsu-spa-admin-{env}.s3.amazonaws.com"
+          oac: true
+        - id: "images"
+          domain: "kashikaigishitsu-images-{env}.s3.amazonaws.com"
+          oac: true
+        - id: "api"
+          domain: "alb-endpoint"
+          custom_origin:
+            protocol: "https-only"
+      behaviors:
+        - path: "/api/*"
+          origin: "api"
+          cache_policy: "CachingDisabled"
+          origin_request_policy: "AllViewerExceptHostHeader"
+        - path: "/admin/*"
+          origin: "spa-admin"
+          cache_policy: "CachingOptimized"
+        - path: "/images/*"
+          origin: "images"
+          cache_policy: "CachingOptimized"
+          ttl_default: 86400
+        - path: "/*"
+          origin: "spa-user"
+          cache_policy: "CachingOptimized"
+      tls:
+        minimum_protocol_version: "TLSv1.2_2021"
+        certificate: "acm-us-east-1-arn"
+      http_version: "http2and3"
+      price_class: "PriceClass_200"
+    dependencies:
+      - "comp-s3"
+      - "comp-alb"
+    iac_module: "infra/product/aws/modules/cloudfront"
+    validation_rules:
+      - rule: "CloudFront Distribution が Deployed であること"
+        type: "runtime"
+        description: "aws cloudfront get-distribution で Status=Deployed"
+
+  - id: "comp-cognito"
+    name: "Amazon Cognito"
+    canonical_element_id: "idp"
+    vendor_service: "Amazon Cognito"
+    configuration:
+      user_pool:
+        name: "kashikaigishitsu-{env}"
+        mfa:
+          admin_required: true
+          method: "TOTP"
+        password_policy:
+          minimum_length: 8
+          require_uppercase: true
+          require_lowercase: true
+          require_numbers: true
+          require_symbols: true
+        custom_attributes:
+          - name: "role"
+            type: "String"
+            mutable: true
+          - name: "owner_id"
+            type: "String"
+            mutable: false
+        lambda_triggers:
+          pre_sign_up: "kashikaigishitsu-pre-signup-{env}"
+          post_confirmation: "kashikaigishitsu-post-confirmation-{env}"
+      app_client:
+        token_validity:
+          access_token: "15 minutes"
+          id_token: "15 minutes"
+          refresh_token: "30 days"
+        auth_flows:
+          - "ALLOW_USER_SRP_AUTH"
+          - "ALLOW_REFRESH_TOKEN_AUTH"
+        oauth:
+          scopes: ["openid", "profile", "email"]
+          callback_urls: ["https://app.example.com/callback"]
+          logout_urls: ["https://app.example.com/logout"]
+    dependencies: []
+    iac_module: "infra/product/aws/modules/cognito"
+    validation_rules:
+      - rule: "ユーザープールが Active であること"
+        type: "runtime"
+        description: "aws cognito-idp describe-user-pool で Status=Active"
+
+  - id: "comp-openfga"
+    name: "OpenFGA (ReBAC)"
+    canonical_element_id: "authz_service"
+    vendor_service: "OpenFGA on Amazon EKS"
+    configuration:
+      namespace: "kashikaigishitsu-{env}"
+      deployment:
+        replicas: 2
+        image: "openfga/openfga:latest"
+        port: 8080
+        grpc_port: 8081
+        resources:
+          requests:
+            cpu: "128m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      datastore:
+        engine: "postgres"
+        uri: "postgres://openfga:***@rds-endpoint:5432/openfga"
+      authorization_model:
+        types:
+          - "user"
+          - "owner"
+          - "room"
+          - "reservation"
+          - "settlement"
+          - "admin"
+        relations:
+          - "owner:room#owner"
+          - "user:reservation#viewer"
+          - "owner:settlement#viewer"
+          - "admin:room#admin"
+    dependencies:
+      - "comp-rds"
+    iac_module: "infra/product/aws/modules/eks-workload"
+    validation_rules:
+      - rule: "OpenFGA Pod が Ready であること"
+        type: "runtime"
+        description: "kubectl get pods -l app=openfga -n kashikaigishitsu-{env}"
+
+  - id: "comp-rds"
+    name: "Amazon RDS for PostgreSQL"
+    canonical_element_id: "database_rdb"
+    vendor_service: "Amazon RDS for PostgreSQL"
+    configuration:
+      engine: "postgres"
+      engine_version: "16"
+      instance_class:
+        production: "db.r6g.large"
+        staging: "db.t4g.medium"
+        development: "db.t4g.medium"
+      multi_az: true
+      storage:
+        type: "gp3"
+        allocated: 100
+        max_allocated: 500
+        iops: 3000
+        throughput: 125
+      backup:
+        retention_period: 35
+        preferred_window: "19:00-20:00"
+        copy_tags_to_snapshot: true
+      encryption:
+        storage_encrypted: true
+        kms_key: "alias/kashikaigishitsu-rds-{env}"
+      parameter_group:
+        max_connections: 200
+        shared_buffers: "25%"
+        log_statement: "ddl"
+        log_min_duration_statement: 1000
+      performance_insights:
+        enabled: true
+        retention_period: 7
+      monitoring:
+        enhanced_monitoring_interval: 60
+      security_group:
+        ingress:
+          - source: "eks-node-sg"
+            port: 5432
+          - source: "lambda-sg"
+            port: 5432
+      subnet_group: "private-db-subnets"
+      tags:
+        cost-center: "development"
+        environment: "{env}"
+        owner: "kashikaigishitsu-team"
+    dependencies: []
+    iac_module: "infra/product/aws/modules/rds-postgresql"
+    validation_rules:
+      - rule: "RDS インスタンスが available であること"
+        type: "runtime"
+        description: "aws rds describe-db-instances で DBInstanceStatus=available"
+      - rule: "Multi-AZ が有効であること"
+        type: "static"
+        description: "MultiAZ=true"
+      - rule: "暗号化が有効であること"
+        type: "static"
+        description: "StorageEncrypted=true"
+
+  - id: "comp-elasticache"
+    name: "Amazon ElastiCache for Redis"
+    canonical_element_id: "cache_redis"
+    vendor_service: "Amazon ElastiCache for Redis"
+    configuration:
+      engine: "redis"
+      engine_version: "7.1"
+      deployment:
+        production: "serverless"
+        staging: "serverless"
+        development:
+          node_type: "cache.t4g.micro"
+          num_cache_nodes: 1
+      serverless_config:
+        max_ecpu_per_second: 5000
+        max_data_storage: 5
+      encryption:
+        at_rest: true
+        in_transit: true
+      security_group:
+        ingress:
+          - source: "eks-node-sg"
+            port: 6379
+          - source: "lambda-sg"
+            port: 6379
+      subnet_group: "private-cache-subnets"
+      tags:
+        cost-center: "development"
+        environment: "{env}"
+        owner: "kashikaigishitsu-team"
+    dependencies: []
+    iac_module: "infra/product/aws/modules/elasticache-redis"
+    validation_rules:
+      - rule: "ElastiCache が available であること"
+        type: "runtime"
+        description: "aws elasticache describe-serverless-caches で Status=available"
+
+  - id: "comp-s3"
+    name: "Amazon S3"
+    canonical_element_id: "storage_object"
+    vendor_service: "Amazon S3"
+    configuration:
+      buckets:
+        - name: "kashikaigishitsu-images-{env}"
+          versioning: true
+          encryption: "aws:kms"
+          kms_key: "alias/kashikaigishitsu-s3-{env}"
+          public_access_block: true
+          lifecycle:
+            - transition: "INTELLIGENT_TIERING"
+              days: 90
+          cors:
+            allowed_origins: ["https://app.example.com"]
+            allowed_methods: ["GET", "PUT"]
+            max_age_seconds: 3600
+        - name: "kashikaigishitsu-spa-user-{env}"
+          versioning: false
+          encryption: "AES256"
+          public_access_block: true
+        - name: "kashikaigishitsu-spa-admin-{env}"
+          versioning: false
+          encryption: "AES256"
+          public_access_block: true
+        - name: "kashikaigishitsu-alb-logs-{env}"
+          versioning: false
+          encryption: "AES256"
+          public_access_block: true
+          lifecycle:
+            - expiration: 90
+      tags:
+        cost-center: "development"
+        environment: "{env}"
+        owner: "kashikaigishitsu-team"
+    dependencies: []
+    iac_module: "infra/product/aws/modules/s3"
+    validation_rules:
+      - rule: "パブリックアクセスブロックが有効であること"
+        type: "static"
+        description: "PublicAccessBlockConfiguration の全フィールドが true"
+
+  - id: "comp-sqs"
+    name: "Amazon SQS"
+    canonical_element_id: "messaging_queue"
+    vendor_service: "Amazon SQS"
+    configuration:
+      queues:
+        - name: "kashikaigishitsu-notifications-{env}"
+          type: "standard"
+          visibility_timeout: 300
+          message_retention_period: 1209600
+          encryption: "SQS"
+          dlq:
+            name: "kashikaigishitsu-notifications-dlq-{env}"
+            max_receive_count: 3
+        - name: "kashikaigishitsu-settlement-{env}.fifo"
+          type: "fifo"
+          content_based_deduplication: true
+          visibility_timeout: 300
+          message_retention_period: 1209600
+          encryption: "SQS"
+          dlq:
+            name: "kashikaigishitsu-settlement-dlq-{env}.fifo"
+            max_receive_count: 3
+      tags:
+        cost-center: "development"
+        environment: "{env}"
+        owner: "kashikaigishitsu-team"
+    dependencies: []
+    iac_module: "infra/product/aws/modules/sqs"
+    validation_rules:
+      - rule: "キューが作成されていること"
+        type: "runtime"
+        description: "aws sqs get-queue-url で URL が取得できること"
+      - rule: "DLQ が設定されていること"
+        type: "static"
+        description: "RedrivePolicy が設定されていること"
