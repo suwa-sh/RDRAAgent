@@ -237,6 +237,58 @@ docs/arch/latest/arch-design.yaml + docs/nfr/latest/nfr-grade.yaml
 | `docs/infra/latest/` | インフラ設計 最新スナップショット（mcl-output/ 含む） |
 | `specs/product/input/` | MCL product-design 入力（一時。実行後に docs/infra/ へ集約） |
 
+## usdm-rdra-nfr-arch-infra-design スキル（デザインシステム生成）
+
+アーキテクチャ設計・インフラ設計からデザインシステムを生成し Storybook に変換する。usdm-rdra-nfr-arch-infra スキルの後段に位置する。
+
+### Skill 構成
+
+```
+.claude/skills/usdm-rdra-nfr-arch-infra-design/
+├── SKILL.md                              # オーケストレーション（10ステップ）
+├── references/
+│   ├── event-sourcing-rules.md           # Step10: イベントソーシングルール
+│   └── design/
+│       ├── design-infer.md               # Step1: モデル分析タスク
+│       ├── design-dialogue.md            # Step2: 対話フロー
+│       ├── design-tokens-generate.md     # Step3: トークン生成ルール
+│       ├── design-components-generate.md # Step3: コンポーネント仕様生成
+│       ├── design-assets-generate.md     # Step6: Logo/Icon SVG 生成
+│       ├── design-storybook-generate.md  # Step7: Storybook 生成 + emoji→Icon
+│       └── design-lessons-learned.md     # Step7,8: 教訓・品質チェックリスト
+└── scripts/
+    ├── schema-design-event.json          # design-event.yaml JSON Schema
+    ├── validateDesignEvent.js            # Step4: YAML バリデーション
+    └── generateDesignEventMd.js          # Step5: Markdown 生成
+```
+
+### Data Flow
+
+```
+docs/rdra/latest/*.tsv + docs/nfr/latest/nfr-grade.yaml + docs/arch/latest/arch-design.yaml
+  → Step1:  モデル分析・デザイン方針決定
+  → Step2:  ユーザー確認（対話・選択肢提示）
+  → Step3:  design-event.yaml 生成（brand/tokens/components/screens/states）
+  → Step4:  validateDesignEvent.js でバリデーション
+  → Step5:  generateDesignEventMd.js で Markdown 生成
+  → Step6:  Logo/Icon SVG 生成（直接記述 or AI生成）
+  → Step7:  Storybook プロジェクト生成（emoji禁止、Icon コンポーネント使用）
+  → Step8:  画面確認（必須。chrome-devtools で目視確認）
+  → Step9:  storybook build 検証
+  → Step10: イベント記録・スナップショット更新
+```
+
+### docs ディレクトリ構成（追加分）
+
+| パス | 用途 |
+|------|------|
+| `docs/design/events/` | デザインシステム イベント履歴 |
+| `docs/design/latest/` | デザインシステム 最新スナップショット |
+| `docs/design/latest/design-event.yaml` | 中核成果物（brand/tokens/components/screens/states） |
+| `docs/design/latest/design-event.md` | Markdown 表現 |
+| `docs/design/latest/assets/` | Logo SVG 3種 + Icon SVG セット |
+| `docs/design/latest/storybook-app/` | Next.js + Storybook プロジェクト |
+
 ## External Resources
 
 - **RDRAGraph**: https://vsa.co.jp/rdratool/graph/v0.94/
