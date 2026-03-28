@@ -150,6 +150,47 @@ docs/rdra/latest/*.tsv（RDRA モデル）
   → スナップショット更新             → docs/nfr/latest/nfr-grade.yaml
 ```
 
+## usdm-rdra-nfr-arch スキル（アーキテクチャ設計）
+
+RDRA モデルと NFR グレードからシステムアーキテクチャ・アプリケーションアーキテクチャ・データアーキテクチャを推論・対話・出力する。usdm-rdra-nfr スキルの後段に位置する。全テクノロジー記述はベンダーニュートラル（FaaS, CaaS(k8s), RDB 等）。クラウドベンダーへのマッピングは後続の別スキルの責務。
+
+### Skill 構成
+
+```
+.claude/skills/usdm-rdra-nfr-arch/
+├── SKILL.md                              # オーケストレーション
+├── references/
+│   ├── arch-schema.md                    # アーキテクチャ設計 YAML スキーマ
+│   ├── arch-inference-rules.md           # RDRA+NFR → アーキテクチャ推論ルール
+│   ├── event-sourcing-rules.md           # アーキテクチャ用イベントソーシングルール
+│   └── arch/
+│       ├── arch-infer.md                 # Step1: RDRA+NFR から推論
+│       ├── arch-dialogue.md              # Step2: 対話で確認
+│       ├── arch-output.md                # Step3: YAML 出力
+│       └── arch-snapshot-update.md       # スナップショット更新
+└── scripts/
+    ├── validateArchDesign.js             # アーキテクチャ YAML バリデーション
+    ├── generateArchDesignMd.js           # Markdown 生成
+    └── schema-arch-design.json           # JSON スキーマ
+```
+
+### Data Flow
+
+```
+docs/rdra/latest/*.tsv + docs/nfr/latest/nfr-grade.yaml
+  → Step1: RDRA+NFR からアーキテクチャ推論
+  → Step2: 対話で確認・調整
+  → Step3: arch-design.yaml 出力 → docs/arch/events/{id}/
+  → スナップショット更新           → docs/arch/latest/
+```
+
+### docs ディレクトリ構成（追加分）
+
+| パス | 用途 |
+|------|------|
+| `docs/arch/events/` | アーキテクチャ設計 イベント履歴 |
+| `docs/arch/latest/` | アーキテクチャ設計 最新スナップショット |
+
 ## External Resources
 
 - **RDRAGraph**: https://vsa.co.jp/rdratool/graph/v0.94/
