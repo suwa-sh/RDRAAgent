@@ -1,0 +1,69 @@
+schema_version: "1.0"
+artifact_type: "product_input"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-saas-input"
+title: "貸し会議室SaaS ワークロード入力"
+status: "draft"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "arch-design:20260328_120000_initial_arch"
+  - "nfr-grade:20260328_100000_virtual_room_nfr"
+decision_refs: []
+inputs_ref:
+  - "foundation-context"
+  - "shared-platform-context"
+
+workload:
+  name: "貸し会議室SaaS"
+  description: "会議室オーナーが所有する会議室を登録・管理し、利用者がオンラインで検索・予約・決済できる貸し会議室マッチングサービス。オーナーは会議室の物件情報や運用ルールを登録して貸出を管理し、利用者は条件検索による会議室照会・予約・鍵の受け渡しによる利用を行う。サービス運営担当者はオーナー審査・利用状況分析・手数料売上管理・問合せ対応を担い、月末にはオーナーへの精算処理を決済機関を通じて実施する。"
+  target_clouds:
+    - "aws"
+
+workload_type: "web_app"
+availability_target:
+  sla: "99.9%"
+  failover: "warm_standby"
+latency_sensitivity:
+  category: "interactive"
+  target_p99: "500ms"
+data_sensitivity:
+  classification: "restricted"
+  pii: true
+  encryption: "at_rest_and_in_transit"
+  compliance: []
+  data_residency: "none"
+traffic_pattern:
+  type: "steady"
+  baseline_rps: 50
+  spike_multiplier: 2
+consistency_needs:
+  type: "strong"
+recovery_target:
+  rpo: "1h"
+  rto: "4h"
+  backup: "daily"
+observability_needs:
+  metrics:
+    - "cpu"
+    - "memory"
+    - "disk"
+    - "network"
+    - "latency"
+    - "error_rate"
+    - "throughput"
+  logs:
+    - "access"
+    - "audit"
+    - "diagnostic"
+    - "dependency"
+  sli:
+    - "availability"
+    - "latency"
+    - "error_rate"
+    - "throughput"
+  alerting:
+    - "health_check"
+    - "error_rate"
+    - "latency_p99"
+cost_posture:
+  strategy: "balanced"

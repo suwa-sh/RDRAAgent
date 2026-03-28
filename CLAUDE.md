@@ -190,6 +190,52 @@ docs/rdra/latest/*.tsv + docs/nfr/latest/nfr-grade.yaml
 |------|------|
 | `docs/arch/events/` | アーキテクチャ設計 イベント履歴 |
 | `docs/arch/latest/` | アーキテクチャ設計 最新スナップショット |
+| `docs/infra/events/` | インフラ設計 イベント履歴 |
+| `docs/infra/latest/` | インフラ設計 最新スナップショット |
+
+## usdm-rdra-nfr-arch-infra スキル（インフラ設計 + Arch フィードバック）
+
+アーキテクチャ設計（arch-design.yaml）を MCL product-design スキルの入力に変換し、クラウドインフラ設計を生成。結果をアーキテクチャ設計にフィードバックする。usdm-rdra-nfr-arch スキルの後段に位置する。Foundation コンテキストは必須、Shared Platform コンテキストは任意。
+
+### Skill 構成
+
+```
+.claude/skills/usdm-rdra-nfr-arch-infra/
+├── SKILL.md                              # オーケストレーション
+├── references/
+│   ├── translation-mapping.md            # Arch+NFR → product-input 変換マッピング
+│   ├── event-sourcing-rules.md           # インフラ用イベントソーシングルール
+│   ├── infra-event-schema.md             # infra-event.yaml スキーマ
+│   ├── arch-feedback-rules.md            # Arch フィードバックルール
+│   └── infra/
+│       ├── infra-translate.md            # Step1: 変換タスク
+│       ├── infra-execute.md              # Step2: MCL 実行タスク
+│       ├── infra-feedback.md             # Step3: フィードバックタスク
+│       ├── infra-writeback-check.md      # Step4: Infra 書き戻しチェック
+│       └── infra-snapshot-update.md      # スナップショット更新
+└── scripts/
+    ├── validateInfraEvent.js             # infra-event.yaml バリデーション
+    ├── generateInfraEventMd.js           # Markdown 生成
+    └── schema-infra-event.json           # JSON スキーマ
+```
+
+### Data Flow
+
+```
+docs/arch/latest/arch-design.yaml + docs/nfr/latest/nfr-grade.yaml
+  → Step1: Arch+NFR → MCL Product Input 変換 → specs/product/input/product-input.yaml
+  → Step2: mcl-product-design 実行          → specs/product/output/, docs/infra/events/
+  → Step3: Infra フィードバック → Arch 更新  → docs/arch/events/{feedback_id}/
+  → Step4: Infra 書き戻しチェック            → 再実行要否を判定（要なら Step1 に戻る）
+```
+
+### docs ディレクトリ構成（追加分）
+
+| パス | 用途 |
+|------|------|
+| `docs/infra/events/` | インフラ設計 イベント履歴（mcl-output/ 含む） |
+| `docs/infra/latest/` | インフラ設計 最新スナップショット（mcl-output/ 含む） |
+| `specs/product/input/` | MCL product-design 入力（一時。実行後に docs/infra/ へ集約） |
 
 ## External Resources
 

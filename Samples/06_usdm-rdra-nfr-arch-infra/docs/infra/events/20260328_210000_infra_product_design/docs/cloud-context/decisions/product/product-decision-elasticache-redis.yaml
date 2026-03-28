@@ -1,0 +1,38 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-elasticache-redis"
+title: "キャッシュの選定: ElastiCache Serverless vs ノードベース"
+status: "accepted"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-elasticache-redis"
+inputs_ref:
+  - "product-kashikaigishitsu-saas-input"
+
+decision:
+  context: "会議室検索結果キャッシュ、セッション管理、トークン管理のためのキャッシュサービスを選定する"
+  conflict_type: "capability"
+  options:
+    - id: "elasticache-serverless"
+      description: "ElastiCache Serverless"
+      pros:
+        - "自動スケーリングで運用負荷ゼロ"
+        - "Multi-AZ が標準"
+        - "閑散時のコスト最適化"
+      cons:
+        - "最低課金がノードベースより高い場合がある"
+    - id: "elasticache-node"
+      description: "ElastiCache ノードベース（cache.r6g.large）"
+      pros:
+        - "コスト予測が容易"
+        - "きめ細かいチューニングが可能"
+      cons:
+        - "ノード管理が必要"
+        - "スケーリングが手動"
+  chosen_option: "elasticache-serverless"
+  rationale: "balanced コストポスチャに基づき、運用負荷の最小化を優先。トラフィックパターンが steady（spike 2倍）のため、Serverless の自動スケーリングがコスト効率的。開発環境のみノードベース（cache.t4g.micro）でコスト削減"
+  risk_assessment: "低リスク。Serverless は Redis 7.1 互換で機能制限が少ない"
+  affected_elements:
+    - "cache_redis"
+  review_date: "2027-03-28"

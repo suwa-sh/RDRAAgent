@@ -1,0 +1,320 @@
+schema_version: "1.0"
+artifact_type: "canonical_model"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-saas-workload-model"
+title: "貸し会議室SaaS ワークロードモデル"
+status: "draft"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-eks-over-ecs"
+  - "product-decision-rds-postgresql"
+  - "product-decision-elasticache-redis"
+inputs_ref:
+  - "product-kashikaigishitsu-saas-input"
+  - "foundation-context"
+  - "shared-platform-context"
+
+elements:
+  # === コンピュート ===
+  - id: "compute_backend_api"
+    name: "バックエンド API コンピュート"
+    category: "compute"
+    description: "6業務ドメインの REST API を提供するコンテナアプリケーション。EKS 共有ランタイム上で稼働する"
+    requirements:
+      - id: "req_compute_api_001"
+        description: "水平スケーリングで同時アクセス ~10,000 に対応"
+        priority: "must"
+        rationale: "NFR B.1.1.1 同時アクセス数 grade 3"
+      - id: "req_compute_api_002"
+        description: "p99 レスポンスタイム 500ms 以内"
+        priority: "must"
+        rationale: "NFR B.2.1.1 レスポンスタイム grade 3"
+      - id: "req_compute_api_003"
+        description: "24h 365日の連続運用、ローリングアップデートによるゼロダウンタイムデプロイ"
+        priority: "must"
+        rationale: "NFR A.1.1.1 運用時間 grade 4"
+      - id: "req_compute_api_004"
+        description: "スループット ~100 TPS"
+        priority: "must"
+        rationale: "NFR B.2.1.2 スループット grade 3"
+    constraints:
+      - "共有プラットフォーム必須サービス svc-eks-runtime を使用"
+      - "Go ランタイム"
+    dependencies:
+      - "database_rdb"
+      - "cache_redis"
+      - "storage_object"
+      - "messaging_queue"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "compute_backend_worker"
+    name: "バックエンドワーカー コンピュート"
+    category: "compute"
+    description: "タイマートリガー（バーチャル会議室利用開始/終了）、非同期通知（会議URL通知）、バッチ処理（月末精算額計算）を実行するワーカー"
+    requirements:
+      - id: "req_compute_worker_001"
+        description: "バッチ処理を 8時間以内に完了"
+        priority: "must"
+        rationale: "NFR B.2.2.1 バッチ処理時間 grade 2"
+      - id: "req_compute_worker_002"
+        description: "メッセージ処理の冪等性保証"
+        priority: "must"
+        rationale: "MQ の at-least-once 配信特性"
+      - id: "req_compute_worker_003"
+        description: "リトライ + デッドレターキューによる障害ハンドリング"
+        priority: "must"
+        rationale: "決済機関連携の精算処理の信頼性確保"
+    constraints:
+      - "共有プラットフォーム svc-eks-runtime（CronJob）+ svc-lambda-runtime（イベントドリブン）"
+    dependencies:
+      - "database_rdb"
+      - "messaging_queue"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "compute_frontend_user"
+    name: "利用者・オーナー向けフロントエンド"
+    category: "compute"
+    description: "利用者・会議室オーナー向け SPA。CDN 経由で配信する"
+    requirements:
+      - id: "req_frontend_user_001"
+        description: "レスポンシブデザイン（PC + スマートフォン対応）"
+        priority: "must"
+        rationale: "NFR F.1.1.2 主要ブラウザ+モバイルブラウザ, F.1.1.3 PC+スマートフォン"
+      - id: "req_frontend_user_002"
+        description: "CDN 配信による低レイテンシ"
+        priority: "should"
+        rationale: "NFR B.2.1.1 レスポンスタイム要件"
+    constraints:
+      - "TypeScript / React / Next.js"
+    dependencies: []
+    source_refs: []
+
+  - id: "compute_frontend_admin"
+    name: "管理者向けフロントエンド"
+    category: "compute"
+    description: "サービス運営担当者向け管理画面 SPA。IP 制限によるアクセス制御"
+    requirements:
+      - id: "req_frontend_admin_001"
+        description: "社内ネットワークからのみアクセス可能（IP 制限）"
+        priority: "must"
+        rationale: "NFR E.5.3.1 IPアドレス制限"
+    constraints:
+      - "TypeScript / React"
+    dependencies: []
+    source_refs: []
+
+  # === API Gateway / ロードバランサー ===
+  - id: "api_gateway"
+    name: "API Gateway / ロードバランサー"
+    category: "networking"
+    description: "全フロントエンドからのリクエストを受け付け、TLS 終端・認証・レート制限を一元管理"
+    requirements:
+      - id: "req_gw_001"
+        description: "OAuth2/OIDC トークン検証"
+        priority: "must"
+        rationale: "認証方式ユーザー指定"
+      - id: "req_gw_002"
+        description: "パスベースの粗粒度 RBAC"
+        priority: "must"
+        rationale: "認可方式ユーザー指定"
+      - id: "req_gw_003"
+        description: "レート制限"
+        priority: "must"
+        rationale: "外部公開 Web サービスの保護"
+      - id: "req_gw_004"
+        description: "WAF 統合（OWASP Top 10 防御）"
+        priority: "must"
+        rationale: "NFR E.10.1.1 WAF grade 2"
+      - id: "req_gw_005"
+        description: "TLS 終端（全通信暗号化）"
+        priority: "must"
+        rationale: "NFR E.6.1.2 全通信暗号化 grade 2"
+    constraints:
+      - "マネージドサービスを優先"
+    dependencies:
+      - "compute_backend_api"
+      - "cdn"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  # === CDN ===
+  - id: "cdn"
+    name: "CDN"
+    category: "networking"
+    description: "フロントエンド SPA および会議室画像の配信を高速化"
+    requirements:
+      - id: "req_cdn_001"
+        description: "静的アセット（SPA）と会議室画像の低レイテンシ配信"
+        priority: "must"
+        rationale: "NFR B.2.1.1 レスポンスタイム要件"
+      - id: "req_cdn_002"
+        description: "HTTPS 配信（カスタムドメイン対応）"
+        priority: "must"
+        rationale: "NFR E.6.1.2 全通信暗号化"
+    constraints: []
+    dependencies:
+      - "storage_object"
+    source_refs: []
+
+  # === IdP ===
+  - id: "idp"
+    name: "アイデンティティプロバイダー"
+    category: "security"
+    description: "利用者・会議室オーナー・サービス運営担当者の認証基盤"
+    requirements:
+      - id: "req_idp_001"
+        description: "OAuth2/OIDC トークン発行"
+        priority: "must"
+        rationale: "認証方式ユーザー指定"
+      - id: "req_idp_002"
+        description: "MFA 対応（管理操作用）"
+        priority: "must"
+        rationale: "NFR E.5.1.1 認証方式 grade 2"
+      - id: "req_idp_003"
+        description: "ユーザープロビジョニング（オーナー審査承認→自動作成）"
+        priority: "should"
+        rationale: "BUC: オーナー登録管理フロー"
+    constraints:
+      - "マネージド IdP"
+    dependencies: []
+    source_refs: []
+
+  # === 認可サービス ===
+  - id: "authz_service"
+    name: "認可サービス（ReBAC）"
+    category: "security"
+    description: "リソースレベルのアクセス制御を担う ReBAC サービス。関係性タプルによる所有権ベースの認可"
+    requirements:
+      - id: "req_authz_001"
+        description: "認可判定のレスポンスタイム 10ms 以内"
+        priority: "should"
+        rationale: "全 API リクエストで認可判定が発生"
+      - id: "req_authz_002"
+        description: "関係性タプル（owner→room, user→reservation 等）の管理"
+        priority: "must"
+        rationale: "認可方式ユーザー指定"
+    constraints:
+      - "EKS 上で自前デプロイ（OpenFGA/SpiceDB）"
+    dependencies:
+      - "compute_backend_api"
+    source_refs: []
+
+  # === データベース ===
+  - id: "database_rdb"
+    name: "リレーショナルデータベース"
+    category: "database"
+    description: "18エンティティのトランザクション整合性を保証する RDB。金銭取引（決済・精算）を含む"
+    requirements:
+      - id: "req_db_001"
+        description: "Multi-AZ 同期レプリケーションによる高可用性"
+        priority: "must"
+        rationale: "NFR A.2.1.1 N+1冗長自動切替 grade 4, A.2.5.1 ミラーリング以上 grade 3"
+      - id: "req_db_002"
+        description: "ポイントインタイムリカバリ"
+        priority: "must"
+        rationale: "NFR C.1.2.1 継続的バックアップ grade 3, A.4.1.1 RPO 障害直前 grade 3"
+      - id: "req_db_003"
+        description: "個人情報・決済情報の保管時暗号化"
+        priority: "must"
+        rationale: "NFR E.6.1.1 機密データのみ暗号化 grade 1"
+      - id: "req_db_004"
+        description: "強整合性（ACID トランザクション）"
+        priority: "must"
+        rationale: "決済・精算のデータ整合性"
+    constraints:
+      - "PostgreSQL 推奨"
+      - "接続プール管理"
+    dependencies: []
+    source_refs:
+      - "aws-rds-postgresql"
+
+  # === キャッシュ ===
+  - id: "cache_redis"
+    name: "キャッシュ（KVS）"
+    category: "cache"
+    description: "会議室検索結果キャッシュ、セッション管理、トークン管理"
+    requirements:
+      - id: "req_cache_001"
+        description: "TTL ベースのキャッシュ管理"
+        priority: "must"
+        rationale: "会議室検索結果のデータ鮮度確保"
+      - id: "req_cache_002"
+        description: "高可用性（Multi-AZ レプリケーション）"
+        priority: "should"
+        rationale: "認証トークン管理の可用性"
+    constraints:
+      - "Redis 互換"
+    dependencies: []
+    source_refs:
+      - "aws-elasticache-redis"
+
+  # === オブジェクトストレージ ===
+  - id: "storage_object"
+    name: "オブジェクトストレージ"
+    category: "storage"
+    description: "会議室画像ファイルの保管"
+    requirements:
+      - id: "req_storage_001"
+        description: "CDN 配信との統合"
+        priority: "must"
+        rationale: "会議室画像の低レイテンシ配信"
+      - id: "req_storage_002"
+        description: "保管時暗号化"
+        priority: "must"
+        rationale: "NFR E.6.1.1 保管時暗号化"
+    constraints: []
+    dependencies: []
+    source_refs: []
+
+  # === メッセージング ===
+  - id: "messaging_queue"
+    name: "メッセージキュー"
+    category: "messaging"
+    description: "非同期通知、バッチトリガー、決済機関連携の非同期処理"
+    requirements:
+      - id: "req_mq_001"
+        description: "at-least-once 配信保証"
+        priority: "must"
+        rationale: "ワーカーの冪等性設計と組み合わせ"
+      - id: "req_mq_002"
+        description: "デッドレターキュー"
+        priority: "must"
+        rationale: "処理失敗メッセージの退避"
+      - id: "req_mq_003"
+        description: "FIFO（精算処理の順序保証）"
+        priority: "should"
+        rationale: "精算処理の順序依存性"
+    constraints: []
+    dependencies: []
+    source_refs: []
+
+  # === 外部連携 ===
+  - id: "external_payment"
+    name: "決済機関連携"
+    category: "integration"
+    description: "決済機関への支払処理・引き落とし処理のアダプタ"
+    requirements:
+      - id: "req_ext_001"
+        description: "冪等キーによる重複支払防止"
+        priority: "must"
+        rationale: "決済系の安全性"
+      - id: "req_ext_002"
+        description: "サーキットブレーカーによる障害局所化"
+        priority: "must"
+        rationale: "外部システム障害の伝播防止"
+      - id: "req_ext_003"
+        description: "全通信のリクエスト/レスポンスログ記録"
+        priority: "must"
+        rationale: "NFR E.7.1.1 監査ログ grade 2"
+    constraints:
+      - "TLS 1.2 以上必須"
+    dependencies:
+      - "compute_backend_api"
+      - "compute_backend_worker"
+    source_refs: []

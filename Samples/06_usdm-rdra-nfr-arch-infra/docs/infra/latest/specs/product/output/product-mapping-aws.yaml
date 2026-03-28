@@ -1,0 +1,215 @@
+schema_version: "1.0"
+artifact_type: "vendor_mapping"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-saas-mapping-aws"
+title: "貸し会議室SaaS AWS サービスマッピング"
+status: "draft"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-eks-over-ecs"
+  - "product-decision-rds-postgresql"
+  - "product-decision-elasticache-redis"
+inputs_ref:
+  - "product-kashikaigishitsu-saas-workload-model"
+  - "foundation-context"
+  - "shared-platform-context"
+
+vendor: "aws"
+canonical_ref: "product-kashikaigishitsu-saas-workload-model"
+
+mappings:
+  - canonical_element_id: "compute_backend_api"
+    vendor_service: "Amazon EKS"
+    vendor_feature: "Managed Node Groups + Karpenter + HPA"
+    fidelity: "exact"
+    configuration_notes: |
+      - 共有プラットフォーム svc-eks-runtime を使用（必須サービス）
+      - Namespace: kashikaigishitsu-{env}
+      - Pod Identity でサービスアカウント認証
+      - HPA: CPU 70% ターゲット、min 2 / max 10 replicas
+      - リソース: requests 256m CPU / 512Mi Memory、limits 1000m CPU / 1Gi Memory
+      - Liveness/Readiness プローブ設定
+      - PodDisruptionBudget: minAvailable 1
+    alternatives:
+      - service: "Amazon ECS (Fargate)"
+        reason: "共有プラットフォームが EKS を必須サービスとして提供しているため EKS を選択"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - canonical_element_id: "compute_backend_worker"
+    vendor_service: "Amazon EKS (CronJob) + Amazon SQS (Lambda trigger)"
+    vendor_feature: "Kubernetes CronJob（タイマー系）+ Lambda（SQS トリガー）"
+    fidelity: "exact"
+    configuration_notes: |
+      - タイマー系（バーチャル会議室利用開始/終了、月末精算）: EKS CronJob
+      - イベント駆動（会議URL通知等）: Lambda + SQS トリガー
+      - 共有プラットフォーム svc-lambda-runtime を活用（必須サービス）
+      - Lambda: VPC 配置（shared-services VPC）、タイムアウト 300s
+    alternatives: []
+    source_refs: []
+
+  - canonical_element_id: "compute_frontend_user"
+    vendor_service: "Amazon S3 + Amazon CloudFront"
+    vendor_feature: "S3 静的ホスティング + CloudFront CDN 配信"
+    fidelity: "exact"
+    configuration_notes: |
+      - S3: パブリックアクセスブロック有効、OAC 経由でのみ CloudFront アクセス許可
+      - CloudFront: カスタムドメイン + ACM 証明書、HTTP/2 有効
+      - キャッシュポリシー: 静的アセット 24h、HTML 5min
+    alternatives: []
+    source_refs: []
+
+  - canonical_element_id: "compute_frontend_admin"
+    vendor_service: "Amazon S3 + Amazon CloudFront"
+    vendor_feature: "S3 静的ホスティング + CloudFront CDN 配信（IP 制限付き）"
+    fidelity: "exact"
+    configuration_notes: |
+      - CloudFront: WAF IP 制限ルールで社内 IP のみ許可
+      - S3: パブリックアクセスブロック有効
+    alternatives: []
+    source_refs: []
+
+  - canonical_element_id: "api_gateway"
+    vendor_service: "AWS Application Load Balancer + AWS WAF"
+    vendor_feature: "ALB（Ingress Controller）+ WAF v2"
+    fidelity: "exact"
+    configuration_notes: |
+      - ALB: EKS AWS Load Balancer Controller で管理
+      - WAF: AWS マネージドルール（AWSManagedRulesCommonRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesKnownBadInputsRuleSet）
+      - TLS 終端: ALB で実施、ACM 証明書（自動更新）
+      - レート制限: WAF レート制限ルール（1000 req/5min per IP）
+      - 管理画面 IP 制限: WAF IP セットルール
+      - OIDC トークン検証: ALB の OIDC 認証アクション or アプリケーション層で実施
+    alternatives:
+      - service: "Amazon API Gateway"
+        reason: "REST API のみであれば API Gateway も候補だが、EKS + ALB が共有プラットフォーム標準のため ALB を選択"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - canonical_element_id: "cdn"
+    vendor_service: "Amazon CloudFront"
+    vendor_feature: "グローバル CDN + OAC"
+    fidelity: "exact"
+    configuration_notes: |
+      - Origin: S3 (SPA + 画像) + ALB (API)
+      - キャッシュ動作: /api/* はキャッシュ無効、静的アセットは Cache-Control に準拠
+      - HTTPS 強制、TLSv1.2 以上
+      - ap-northeast-1 リージョン（foundation リージョン制限準拠）
+    alternatives: []
+    source_refs: []
+
+  - canonical_element_id: "idp"
+    vendor_service: "Amazon Cognito"
+    vendor_feature: "ユーザープール + OIDC"
+    fidelity: "exact"
+    configuration_notes: |
+      - ユーザープール: 利用者、会議室オーナー、サービス運営担当者
+      - カスタム属性: role（user/owner/admin）
+      - MFA: サービス運営担当者に必須（TOTP）
+      - パスワードポリシー: 最小 8 文字、大文字小文字数字記号必須
+      - トークン: アクセストークン 15 分、リフレッシュトークン 30 日（ローテーション）
+      - Lambda トリガー: Pre-SignUp（オーナー審査承認チェック）、Post-Confirmation（ユーザー初期設定）
+    alternatives:
+      - service: "Auth0"
+        reason: "外部 SaaS のため AWS ネイティブ統合が容易な Cognito を選択"
+    source_refs: []
+
+  - canonical_element_id: "authz_service"
+    vendor_service: "OpenFGA on Amazon EKS"
+    vendor_feature: "OpenFGA（EKS 上にデプロイ）"
+    fidelity: "exact"
+    configuration_notes: |
+      - EKS 共有ランタイム上に Deployment としてデプロイ
+      - PostgreSQL をバックエンドストアとして使用（database_rdb を共有 or 専用）
+      - gRPC 通信
+      - 関係性タプル: owner:X→room:Y, user:X→reservation:Y, owner:X→settlement:Y
+    alternatives:
+      - service: "Amazon Verified Permissions"
+        reason: "ReBAC（関係性ベース認可）の要件にはOpenFGA/SpiceDB がより適合"
+    source_refs: []
+
+  - canonical_element_id: "database_rdb"
+    vendor_service: "Amazon RDS for PostgreSQL"
+    vendor_feature: "Multi-AZ + PITR + KMS 暗号化"
+    fidelity: "exact"
+    configuration_notes: |
+      - エンジン: PostgreSQL 16
+      - インスタンスクラス: db.r6g.large（本番）、db.t4g.medium（開発・ステージング）
+      - Multi-AZ: 有効（同期レプリケーション、自動フェイルオーバー）
+      - ストレージ: gp3、100GB 初期、自動拡張有効
+      - バックアップ: 自動バックアップ有効、35日リテンション、PITR 5分粒度
+      - 暗号化: KMS CMK（保管時暗号化）
+      - パラメータグループ: max_connections 200、shared_buffers 25%
+      - セキュリティグループ: EKS ノード + Lambda からの 5432/tcp のみ許可
+      - サブネットグループ: プライベートサブネット（Multi-AZ）
+      - Performance Insights: 有効
+    alternatives:
+      - service: "Amazon Aurora PostgreSQL"
+        reason: "コストと複雑性のバランスから RDS を選択。将来スケーリング要件が増大した場合に Aurora への移行を検討"
+    source_refs:
+      - "aws-rds-postgresql"
+
+  - canonical_element_id: "cache_redis"
+    vendor_service: "Amazon ElastiCache for Redis"
+    vendor_feature: "Serverless or クラスターモード"
+    fidelity: "exact"
+    configuration_notes: |
+      - 本番: ElastiCache Serverless（自動スケーリング、Multi-AZ）
+      - 開発: ElastiCache ノードベース（cache.t4g.micro、シングル AZ）
+      - 暗号化: in-transit + at-rest
+      - セキュリティグループ: EKS ノードからの 6379/tcp のみ許可
+      - TTL 戦略: 会議室検索結果 5min、セッション 15min、トークンキャッシュ 5min
+    alternatives:
+      - service: "Amazon MemoryDB for Redis"
+        reason: "耐久性要件がないキャッシュ用途のため ElastiCache で十分"
+    source_refs:
+      - "aws-elasticache-redis"
+
+  - canonical_element_id: "storage_object"
+    vendor_service: "Amazon S3"
+    vendor_feature: "Standard + Intelligent-Tiering"
+    fidelity: "exact"
+    configuration_notes: |
+      - バケット: kashikaigishitsu-images-{env}、kashikaigishitsu-spa-{env}
+      - パブリックアクセスブロック: 有効
+      - 暗号化: SSE-KMS（CMK）
+      - バージョニング: 有効（画像バケット）
+      - ライフサイクル: 90日後 Intelligent-Tiering
+      - CORS: フロントエンドドメインからの PUT/GET を許可
+    alternatives: []
+    source_refs: []
+
+  - canonical_element_id: "messaging_queue"
+    vendor_service: "Amazon SQS"
+    vendor_feature: "Standard + FIFO キュー"
+    fidelity: "exact"
+    configuration_notes: |
+      - 非同期通知（会議URL通知等）: Standard キュー
+      - 精算処理: FIFO キュー（MessageGroupId: owner_id）
+      - DLQ: 各キューに DLQ を設定、maxReceiveCount 3
+      - メッセージ保持期間: 14日
+      - 可視性タイムアウト: 300秒（Lambda タイムアウトと一致）
+      - 暗号化: SSE-SQS
+      - Lambda トリガー: バッチサイズ 10、最大並行数 5
+    alternatives:
+      - service: "Amazon EventBridge"
+        reason: "シンプルなキュー処理のため SQS を選択。イベントルーティングが不要"
+    source_refs: []
+
+  - canonical_element_id: "external_payment"
+    vendor_service: "アプリケーション層（Gateway 層）"
+    vendor_feature: "HTTP Client + Circuit Breaker（resilience4j）"
+    fidelity: "exact"
+    configuration_notes: |
+      - 冪等キー: X-Idempotency-Key ヘッダー
+      - サーキットブレーカー: failureRateThreshold 50%、waitDurationInOpenState 30s
+      - タイムアウト: 接続 5s、読み取り 30s
+      - リトライ: 最大 3回、指数バックオフ（初期 1s、最大 10s）
+      - 全通信ログ: リクエスト/レスポンスを構造化 JSON で記録（機密情報はマスク）
+      - TLS 1.2 以上
+    alternatives: []
+    source_refs: []

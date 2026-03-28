@@ -1,0 +1,195 @@
+schema_version: "1.0"
+artifact_type: "conformance_report"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-saas-conformance-aws"
+title: "貸し会議室SaaS AWS 準拠レポート"
+status: "draft"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs: []
+inputs_ref:
+  - "product-kashikaigishitsu-saas-impl-aws"
+  - "foundation-context"
+  - "shared-platform-context"
+
+vendor: "aws"
+canonical_ref: "product-kashikaigishitsu-saas-workload-model"
+implementation_ref: "product-kashikaigishitsu-saas-impl-aws"
+
+summary:
+  total_requirements: 28
+  conformant: 26
+  partial: 2
+  non_conformant: 0
+  deferred: 0
+
+results:
+  # Foundation ガードレール準拠
+  - canonical_element_id: "all"
+    requirement_id: "foundation-region-restriction"
+    status: "conformant"
+    evidence: "全リソースが ap-northeast-1 に配置。CloudFront 証明書のみ us-east-1（ACM 要件）"
+    notes: "Foundation SCP によりリージョン制限が強制される"
+
+  - canonical_element_id: "all"
+    requirement_id: "foundation-required-tags"
+    status: "conformant"
+    evidence: "全リソースに cost-center, environment, owner タグを設定"
+    notes: "Foundation SCP + AWS Config ルールにより強制"
+
+  - canonical_element_id: "all"
+    requirement_id: "foundation-encryption"
+    status: "conformant"
+    evidence: "RDS: KMS CMK 暗号化、S3: SSE-KMS、ElastiCache: at-rest + in-transit、SQS: SSE-SQS"
+    notes: ""
+
+  - canonical_element_id: "all"
+    requirement_id: "foundation-no-local-iam-users"
+    status: "conformant"
+    evidence: "IAM Identity Center 経由のフェデレーション認証のみ使用。ローカル IAM ユーザーなし"
+    notes: ""
+
+  - canonical_element_id: "all"
+    requirement_id: "foundation-vpc-flow-logs"
+    status: "conformant"
+    evidence: "ワークロード VPC で VPC フローログ有効化"
+    notes: ""
+
+  # 共有プラットフォーム準拠
+  - canonical_element_id: "compute_backend_api"
+    requirement_id: "shared-platform-eks-runtime"
+    status: "conformant"
+    evidence: "svc-eks-runtime 必須サービスを使用。Namespace 分離、RBAC、NetworkPolicy、ArgoCD AppProject を適用"
+    notes: ""
+
+  - canonical_element_id: "compute_backend_worker"
+    requirement_id: "shared-platform-lambda-runtime"
+    status: "conformant"
+    evidence: "svc-lambda-runtime 必須サービスを使用（SQS トリガーのイベントワーカー）"
+    notes: ""
+
+  - canonical_element_id: "all"
+    requirement_id: "shared-platform-observability"
+    status: "conformant"
+    evidence: "svc-observability 必須サービスを使用。ADOT Collector → Managed Prometheus、CloudWatch Logs、X-Ray"
+    notes: ""
+
+  - canonical_element_id: "all"
+    requirement_id: "shared-platform-delivery-pipeline"
+    status: "conformant"
+    evidence: "svc-delivery-pipeline 必須サービスを使用。GitHub Actions CI + ArgoCD GitOps CD"
+    notes: ""
+
+  - canonical_element_id: "all"
+    requirement_id: "shared-platform-secrets"
+    status: "conformant"
+    evidence: "AWS Secrets Manager + External Secrets Operator（任意サービス svc-secret-management を活用）"
+    notes: ""
+
+  # ワークロード要件準拠
+  - canonical_element_id: "compute_backend_api"
+    requirement_id: "req_compute_api_001"
+    status: "conformant"
+    evidence: "HPA（min 2 / max 10）+ Karpenter ノードスケーリングで ~10,000 同時アクセスに対応"
+    notes: ""
+
+  - canonical_element_id: "compute_backend_api"
+    requirement_id: "req_compute_api_002"
+    status: "conformant"
+    evidence: "EKS + ALB 構成で p99 500ms 以内を達成可能。Performance Insights + X-Ray でモニタリング"
+    notes: "負荷テストでの検証が必要"
+
+  - canonical_element_id: "compute_backend_api"
+    requirement_id: "req_compute_api_003"
+    status: "conformant"
+    evidence: "RollingUpdate（maxUnavailable: 0、maxSurge: 1）+ PDB（minAvailable: 1）でゼロダウンタイムデプロイ"
+    notes: ""
+
+  - canonical_element_id: "database_rdb"
+    requirement_id: "req_db_001"
+    status: "conformant"
+    evidence: "RDS Multi-AZ 有効、同期レプリケーション、自動フェイルオーバー"
+    notes: ""
+
+  - canonical_element_id: "database_rdb"
+    requirement_id: "req_db_002"
+    status: "conformant"
+    evidence: "自動バックアップ有効、35日リテンション、PITR 5分粒度"
+    notes: ""
+
+  - canonical_element_id: "database_rdb"
+    requirement_id: "req_db_003"
+    status: "conformant"
+    evidence: "KMS CMK による保管時暗号化有効"
+    notes: ""
+
+  - canonical_element_id: "database_rdb"
+    requirement_id: "req_db_004"
+    status: "conformant"
+    evidence: "PostgreSQL ACID トランザクション。決済・精算処理はユースケース層でトランザクション境界を管理"
+    notes: ""
+
+  - canonical_element_id: "api_gateway"
+    requirement_id: "req_gw_001"
+    status: "partial"
+    evidence: "ALB の OIDC 認証アクションまたはアプリケーション層での JWT 検証。ALB 単体では完全な OIDC フローが制限される場合がある"
+    notes: "Cognito との統合で ALB 認証アクションを使用する場合、カスタムスコープのサポートに制限あり。アプリケーション層での JWT 検証を併用"
+
+  - canonical_element_id: "api_gateway"
+    requirement_id: "req_gw_004"
+    status: "conformant"
+    evidence: "AWS WAF v2 マネージドルール（CommonRuleSet, SQLiRuleSet, KnownBadInputsRuleSet）"
+    notes: ""
+
+  - canonical_element_id: "idp"
+    requirement_id: "req_idp_001"
+    status: "conformant"
+    evidence: "Cognito ユーザープール OIDC 対応"
+    notes: ""
+
+  - canonical_element_id: "idp"
+    requirement_id: "req_idp_002"
+    status: "conformant"
+    evidence: "Cognito MFA（TOTP）をサービス運営担当者に必須設定"
+    notes: ""
+
+  - canonical_element_id: "authz_service"
+    requirement_id: "req_authz_001"
+    status: "partial"
+    evidence: "OpenFGA on EKS。レイテンシ 10ms 以内はキャッシュ層の併用が必要になる可能性あり"
+    notes: "初期はキャッシュなしで運用し、レイテンシモニタリングに基づきキャッシュ導入を判断"
+
+  - canonical_element_id: "cache_redis"
+    requirement_id: "req_cache_001"
+    status: "conformant"
+    evidence: "ElastiCache Serverless、TTL 管理（5min 会議室検索、15min セッション）"
+    notes: ""
+
+  - canonical_element_id: "storage_object"
+    requirement_id: "req_storage_001"
+    status: "conformant"
+    evidence: "S3 + CloudFront OAC 統合"
+    notes: ""
+
+  - canonical_element_id: "messaging_queue"
+    requirement_id: "req_mq_001"
+    status: "conformant"
+    evidence: "SQS Standard + FIFO（at-least-once 配信）"
+    notes: ""
+
+  - canonical_element_id: "messaging_queue"
+    requirement_id: "req_mq_002"
+    status: "conformant"
+    evidence: "全キューに DLQ 設定（maxReceiveCount: 3）"
+    notes: ""
+
+  - canonical_element_id: "external_payment"
+    requirement_id: "req_ext_001"
+    status: "conformant"
+    evidence: "X-Idempotency-Key ヘッダーによる冪等性保証"
+    notes: ""
+
+  - canonical_element_id: "external_payment"
+    requirement_id: "req_ext_002"
+    status: "conformant"
+    evidence: "resilience4j サーキットブレーカー（failureRateThreshold 50%）"
+    notes: ""

@@ -1,0 +1,41 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-eks-over-ecs"
+title: "コンピュートランタイムの選定: EKS vs ECS"
+status: "accepted"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+inputs_ref:
+  - "shared-platform-context"
+
+decision:
+  context: "バックエンド API のコンテナ実行環境を選定する必要がある。共有プラットフォームが EKS を必須サービスとして提供している"
+  conflict_type: "capability"
+  options:
+    - id: "eks"
+      description: "Amazon EKS（共有プラットフォーム提供）"
+      pros:
+        - "共有プラットフォームの必須サービスであり、Namespace 分離・RBAC・NetworkPolicy・ArgoCD が標準提供"
+        - "Karpenter によるノード自動スケーリング"
+        - "Pod Identity によるセキュアな AWS サービスアクセス"
+        - "CronJob によるバッチ処理のネイティブサポート"
+      cons:
+        - "Kubernetes の運用複雑性（共有プラットフォーム CCoE が吸収）"
+    - id: "ecs"
+      description: "Amazon ECS (Fargate)"
+      pros:
+        - "サーバーレスで運用負荷が低い"
+        - "タスク単位の課金"
+      cons:
+        - "共有プラットフォームの必須サービスをバイパスすることになる"
+        - "ArgoCD GitOps フローとの統合が非標準"
+        - "CronJob 相当の機能が EventBridge + ECS タスク実行で複雑になる"
+  chosen_option: "eks"
+  rationale: "共有プラットフォームが svc-eks-runtime を必須サービスとして提供しており、バイパスは許可されていない。EKS を選択することで、Namespace 分離・RBAC・ArgoCD GitOps・オブザーバビリティ統合が標準で利用できる"
+  risk_assessment: "低リスク。共有プラットフォーム CCoE がクラスター運用を担当するため、ワークロードチームの運用負荷は限定的"
+  affected_elements:
+    - "compute_backend_api"
+    - "compute_backend_worker"
+  review_date: "2027-03-28"
