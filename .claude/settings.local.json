@@ -37,7 +37,9 @@
       "Bash(BASE=\"/Users/suwa_sh/src/github.com/suwa-sh/RDRAAgent/test\")",
       "Bash(mkdir -p \"$BASE/docs/rdra/events/$EVENT_ID\")",
       "Bash(cp \"$BASE/1_RDRA/\"*.tsv \"$BASE/docs/rdra/latest/\")",
-      "Bash(cp \"$BASE/1_RDRA/システム概要.json\" \"$BASE/docs/rdra/latest/\")"
+      "Bash(cp \"$BASE/1_RDRA/システム概要.json\" \"$BASE/docs/rdra/latest/\")",
+      "Bash(mkdir -p .claude/skills/usdm-rdra-nfr-arch-workspace/iteration-1/eval-3-coverage-report/with_skill/outputs)",
+      "Bash(cp samples/05_usdm-rdra-nfr-arch/docs/arch/latest/coverage-report.md .claude/skills/usdm-rdra-nfr-arch-workspace/iteration-1/eval-3-coverage-report/with_skill/outputs/)"
     ],
     "deny": [],
     "ask": []
