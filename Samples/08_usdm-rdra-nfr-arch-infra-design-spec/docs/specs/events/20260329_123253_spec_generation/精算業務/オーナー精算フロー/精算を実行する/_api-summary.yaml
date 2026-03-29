@@ -1,0 +1,88 @@
+uc: "精算を実行する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/admin/settlements/{settlement_id}/execute"
+    summary: "精算実行（精算計算済み→支払処理中、MQへ精算支払連携イベント発行）"
+    request_schema: null
+    response_schema: "SettlementExecuteResponse"
+    tags: ["admin", "settlements", "payment"]
+  - method: "GET"
+    path: "/api/v1/admin/settlements/{settlement_id}/execute/status"
+    summary: "精算処理状態確認"
+    request_schema: null
+    response_schema: "SettlementExecuteStatusResponse"
+    tags: ["admin", "settlements", "payment"]
+async_events:
+  - channel: "settlement.payment.requested"
+    direction: "publish"
+    message_schema: "SettlementPaymentRequestedEvent"
+    summary: "精算支払連携イベント発行（Backend API→MQ→FaaSワーカー）"
+  - channel: "settlement.payment.completed"
+    direction: "publish"
+    message_schema: "SettlementPaymentCompletedEvent"
+    summary: "精算支払完了イベント発行（FaaSワーカー→MQ→通知処理）"
+schemas:
+  - name: "SettlementExecuteResponse"
+    properties:
+      - name: "settlement_id"
+        type: "string"
+        required: true
+      - name: "owner_settlement_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "message_id"
+        type: "string"
+        required: true
+  - name: "SettlementExecuteStatusResponse"
+    properties:
+      - name: "settlement_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "payment_completed_at"
+        type: "string"
+        format: "datetime"
+        required: false
+      - name: "error_message"
+        type: "string"
+        required: false
+  - name: "SettlementPaymentRequestedEvent"
+    properties:
+      - name: "settlement_id"
+        type: "string"
+        required: true
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "payment_amount"
+        type: "integer"
+        required: true
+      - name: "idempotency_key"
+        type: "string"
+        required: true
+      - name: "requested_at"
+        type: "string"
+        format: "datetime"
+        required: true
+  - name: "SettlementPaymentCompletedEvent"
+    properties:
+      - name: "settlement_id"
+        type: "string"
+        required: true
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "payment_gateway_id"
+        type: "string"
+        required: true
+      - name: "completed_at"
+        type: "string"
+        format: "datetime"
+        required: true

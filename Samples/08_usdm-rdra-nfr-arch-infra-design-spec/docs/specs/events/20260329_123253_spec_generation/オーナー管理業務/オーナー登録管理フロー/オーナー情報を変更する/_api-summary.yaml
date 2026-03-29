@@ -1,0 +1,40 @@
+uc: "オーナー情報を変更する"
+business: "オーナー管理業務"
+buc: "オーナー登録管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/owners/{owner_id}"
+    summary: "オーナーの登録情報を更新する"
+    request_schema: "UpdateOwnerRequest"
+    response_schema: "OwnerResponse"
+    tags: ["owners"]
+async_events: []
+schemas:
+  - name: "UpdateOwnerRequest"
+    properties:
+      - name: "name"
+        type: "string"
+        required: false
+      - name: "phone"
+        type: "string"
+        required: false
+      - name: "email"
+        type: "string"
+        required: false
+  - name: "OwnerResponse"
+    properties:
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "phone"
+        type: "string"
+        required: true
+      - name: "email"
+        type: "string"
+        required: true
+      - name: "updated_at"
+        type: "string"
+        required: true

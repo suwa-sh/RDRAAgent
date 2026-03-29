@@ -1,0 +1,58 @@
+uc: "オーナーへ問合せを送信する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/inquiries"
+    summary: "問合せ登録（オーナー宛またはサービス運営宛）"
+    request_schema: "CreateInquiryRequest"
+    response_schema: "InquiryResponse"
+    tags: ["inquiries", "rental"]
+async_events:
+  - channel: "inquiry-notification"
+    direction: "publish"
+    message_schema: "InquiryNotificationEvent"
+    summary: "問合せ登録後にオーナーへの通知イベントを発行"
+schemas:
+  - name: "CreateInquiryRequest"
+    properties:
+      - name: "inquiryType"
+        type: "string"
+        required: true
+      - name: "recipientId"
+        type: "string"
+        required: true
+      - name: "content"
+        type: "string"
+        required: true
+  - name: "InquiryResponse"
+    properties:
+      - name: "inquiryId"
+        type: "string"
+        required: true
+      - name: "userId"
+        type: "string"
+        required: true
+      - name: "inquiryType"
+        type: "string"
+        required: true
+      - name: "recipientId"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "createdAt"
+        type: "string"
+        required: true
+  - name: "InquiryNotificationEvent"
+    properties:
+      - name: "inquiryId"
+        type: "string"
+        required: true
+      - name: "recipientId"
+        type: "string"
+        required: true
+      - name: "inquiryType"
+        type: "string"
+        required: true

@@ -1,0 +1,1166 @@
+version: "1.0"
+event_id: "20260327_100000_initial_nfr"
+created_at: "2026-03-27T10:00:00"
+source: "RDRA モデルからの初期 NFR グレード構築"
+
+model_system:
+  type: "model2"
+  reason: "外部ユーザー（利用者・オーナー）が利用する商用SaaSサービスで、決済機関との金銭取引を扱うが社会インフラ級ではなく、中規模サービスに該当"
+
+categories:
+  - id: "A"
+    name: "可用性"
+    subcategories:
+      - id: "A.1"
+        name: "継続性"
+        items:
+          - id: "A.1.1"
+            name: "運用スケジュール"
+            important: true
+            metrics:
+              - id: "A.1.1.1"
+                name: "運用時間（通常）"
+                important: true
+                grade: 3
+                grade_description: "1時間程度の停止（9時〜翌8時）"
+                reason: "BUC「会議室予約フロー」「会議室貸出管理フロー」が営業時間外も利用される想定のため"
+                source_model: "BUC: 会議室予約フロー, 会議室貸出管理フロー"
+                confidence: "high"
+              - id: "A.1.1.2"
+                name: "運用時間（特定日）"
+                important: false
+                grade: 0
+                grade_description: "規定なし"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "A.1.1.3"
+                name: "計画停止の有無"
+                important: true
+                grade: 3
+                grade_description: "不定期に計画停止あり（事前通知3日前）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "A.1.2"
+            name: "サービス切替時間"
+            important: true
+            metrics:
+              - id: "A.1.2.1"
+                name: "サービス切替時間"
+                important: true
+                grade: 3
+                grade_description: "60分未満（コールドスタンバイ）"
+                reason: "モデルシステム2のデフォルト値を適用。決済機関との連携があるため停止時間は短く抑える必要がある"
+                source_model: "外部システム: 決済機関"
+                confidence: "medium"
+      - id: "A.2"
+        name: "耐障害性"
+        items:
+          - id: "A.2.1"
+            name: "サーバ"
+            important: true
+            metrics:
+              - id: "A.2.1.1"
+                name: "サーバ内の冗長化"
+                important: true
+                grade: 3
+                grade_description: "N+1冗長（手動切替）"
+                reason: "モデルシステム2のデフォルト値を適用。外部ユーザー2種（オーナー・利用者）が利用するため"
+                source_model: "アクター: 会議室オーナー, 利用者"
+                confidence: "medium"
+          - id: "A.2.2"
+            name: "端末"
+            important: false
+            metrics:
+              - id: "A.2.2.1"
+                name: "端末の冗長化"
+                important: false
+                grade: 1
+                grade_description: "冗長化なし"
+                reason: "モデルシステム2のデフォルト値を適用。Webブラウザベースのため端末冗長化は不要"
+                source_model: "なし"
+                confidence: "default"
+          - id: "A.2.3"
+            name: "ネットワーク機器"
+            important: true
+            metrics:
+              - id: "A.2.3.1"
+                name: "ネットワーク機器の冗長化"
+                important: true
+                grade: 2
+                grade_description: "一部機器の冗長化"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "A.2.4"
+            name: "ネットワーク回線"
+            important: false
+            metrics:
+              - id: "A.2.4.1"
+                name: "回線の冗長化"
+                important: false
+                grade: 2
+                grade_description: "一部回線の冗長化"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "A.2.5"
+            name: "ストレージ"
+            important: true
+            metrics:
+              - id: "A.2.5.1"
+                name: "ストレージの冗長化"
+                important: true
+                grade: 2
+                grade_description: "RAID5（パリティ）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "A.2.6"
+            name: "建物・電源"
+            important: true
+            metrics:
+              - id: "A.2.6.1"
+                name: "建物の耐震・免震"
+                important: false
+                grade: 2
+                grade_description: "耐震構造"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "A.2.6.2"
+                name: "電源の冗長化"
+                important: true
+                grade: 2
+                grade_description: "UPS（無停電電源装置）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "A.3"
+        name: "災害対策"
+        items:
+          - id: "A.3.1"
+            name: "災害対策"
+            important: true
+            metrics:
+              - id: "A.3.1.1"
+                name: "災害対策の範囲"
+                important: true
+                grade: 2
+                grade_description: "コールドスタンバイ拠点を用意"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "A.3.1.2"
+                name: "業務継続の要否"
+                important: true
+                grade: 1
+                grade_description: "業務継続要（24時間以内に復旧）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "A.4"
+        name: "回復性"
+        items:
+          - id: "A.4.1"
+            name: "目標復旧水準"
+            important: true
+            metrics:
+              - id: "A.4.1.1"
+                name: "RPO（目標復旧地点）"
+                important: true
+                grade: 3
+                grade_description: "障害直前まで"
+                reason: "予約・決済・精算に金銭取引の状態遷移があり、データ損失が精算不整合に直結するため"
+                source_model: "状態: 予約, 決済, 精算"
+                confidence: "medium"
+              - id: "A.4.1.2"
+                name: "RTO（目標復旧時間）"
+                important: true
+                grade: 3
+                grade_description: "2時間以内"
+                reason: "モデルシステム2のデフォルト値を適用。予約サービスの性質上、長時間停止は機会損失となるため"
+                source_model: "BUC: 会議室予約フロー"
+                confidence: "medium"
+              - id: "A.4.1.3"
+                name: "RLO（目標復旧レベル）"
+                important: false
+                grade: 2
+                grade_description: "平常時の80%の処理能力"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+
+  - id: "B"
+    name: "性能・拡張性"
+    subcategories:
+      - id: "B.1"
+        name: "業務処理量"
+        items:
+          - id: "B.1.1"
+            name: "通常時の業務量"
+            important: true
+            metrics:
+              - id: "B.1.1.1"
+                name: "同時アクセス数"
+                important: true
+                grade: 3
+                grade_description: "〜10,000"
+                reason: "モデルシステム2のデフォルト値を適用。外部ユーザー（利用者）向けWebサービスのため"
+                source_model: "アクター: 利用者"
+                confidence: "medium"
+              - id: "B.1.1.2"
+                name: "データ量"
+                important: false
+                grade: 2
+                grade_description: "〜100GB"
+                reason: "情報エンティティ18種だが画像データ（会議室画像）を含むため中規模と推定"
+                source_model: "情報: 会議室情報（画像属性あり）"
+                confidence: "low"
+              - id: "B.1.1.3"
+                name: "オンラインリクエスト件数"
+                important: true
+                grade: 3
+                grade_description: "〜100,000件/日"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "B.1.1.4"
+                name: "バッチ処理件数"
+                important: false
+                grade: 2
+                grade_description: "〜10,000件"
+                reason: "月末精算バッチ（精算額計算→精算実行）の処理件数として推定"
+                source_model: "BUC: オーナー精算フロー"
+                confidence: "low"
+          - id: "B.1.2"
+            name: "ピーク時の業務量"
+            important: true
+            metrics:
+              - id: "B.1.2.1"
+                name: "ピーク時同時アクセス数"
+                important: true
+                grade: 2
+                grade_description: "通常時の2倍"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "B.1.2.2"
+                name: "ピーク時データ量"
+                important: false
+                grade: 2
+                grade_description: "通常時の2倍"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "B.2"
+        name: "性能目標値"
+        items:
+          - id: "B.2.1"
+            name: "オンライン"
+            important: true
+            metrics:
+              - id: "B.2.1.1"
+                name: "レスポンスタイム"
+                important: true
+                grade: 3
+                grade_description: "5秒以内"
+                reason: "一般利用者向け画面（会議室検索・予約申請・会議室照会）が多く、UX重視のため"
+                source_model: "BUC: 会議室予約フロー（会議室検索, 予約申請）"
+                confidence: "high"
+              - id: "B.2.1.2"
+                name: "スループット"
+                important: true
+                grade: 3
+                grade_description: "〜100 TPS"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "B.2.1.3"
+                name: "ターンアラウンドタイム"
+                important: false
+                grade: 2
+                grade_description: "10分以内"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "B.2.2"
+            name: "バッチ"
+            important: true
+            metrics:
+              - id: "B.2.2.1"
+                name: "バッチ処理時間"
+                important: true
+                grade: 2
+                grade_description: "8時間以内"
+                reason: "モデルシステム2のデフォルト値を適用。月末精算バッチの処理時間として"
+                source_model: "BUC: オーナー精算フロー"
+                confidence: "medium"
+              - id: "B.2.2.2"
+                name: "バッチ処理量"
+                important: false
+                grade: 2
+                grade_description: "〜100GB"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "B.3"
+        name: "リソース拡張性"
+        items:
+          - id: "B.3.1"
+            name: "CPU"
+            important: true
+            metrics:
+              - id: "B.3.1.1"
+                name: "CPU拡張性"
+                important: true
+                grade: 2
+                grade_description: "スケールアウト（サーバ追加）"
+                reason: "モデルシステム2のデフォルト値を適用。一般利用者のアクセス増に対応するため"
+                source_model: "アクター: 利用者"
+                confidence: "medium"
+          - id: "B.3.2"
+            name: "メモリ"
+            important: false
+            metrics:
+              - id: "B.3.2.1"
+                name: "メモリ拡張性"
+                important: false
+                grade: 2
+                grade_description: "スケールアウト（サーバ追加）"
+                reason: "CPU拡張性と連動"
+                source_model: "なし"
+                confidence: "default"
+          - id: "B.3.3"
+            name: "ストレージ"
+            important: false
+            metrics:
+              - id: "B.3.3.1"
+                name: "ストレージ拡張性"
+                important: false
+                grade: 2
+                grade_description: "オンライン拡張可能"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "B.3.4"
+            name: "ネットワーク"
+            important: false
+            metrics:
+              - id: "B.3.4.1"
+                name: "ネットワーク拡張性"
+                important: false
+                grade: 2
+                grade_description: "帯域増強可能"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "B.4"
+        name: "性能品質保証"
+        items:
+          - id: "B.4.1"
+            name: "性能テスト"
+            important: true
+            metrics:
+              - id: "B.4.1.1"
+                name: "性能テスト"
+                important: true
+                grade: 3
+                grade_description: "負荷テスト（ピーク時想定）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+
+  - id: "C"
+    name: "運用・保守性"
+    subcategories:
+      - id: "C.1"
+        name: "通常運用"
+        items:
+          - id: "C.1.1"
+            name: "運用時間"
+            important: true
+            metrics:
+              - id: "C.1.1.1"
+                name: "運用監視時間"
+                important: true
+                grade: 5
+                grade_description: "24時間監視"
+                reason: "ユーザー指定: 専任運用チーム（24h監視）が配置されるため"
+                source_model: "なし"
+                confidence: "user"
+              - id: "C.1.1.2"
+                name: "バックアップ時間帯"
+                important: false
+                grade: 2
+                grade_description: "深夜帯（0時〜6時）"
+                reason: "モデルシステム2のデフォルト値を適用。運用時間外に実施"
+                source_model: "なし"
+                confidence: "default"
+              - id: "C.1.1.3"
+                name: "計画停止対応時間"
+                important: false
+                grade: 2
+                grade_description: "4時間以内"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "C.1.2"
+            name: "バックアップ"
+            important: true
+            metrics:
+              - id: "C.1.2.1"
+                name: "バックアップ方式"
+                important: true
+                grade: 2
+                grade_description: "フル+差分バックアップ（日次）"
+                reason: "モデルシステム2のデフォルト値を適用。情報エンティティ18種を管理"
+                source_model: "情報: 18エンティティ"
+                confidence: "medium"
+              - id: "C.1.2.2"
+                name: "バックアップ対象"
+                important: false
+                grade: 2
+                grade_description: "データ+構成情報"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "C.1.2.3"
+                name: "バックアップ世代管理"
+                important: false
+                grade: 2
+                grade_description: "7世代（1週間分）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "C.1.3"
+            name: "運用監視"
+            important: true
+            metrics:
+              - id: "C.1.3.1"
+                name: "監視範囲"
+                important: true
+                grade: 3
+                grade_description: "+アプリケーション監視"
+                reason: "モデルシステム2のデフォルト値を適用。決済機関との外部連携を含むため"
+                source_model: "外部システム: 決済機関"
+                confidence: "medium"
+              - id: "C.1.3.2"
+                name: "監視方式"
+                important: false
+                grade: 2
+                grade_description: "エージェント型+外形監視"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "C.1.3.3"
+                name: "監視間隔"
+                important: false
+                grade: 2
+                grade_description: "5分間隔"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "C.2"
+        name: "保守運用"
+        items:
+          - id: "C.2.1"
+            name: "計画保守"
+            important: true
+            metrics:
+              - id: "C.2.1.1"
+                name: "計画保守の時間帯"
+                important: false
+                grade: 2
+                grade_description: "深夜帯（0時〜6時）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "C.2.1.2"
+                name: "パッチ適用方針"
+                important: true
+                grade: 2
+                grade_description: "定期的パッチ適用（四半期）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "C.2.2"
+            name: "ソフトウェア保守"
+            important: false
+            metrics:
+              - id: "C.2.2.1"
+                name: "ライフサイクル管理"
+                important: false
+                grade: 2
+                grade_description: "バージョン管理+EOL対応計画"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "C.3"
+        name: "障害時運用"
+        items:
+          - id: "C.3.1"
+            name: "障害検知"
+            important: true
+            metrics:
+              - id: "C.3.1.1"
+                name: "障害検知方式"
+                important: true
+                grade: 2
+                grade_description: "監視ツールによる検知（アラート通知）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "C.3.2"
+            name: "障害通知"
+            important: false
+            metrics:
+              - id: "C.3.2.1"
+                name: "障害通知方式"
+                important: false
+                grade: 2
+                grade_description: "メール+チャット通知"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "C.3.3"
+            name: "障害復旧"
+            important: false
+            metrics:
+              - id: "C.3.3.1"
+                name: "障害復旧方式"
+                important: false
+                grade: 2
+                grade_description: "復旧手順書+定期訓練"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "C.4"
+        name: "運用環境"
+        items:
+          - id: "C.4.1"
+            name: "テスト環境"
+            important: true
+            metrics:
+              - id: "C.4.1.1"
+                name: "テスト環境"
+                important: true
+                grade: 2
+                grade_description: "簡易テスト環境（本番縮小構成）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "C.4.2"
+            name: "開発環境"
+            important: false
+            metrics:
+              - id: "C.4.2.1"
+                name: "開発環境"
+                important: false
+                grade: 2
+                grade_description: "本番縮小構成の開発環境"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "C.5"
+        name: "サポート体制"
+        items:
+          - id: "C.5.1"
+            name: "サポート時間"
+            important: true
+            metrics:
+              - id: "C.5.1.1"
+                name: "サポート時間"
+                important: true
+                grade: 4
+                grade_description: "24時間365日対応"
+                reason: "ユーザー指定: 専任運用チーム（24h監視）が配置されるため"
+                source_model: "なし"
+                confidence: "user"
+          - id: "C.5.2"
+            name: "エスカレーション"
+            important: false
+            metrics:
+              - id: "C.5.2.1"
+                name: "エスカレーション体制"
+                important: false
+                grade: 2
+                grade_description: "2段階エスカレーション"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "C.6"
+        name: "その他の運用管理方針"
+        items:
+          - id: "C.6.1"
+            name: "ログ管理"
+            important: true
+            metrics:
+              - id: "C.6.1.1"
+                name: "ログ保管期間"
+                important: true
+                grade: 4
+                grade_description: "1年"
+                reason: "金銭取引関連BUC（精算額計算・精算実行・決済方法設定）があり、監査対応を考慮"
+                source_model: "BUC: オーナー精算フロー, 情報: 決済情報, 精算情報"
+                confidence: "medium"
+              - id: "C.6.1.2"
+                name: "ログ種別"
+                important: false
+                grade: 2
+                grade_description: "アクセスログ+操作ログ+エラーログ"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+
+  - id: "D"
+    name: "移行性"
+    subcategories:
+      - id: "D.1"
+        name: "移行時期"
+        items:
+          - id: "D.1.1"
+            name: "移行時期"
+            important: false
+            metrics:
+              - id: "D.1.1.1"
+                name: "移行時期"
+                important: false
+                grade: 0
+                grade_description: "該当なし"
+                reason: "ユーザー指定: 新規構築のため移行なし"
+                source_model: "なし"
+                confidence: "user"
+      - id: "D.2"
+        name: "移行方式"
+        items:
+          - id: "D.2.1"
+            name: "移行方式"
+            important: true
+            metrics:
+              - id: "D.2.1.1"
+                name: "移行方式"
+                important: true
+                grade: 1
+                grade_description: "一括移行（ビッグバン方式）"
+                reason: "ユーザー指定: 新規構築のため大規模移行は不要。初期データ投入のみ"
+                source_model: "なし"
+                confidence: "user"
+      - id: "D.3"
+        name: "移行対象（機器）"
+        items:
+          - id: "D.3.1"
+            name: "移行対象機器"
+            important: false
+            metrics:
+              - id: "D.3.1.1"
+                name: "移行対象機器"
+                important: false
+                grade: 0
+                grade_description: "該当なし"
+                reason: "ユーザー指定: 新規構築のため移行対象機器なし"
+                source_model: "なし"
+                confidence: "user"
+              - id: "D.3.1.2"
+                name: "移行元環境の廃棄"
+                important: false
+                grade: 0
+                grade_description: "該当なし"
+                reason: "ユーザー指定: 新規構築のため移行元環境なし"
+                source_model: "なし"
+                confidence: "user"
+      - id: "D.4"
+        name: "移行対象（データ）"
+        items:
+          - id: "D.4.1"
+            name: "移行データ"
+            important: true
+            metrics:
+              - id: "D.4.1.1"
+                name: "データ移行量"
+                important: true
+                grade: 1
+                grade_description: "〜100GB"
+                reason: "ユーザー指定: 新規構築のため移行データは最小限（マスターデータ投入程度）"
+                source_model: "なし"
+                confidence: "user"
+              - id: "D.4.1.2"
+                name: "データ変換"
+                important: false
+                grade: 0
+                grade_description: "該当なし"
+                reason: "ユーザー指定: 新規構築のためデータ変換なし"
+                source_model: "なし"
+                confidence: "user"
+              - id: "D.4.1.3"
+                name: "データクレンジング"
+                important: false
+                grade: 0
+                grade_description: "該当なし"
+                reason: "ユーザー指定: 新規構築のためデータクレンジング不要"
+                source_model: "なし"
+                confidence: "user"
+      - id: "D.5"
+        name: "移行計画"
+        items:
+          - id: "D.5.1"
+            name: "移行計画"
+            important: true
+            metrics:
+              - id: "D.5.1.1"
+                name: "移行リハーサル"
+                important: true
+                grade: 0
+                grade_description: "リハーサルなし"
+                reason: "ユーザー指定: 新規構築のため移行リハーサル不要"
+                source_model: "なし"
+                confidence: "user"
+              - id: "D.5.1.2"
+                name: "移行判定基準"
+                important: false
+                grade: 0
+                grade_description: "該当なし"
+                reason: "ユーザー指定: 新規構築のため移行判定不要"
+                source_model: "なし"
+                confidence: "user"
+              - id: "D.5.1.3"
+                name: "切り戻し計画"
+                important: false
+                grade: 0
+                grade_description: "該当なし"
+                reason: "ユーザー指定: 新規構築のため切り戻し計画不要"
+                source_model: "なし"
+                confidence: "user"
+
+  - id: "E"
+    name: "セキュリティ"
+    subcategories:
+      - id: "E.1"
+        name: "前提条件・制約条件"
+        items:
+          - id: "E.1.1"
+            name: "セキュリティポリシー"
+            important: true
+            metrics:
+              - id: "E.1.1.1"
+                name: "セキュリティポリシー"
+                important: true
+                grade: 2
+                grade_description: "組織のセキュリティポリシーに準拠"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "E.1.2"
+            name: "セキュリティ関連法規"
+            important: false
+            metrics:
+              - id: "E.1.2.1"
+                name: "準拠すべき法規・基準"
+                important: false
+                grade: 1
+                grade_description: "個人情報保護法"
+                reason: "情報「オーナー情報」「利用者情報」に氏名・連絡先・メールアドレスの個人情報が含まれるため"
+                source_model: "情報: オーナー情報, 利用者情報"
+                confidence: "medium"
+      - id: "E.2"
+        name: "セキュリティリスク分析"
+        items:
+          - id: "E.2.1"
+            name: "リスク分析"
+            important: true
+            metrics:
+              - id: "E.2.1.1"
+                name: "セキュリティリスク分析"
+                important: true
+                grade: 2
+                grade_description: "リスク分析（脅威・脆弱性評価）"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "E.3"
+        name: "セキュリティ診断"
+        items:
+          - id: "E.3.1"
+            name: "セキュリティ診断"
+            important: true
+            metrics:
+              - id: "E.3.1.1"
+                name: "セキュリティ診断"
+                important: true
+                grade: 2
+                grade_description: "手動による脆弱性診断"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "E.4"
+        name: "セキュリティリスク管理"
+        items:
+          - id: "E.4.1"
+            name: "リスク管理"
+            important: false
+            metrics:
+              - id: "E.4.1.1"
+                name: "リスク管理プロセス"
+                important: false
+                grade: 2
+                grade_description: "定期的なリスク評価と対策見直し"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "E.5"
+        name: "アクセス・利用制限"
+        items:
+          - id: "E.5.1"
+            name: "認証"
+            important: true
+            metrics:
+              - id: "E.5.1.1"
+                name: "認証方式"
+                important: true
+                grade: 2
+                grade_description: "+パスワードポリシー（複雑性・有効期限）"
+                reason: "アクター3種（オーナー/利用者/運営）で権限が分離。条件「使用許諾条件」「オーナー登録審査条件」に権限制御系がある"
+                source_model: "アクター: 3種, 条件: 使用許諾条件, オーナー登録審査条件"
+                confidence: "medium"
+          - id: "E.5.2"
+            name: "アクセス制御"
+            important: true
+            metrics:
+              - id: "E.5.2.1"
+                name: "アクセス制御"
+                important: true
+                grade: 2
+                grade_description: "ロールベースアクセス制御（RBAC）"
+                reason: "オーナー/利用者/運営担当者で操作権限が明確に分離されているため"
+                source_model: "アクター: 会議室オーナー, 利用者, サービス運営担当者"
+                confidence: "high"
+          - id: "E.5.3"
+            name: "利用制限"
+            important: false
+            metrics:
+              - id: "E.5.3.1"
+                name: "利用制限"
+                important: false
+                grade: 1
+                grade_description: "IPアドレス制限（管理画面のみ）"
+                reason: "サービス運営担当者の管理画面へのアクセス制限を想定"
+                source_model: "アクター: サービス運営担当者（社内）"
+                confidence: "low"
+      - id: "E.6"
+        name: "データ秘匿"
+        items:
+          - id: "E.6.1"
+            name: "暗号化"
+            important: true
+            metrics:
+              - id: "E.6.1.1"
+                name: "データ暗号化（保管時）"
+                important: true
+                grade: 1
+                grade_description: "機密データのみ暗号化"
+                reason: "情報「オーナー情報」「利用者情報」に個人情報、情報「決済情報」にクレジットカード情報が含まれるため"
+                source_model: "情報: オーナー情報, 利用者情報, 決済情報"
+                confidence: "high"
+              - id: "E.6.1.2"
+                name: "データ暗号化（通信時）"
+                important: true
+                grade: 2
+                grade_description: "全通信暗号化（内部通信含む）"
+                reason: "モデルシステム2のデフォルト値を適用。決済機関との外部通信+個人情報の送受信があるため"
+                source_model: "外部システム: 決済機関, 情報: 決済情報"
+                confidence: "high"
+          - id: "E.6.2"
+            name: "データマスキング"
+            important: false
+            metrics:
+              - id: "E.6.2.1"
+                name: "データマスキング"
+                important: false
+                grade: 1
+                grade_description: "テスト環境でのマスキング実施"
+                reason: "個人情報（氏名・連絡先・メール）やクレジットカード情報があるため、テスト環境ではマスキングが必要"
+                source_model: "情報: オーナー情報, 利用者情報, 決済情報"
+                confidence: "medium"
+      - id: "E.7"
+        name: "不正追跡・監視"
+        items:
+          - id: "E.7.1"
+            name: "監査ログ"
+            important: true
+            metrics:
+              - id: "E.7.1.1"
+                name: "監査ログ"
+                important: true
+                grade: 2
+                grade_description: "+データアクセスログ"
+                reason: "外部ユーザー（利用者・オーナー）があり、金銭取引の追跡が必要なため"
+                source_model: "アクター: 利用者, 会議室オーナー（社外）, 情報: 決済情報, 精算情報"
+                confidence: "medium"
+          - id: "E.7.2"
+            name: "不正監視"
+            important: false
+            metrics:
+              - id: "E.7.2.1"
+                name: "不正監視"
+                important: false
+                grade: 2
+                grade_description: "不正ログイン検知+アラート"
+                reason: "外部ユーザーがアクターにいるため不正アクセス監視が必要"
+                source_model: "アクター: 利用者, 会議室オーナー（社外）"
+                confidence: "medium"
+      - id: "E.8"
+        name: "ネットワーク対策"
+        items:
+          - id: "E.8.1"
+            name: "ファイアウォール"
+            important: true
+            metrics:
+              - id: "E.8.1.1"
+                name: "ファイアウォール"
+                important: true
+                grade: 2
+                grade_description: "ステートフルインスペクション"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+          - id: "E.8.2"
+            name: "IDS/IPS"
+            important: false
+            metrics:
+              - id: "E.8.2.1"
+                name: "IDS/IPS"
+                important: false
+                grade: 1
+                grade_description: "IDS導入（検知のみ）"
+                reason: "外部公開Webサービスのため侵入検知が必要"
+                source_model: "アクター: 利用者, 会議室オーナー（社外）"
+                confidence: "low"
+          - id: "E.8.3"
+            name: "ネットワーク分離"
+            important: false
+            metrics:
+              - id: "E.8.3.1"
+                name: "ネットワーク分離"
+                important: false
+                grade: 2
+                grade_description: "DMZ+内部セグメント分離"
+                reason: "外部公開Webサービスのため、DMZによるネットワーク分離が必要"
+                source_model: "アクター: 利用者, 会議室オーナー（社外）"
+                confidence: "medium"
+      - id: "E.9"
+        name: "マルウェア対策"
+        items:
+          - id: "E.9.1"
+            name: "マルウェア対策"
+            important: true
+            metrics:
+              - id: "E.9.1.1"
+                name: "マルウェア対策"
+                important: true
+                grade: 2
+                grade_description: "+定義ファイル自動更新+定期スキャン"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "E.10"
+        name: "Web対策"
+        items:
+          - id: "E.10.1"
+            name: "WAF"
+            important: true
+            metrics:
+              - id: "E.10.1.1"
+                name: "WAF"
+                important: true
+                grade: 2
+                grade_description: "カスタムルール+定期チューニング"
+                reason: "モデルシステム2のデフォルト値を適用。外部公開Webサービスのため"
+                source_model: "アクター: 利用者, 会議室オーナー（社外）"
+                confidence: "medium"
+          - id: "E.10.2"
+            name: "Webアプリケーション対策"
+            important: false
+            metrics:
+              - id: "E.10.2.1"
+                name: "Webアプリケーション対策"
+                important: false
+                grade: 2
+                grade_description: "OWASP Top10対策実施"
+                reason: "外部公開Webサービスのため、XSS/SQLインジェクション/CSRF等への対策が必要"
+                source_model: "アクター: 利用者, 会議室オーナー（社外）"
+                confidence: "medium"
+      - id: "E.11"
+        name: "セキュリティインシデント対応"
+        items:
+          - id: "E.11.1"
+            name: "インシデント対応"
+            important: true
+            metrics:
+              - id: "E.11.1.1"
+                name: "インシデント対応計画"
+                important: true
+                grade: 2
+                grade_description: "インシデント対応手順書+定期訓練"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+
+  - id: "F"
+    name: "システム環境・エコロジー"
+    subcategories:
+      - id: "F.1"
+        name: "システム制約・前提条件"
+        items:
+          - id: "F.1.1"
+            name: "システム制約"
+            important: true
+            metrics:
+              - id: "F.1.1.1"
+                name: "対応OS"
+                important: true
+                grade: 2
+                grade_description: "主要2-3 OS対応"
+                reason: "モデルシステム2のデフォルト値を適用。Webアプリケーションのため"
+                source_model: "なし"
+                confidence: "default"
+              - id: "F.1.1.2"
+                name: "対応ブラウザ"
+                important: true
+                grade: 3
+                grade_description: "主要ブラウザ全対応+モバイルブラウザ"
+                reason: "一般利用者がスマートフォンからも会議室検索・予約する想定のため"
+                source_model: "BUC: 会議室予約フロー（会議室検索, 予約申請）, アクター: 利用者"
+                confidence: "medium"
+              - id: "F.1.1.3"
+                name: "対応デバイス"
+                important: false
+                grade: 2
+                grade_description: "PC+スマートフォン"
+                reason: "一般利用者がスマートフォンから利用する想定のため"
+                source_model: "アクター: 利用者"
+                confidence: "medium"
+          - id: "F.1.2"
+            name: "ネットワーク制約"
+            important: false
+            metrics:
+              - id: "F.1.2.1"
+                name: "通信プロトコル"
+                important: false
+                grade: 1
+                grade_description: "HTTPS"
+                reason: "WebアプリケーションのためHTTPS通信"
+                source_model: "なし"
+                confidence: "default"
+              - id: "F.1.2.2"
+                name: "帯域要件"
+                important: false
+                grade: 2
+                grade_description: "100Mbps以上"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "F.2"
+        name: "システム特性"
+        items:
+          - id: "F.2.1"
+            name: "可搬性"
+            important: false
+            metrics:
+              - id: "F.2.1.1"
+                name: "可搬性"
+                important: false
+                grade: 2
+                grade_description: "同一ベンダ内での移行可能"
+                reason: "ユーザー指定: クラウド（シングルリージョン）のため"
+                source_model: "なし"
+                confidence: "user"
+          - id: "F.2.2"
+            name: "拡張性"
+            important: false
+            metrics:
+              - id: "F.2.2.1"
+                name: "アーキテクチャ拡張性"
+                important: false
+                grade: 2
+                grade_description: "モジュラーアーキテクチャ"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "F.3"
+        name: "適合規格"
+        items:
+          - id: "F.3.1"
+            name: "適合規格"
+            important: false
+            metrics:
+              - id: "F.3.1.1"
+                name: "業界標準・規格"
+                important: false
+                grade: 0
+                grade_description: "特になし"
+                reason: "ユーザー指定: セキュリティ規制・コンプライアンス要件は特になし"
+                source_model: "なし"
+                confidence: "user"
+              - id: "F.3.1.2"
+                name: "アクセシビリティ"
+                important: false
+                grade: 1
+                grade_description: "基本的なアクセシビリティ対応"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+      - id: "F.4"
+        name: "機材設置環境条件"
+        items:
+          - id: "F.4.1"
+            name: "設置環境"
+            important: false
+            metrics:
+              - id: "F.4.1.1"
+                name: "耐震クラス"
+                important: false
+                grade: 2
+                grade_description: "データセンタ（耐震）"
+                reason: "ユーザー指定: クラウド（シングルリージョン）のためクラウドベンダのデータセンタ基準に準拠"
+                source_model: "なし"
+                confidence: "user"
+              - id: "F.4.1.2"
+                name: "空調・温度管理"
+                important: false
+                grade: 2
+                grade_description: "データセンタ基準"
+                reason: "クラウドベンダのデータセンタ基準に準拠"
+                source_model: "なし"
+                confidence: "default"
+              - id: "F.4.1.3"
+                name: "物理セキュリティ"
+                important: false
+                grade: 2
+                grade_description: "データセンタ基準（入退室管理+監視カメラ）"
+                reason: "クラウドベンダのデータセンタ基準に準拠"
+                source_model: "なし"
+                confidence: "default"
+      - id: "F.5"
+        name: "環境マネージメント"
+        items:
+          - id: "F.5.1"
+            name: "環境対策"
+            important: false
+            metrics:
+              - id: "F.5.1.1"
+                name: "CO2排出量"
+                important: false
+                grade: 1
+                grade_description: "省電力機器の選定"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"
+              - id: "F.5.1.2"
+                name: "廃棄物・リサイクル"
+                important: false
+                grade: 1
+                grade_description: "IT機器の適正廃棄"
+                reason: "モデルシステム2のデフォルト値を適用"
+                source_model: "なし"
+                confidence: "default"

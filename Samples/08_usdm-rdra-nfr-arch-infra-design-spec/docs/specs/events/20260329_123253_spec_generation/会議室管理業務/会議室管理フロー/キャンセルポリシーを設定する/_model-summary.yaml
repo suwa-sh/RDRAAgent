@@ -1,0 +1,84 @@
+uc: "キャンセルポリシーを設定する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+
+models:
+  - name: "CancelPolicyForm"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "キャンセルポリシー"
+  - name: "CancelPolicyState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "キャンセルポリシー"
+  - name: "SetCancelPolicyRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "キャンセルポリシー"
+  - name: "SetCancelPolicyRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "キャンセルポリシー"
+  - name: "SetCancelPolicyCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "キャンセルポリシー"
+  - name: "CancelPolicy"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "キャンセルポリシー"
+  - name: "CancelPolicyRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "キャンセルポリシー"
+
+tables:
+  - name: "cancel_policies"
+    rdra_info: "キャンセルポリシー"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id}"
+      - type: "INSERT"
+        columns:
+          - name: "policy_id"
+            value: "UUID 自動採番"
+          - name: "room_id"
+            value: "対象会議室ID"
+          - name: "cancel_deadline"
+            value: "キャンセル期限（時間）"
+          - name: "cancel_rate"
+            value: "キャンセル料率（%）"
+          - name: "refund_rule"
+            value: "返金ルール"
+        where: ""
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "会議室のキャンセルポリシー取得"
+        access_pattern: "PUT /api/v1/rooms/{room_id}/cancel-policy"
+  - name: "operation_rules"
+    rdra_info: "運用ルール"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id}"
+    indexes_needed: []
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "公開可能（運用ルール+キャンセルポリシー両方設定済みの場合）"
+        where: "room_id = {room_id}"
+    indexes_needed: []
+
+kvs: []
+object_storage: []

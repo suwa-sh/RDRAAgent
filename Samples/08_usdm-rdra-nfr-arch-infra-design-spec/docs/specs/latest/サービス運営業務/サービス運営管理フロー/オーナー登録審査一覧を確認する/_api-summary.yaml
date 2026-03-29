@@ -1,0 +1,86 @@
+uc: "オーナー登録審査一覧を確認する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/admin/owners"
+    summary: "オーナー一覧取得（審査状態フィルター・キーワード検索・ページネーション）"
+    request_schema: "AdminOwnerListQuery"
+    response_schema: "AdminOwnerListResponse"
+    tags: ["admin", "owners", "review"]
+  - method: "GET"
+    path: "/api/v1/admin/owners/summary"
+    summary: "オーナー審査状態サマリー取得"
+    request_schema: null
+    response_schema: "OwnerReviewSummaryResponse"
+    tags: ["admin", "owners", "review"]
+async_events: []
+schemas:
+  - name: "AdminOwnerListQuery"
+    properties:
+      - name: "status"
+        type: "string"
+        required: false
+        enum: ["pending", "approved", "rejected", "withdrawn"]
+      - name: "keyword"
+        type: "string"
+        required: false
+      - name: "sort"
+        type: "string"
+        required: false
+        enum: ["registered_at_asc", "registered_at_desc"]
+      - name: "page"
+        type: "integer"
+        required: false
+      - name: "per_page"
+        type: "integer"
+        required: false
+  - name: "AdminOwnerListResponse"
+    properties:
+      - name: "owners"
+        type: "array"
+        required: true
+      - name: "summary"
+        type: "object"
+        required: true
+      - name: "pagination"
+        type: "object"
+        required: true
+  - name: "AdminOwnerItem"
+    properties:
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "email"
+        type: "string"
+        required: true
+      - name: "contact"
+        type: "string"
+        required: true
+      - name: "registered_at"
+        type: "string"
+        format: "datetime"
+        required: true
+      - name: "review_status"
+        type: "string"
+        required: true
+      - name: "elapsed_days"
+        type: "integer"
+        required: true
+  - name: "OwnerReviewSummaryResponse"
+    properties:
+      - name: "pending_count"
+        type: "integer"
+        required: true
+      - name: "approved_count"
+        type: "integer"
+        required: true
+      - name: "rejected_count"
+        type: "integer"
+        required: true
+      - name: "withdrawn_count"
+        type: "integer"
+        required: true

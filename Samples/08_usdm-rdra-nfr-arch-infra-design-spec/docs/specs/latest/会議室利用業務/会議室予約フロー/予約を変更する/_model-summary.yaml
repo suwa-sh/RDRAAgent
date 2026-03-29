@@ -1,0 +1,78 @@
+uc: "予約を変更する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+models:
+  - name: "ReservationEditPage"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "予約情報"
+  - name: "EditState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "予約情報"
+  - name: "UpdateReservationRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "予約情報"
+  - name: "UpdateReservationRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "予約情報"
+  - name: "UpdateReservationCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "予約情報"
+  - name: "Reservation"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "予約情報"
+  - name: "ReservationRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "予約情報"
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id=? AND status=確定"
+      - type: "SELECT"
+        columns: []
+        where: "room_id=? AND start_at<? AND end_at>? AND status IN (申請,確定,変更) AND id!=?"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "変更"
+          - name: "start_at"
+            value: "新利用開始日時"
+          - name: "end_at"
+            value: "新利用終了日時"
+          - name: "fee"
+            value: "再計算済み利用料金"
+          - name: "updated_at"
+            value: "NOW()"
+        where: "reservation_id=? AND status=確定"
+    indexes_needed:
+      - columns: ["room_id", "start_at", "end_at", "status"]
+        reason: "変更後の日時の重複予約チェックのため"
+        access_pattern: "PUT /api/v1/reservations/{id} 重複チェック"
+  - name: "operation_rules"
+    rdra_info: "運用ルール"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id=?"
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "変更後の日時の運用ルール確認のため"
+        access_pattern: "PUT /api/v1/reservations/{id} 運用ルール確認"
+kvs: []
+object_storage: []

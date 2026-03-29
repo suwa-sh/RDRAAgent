@@ -1,0 +1,4 @@
+usdm-rdra-nfr-arch-infra-design-spec スキル Step9 による Storybook Story 追加。
+UC Spec の tier-frontend-*.md からページ Story を生成し、
+_cross-cutting/ux-ui/common-components.md から共通コンポーネントを実装。
+3ポータル（user/owner/admin）のレイアウトシェルを追加。

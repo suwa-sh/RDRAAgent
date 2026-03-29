@@ -1,0 +1,72 @@
+uc: "利用履歴を管理する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+
+models:
+  - name: "UsageHistoryManagement"
+    tier: "tier-frontend-admin"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "利用履歴"
+  - name: "UsageHistoryState"
+    tier: "tier-frontend-admin"
+    layer: "state"
+    type: "state"
+    rdra_info: "利用履歴"
+  - name: "GetUsageHistoryRequest"
+    tier: "tier-frontend-admin"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "利用履歴"
+  - name: "GetUsageHistoryRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "利用履歴"
+  - name: "GetUsageHistoryQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "利用履歴"
+  - name: "UsageHistoryList"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "value-object"
+    rdra_info: "利用履歴"
+  - name: "UsageHistoryRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "利用履歴"
+
+tables:
+  - name: "usage_history"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "利用日時 BETWEEN {from} AND {to} AND user_id = {userId} AND room_id = {roomId} LIMIT {per_page} OFFSET {offset}"
+    indexes_needed:
+      - columns: ["user_id", "usage_date"]
+        reason: "利用者別・期間別の履歴検索"
+        access_pattern: "GET /api/v1/admin/usage-history?userId={userId}"
+      - columns: ["room_id", "usage_date"]
+        reason: "会議室別・期間別の履歴検索"
+        access_pattern: "GET /api/v1/admin/usage-history?roomId={roomId}"
+  - name: "users"
+    rdra_info: "利用者情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "JOIN usage_history ON user_id"
+    indexes_needed: []
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "JOIN usage_history ON room_id"
+    indexes_needed: []
+
+kvs: []
+object_storage: []

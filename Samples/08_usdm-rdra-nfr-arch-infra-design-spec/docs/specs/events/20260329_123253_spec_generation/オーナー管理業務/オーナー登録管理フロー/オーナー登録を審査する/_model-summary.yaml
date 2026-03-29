@@ -1,0 +1,62 @@
+uc: "オーナー登録を審査する"
+business: "オーナー管理業務"
+buc: "オーナー登録管理フロー"
+
+models:
+  - name: "OwnerReviewForm"
+    tier: "tier-frontend-admin"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "オーナー情報"
+  - name: "ReviewState"
+    tier: "tier-frontend-admin"
+    layer: "state"
+    type: "state"
+    rdra_info: "オーナー情報"
+  - name: "ReviewOwnerRequest"
+    tier: "tier-frontend-admin"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "オーナー情報"
+  - name: "ReviewOwnerRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "オーナー情報"
+  - name: "ReviewOwnerCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "オーナー情報"
+  - name: "Owner"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "オーナー情報"
+  - name: "OwnerRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "オーナー情報"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "status = '審査待ち'"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "登録済み または 却下"
+          - name: "reviewed_at"
+            value: "NOW()"
+        where: "owner_id = {owner_id}"
+    indexes_needed:
+      - columns: ["status"]
+        reason: "審査待ち一覧の取得"
+        access_pattern: "GET /api/v1/admin/owners?status=pending"
+
+kvs: []
+object_storage: []

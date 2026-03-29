@@ -1,0 +1,62 @@
+uc: "問合せに対応する"
+business: "サービス運営業務"
+buc: "問合せ管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/admin/inquiries"
+    summary: "管理者向け問合せ一覧取得"
+    request_schema: "AdminInquiryListQuery"
+    response_schema: "AdminInquiryListResponse"
+    tags: ["admin", "inquiries"]
+  - method: "POST"
+    path: "/api/v1/admin/inquiries/{inquiry_id}/answer"
+    summary: "問合せへの回答送信（状態: 未対応→回答済み）"
+    request_schema: "InquiryAnswerRequest"
+    response_schema: "InquiryStatusResponse"
+    tags: ["admin", "inquiries"]
+  - method: "PUT"
+    path: "/api/v1/admin/inquiries/{inquiry_id}/status"
+    summary: "問合せ状態更新（状態: 回答済み→対応済み）"
+    request_schema: "InquiryStatusUpdateRequest"
+    response_schema: "InquiryStatusResponse"
+    tags: ["admin", "inquiries"]
+async_events: []
+schemas:
+  - name: "AdminInquiryListQuery"
+    properties:
+      - name: "status"
+        type: "string"
+        required: false
+        enum: ["pending", "answered", "resolved"]
+      - name: "keyword"
+        type: "string"
+        required: false
+      - name: "page"
+        type: "integer"
+        required: false
+      - name: "per_page"
+        type: "integer"
+        required: false
+  - name: "InquiryAnswerRequest"
+    properties:
+      - name: "answer_content"
+        type: "string"
+        required: true
+  - name: "InquiryStatusUpdateRequest"
+    properties:
+      - name: "status"
+        type: "string"
+        required: true
+        enum: ["resolved"]
+  - name: "InquiryStatusResponse"
+    properties:
+      - name: "inquiry_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "answered_at"
+        type: "string"
+        format: "datetime"
+        required: false

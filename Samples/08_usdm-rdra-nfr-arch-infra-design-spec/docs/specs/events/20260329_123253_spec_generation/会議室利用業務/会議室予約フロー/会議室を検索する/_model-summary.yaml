@@ -1,0 +1,68 @@
+uc: "会議室を検索する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+models:
+  - name: "RoomSearchPage"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室情報"
+  - name: "SearchState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室情報"
+  - name: "GetRoomsRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "会議室情報"
+  - name: "RoomSearchRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室情報"
+  - name: "SearchRoomsQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "会議室情報"
+  - name: "Room"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "会議室情報"
+  - name: "RoomRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議室情報"
+tables:
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "status=公開中 AND 検索条件 LIMIT 20 OFFSET ?"
+    indexes_needed:
+      - columns: ["status", "type", "area"]
+        reason: "公開中の会議室を種別・エリアで絞り込み検索するため"
+        access_pattern: "GET /api/v1/rooms 検索クエリ"
+      - columns: ["status", "capacity"]
+        reason: "収容人数フィルタリングのため"
+        access_pattern: "GET /api/v1/rooms?capacity_min=10 検索"
+      - columns: ["status", "avg_rating"]
+        reason: "評価スコアフィルタリングのため"
+        access_pattern: "GET /api/v1/rooms?rating_min=4.0 検索"
+kvs:
+  - name: "search_cache"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "GET"
+        key_pattern: "search:{hash(conditions)}"
+        note: "検索条件ハッシュをキーとするキャッシュ取得"
+      - type: "SET"
+        key_pattern: "search:{hash(conditions)}"
+        ttl: 60
+        note: "検索結果を60秒TTLでキャッシュ保存"
+object_storage: []

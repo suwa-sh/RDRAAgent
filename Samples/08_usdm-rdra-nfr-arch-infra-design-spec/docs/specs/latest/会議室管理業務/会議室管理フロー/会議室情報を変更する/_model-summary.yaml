@@ -1,0 +1,68 @@
+uc: "会議室情報を変更する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+
+models:
+  - name: "RoomEditForm"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室情報"
+  - name: "RoomEditState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室情報"
+  - name: "UpdateRoomRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "会議室情報"
+  - name: "UpdateRoomRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室情報"
+  - name: "UpdateRoomCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "会議室情報"
+  - name: "Room"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "会議室情報"
+  - name: "RoomRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議室情報"
+
+tables:
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id}"
+      - type: "UPDATE"
+        columns:
+          - name: "room_name"
+            value: "変更後の会議室名"
+          - name: "location"
+            value: "変更後の所在地"
+          - name: "capacity"
+            value: "変更後の収容人数"
+          - name: "price"
+            value: "変更後の時間単価"
+          - name: "updated_at"
+            value: "NOW()"
+        where: "room_id = {room_id}"
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "PK による単一レコード取得"
+        access_pattern: "PUT /api/v1/rooms/{room_id}"
+
+kvs: []
+object_storage: []

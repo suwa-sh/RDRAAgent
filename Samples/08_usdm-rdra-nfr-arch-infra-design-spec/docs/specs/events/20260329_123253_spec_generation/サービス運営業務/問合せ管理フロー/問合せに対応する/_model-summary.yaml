@@ -1,0 +1,64 @@
+uc: "問合せに対応する"
+business: "サービス運営業務"
+buc: "問合せ管理フロー"
+
+models:
+  - name: "InquiryResponseForm"
+    tier: "tier-frontend-admin"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "問合せ"
+  - name: "InquiryDetailState"
+    tier: "tier-frontend-admin"
+    layer: "state"
+    type: "state"
+    rdra_info: "問合せ"
+  - name: "AnswerInquiryRequest"
+    tier: "tier-frontend-admin"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "問合せ"
+  - name: "AnswerInquiryRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "問合せ"
+  - name: "AnswerInquiryCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "問合せ"
+  - name: "Inquiry"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "問合せ"
+  - name: "InquiryRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "問合せ"
+
+tables:
+  - name: "inquiries"
+    rdra_info: "問合せ"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "inquiry_id = {inquiry_id} AND status = '未対応'"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "回答済み"
+          - name: "answer_content"
+            value: "回答内容テキスト"
+          - name: "answered_at"
+            value: "NOW()"
+        where: "inquiry_id = {inquiry_id}"
+    indexes_needed:
+      - columns: ["status", "inquiry_type"]
+        reason: "未対応のサービス問合せ一覧取得"
+        access_pattern: "GET /api/v1/admin/inquiries?status=pending&type=service"
+
+kvs: []
+object_storage: []

@@ -1,0 +1,49 @@
+uc: "バーチャル会議室を登録する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/rooms/virtual"
+    summary: "バーチャル会議室（会議ツール種別・会議URL含む）を非公開状態で登録する"
+    request_schema: "CreateVirtualRoomRequest"
+    response_schema: "VirtualRoomCreatedResponse"
+    tags: ["rooms", "virtual"]
+async_events: []
+schemas:
+  - name: "CreateVirtualRoomRequest"
+    properties:
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "meeting_tool_type"
+        type: "string"
+        required: true
+      - name: "max_connections"
+        type: "integer"
+        required: true
+      - name: "recording_available"
+        type: "boolean"
+        required: true
+      - name: "price_per_hour"
+        type: "integer"
+        required: true
+      - name: "meeting_url"
+        type: "string"
+        required: true
+      - name: "meeting_url_expires_at"
+        type: "string"
+        required: false
+  - name: "VirtualRoomCreatedResponse"
+    properties:
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "meeting_url_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "created_at"
+        type: "string"
+        required: true

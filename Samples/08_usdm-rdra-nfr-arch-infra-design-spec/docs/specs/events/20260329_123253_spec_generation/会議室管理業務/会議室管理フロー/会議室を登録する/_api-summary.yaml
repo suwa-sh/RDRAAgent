@@ -1,0 +1,52 @@
+uc: "会議室を登録する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/rooms"
+    summary: "会議室を非公開状態で登録する（物理/バーチャル対応）"
+    request_schema: "CreateRoomRequest"
+    response_schema: "RoomCreatedResponse"
+    tags: ["rooms"]
+async_events: []
+schemas:
+  - name: "CreateRoomRequest"
+    properties:
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "room_type"
+        type: "string"
+        required: true
+      - name: "price_per_hour"
+        type: "integer"
+        required: true
+      - name: "location"
+        type: "string"
+        required: false
+      - name: "capacity"
+        type: "integer"
+        required: false
+      - name: "amenities"
+        type: "array"
+        required: false
+      - name: "meeting_tool_type"
+        type: "string"
+        required: false
+      - name: "max_connections"
+        type: "integer"
+        required: false
+      - name: "recording_available"
+        type: "boolean"
+        required: false
+  - name: "RoomCreatedResponse"
+    properties:
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "created_at"
+        type: "string"
+        required: true

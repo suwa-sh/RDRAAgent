@@ -1,0 +1,62 @@
+uc: "利用状況を分析する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+
+models:
+  - name: "UsageAnalyticsDashboard"
+    tier: "tier-frontend-admin"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "利用履歴"
+  - name: "UsageAnalyticsState"
+    tier: "tier-frontend-admin"
+    layer: "state"
+    type: "state"
+    rdra_info: "利用履歴"
+  - name: "GetUsageAnalyticsRequest"
+    tier: "tier-frontend-admin"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "利用履歴"
+  - name: "GetUsageAnalyticsRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "利用履歴"
+  - name: "GetUsageAnalyticsQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "利用履歴"
+  - name: "UsageAnalyticsSummary"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "value-object"
+    rdra_info: "利用履歴"
+  - name: "UsageHistoryRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "利用履歴"
+
+tables:
+  - name: "usage_history"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "利用日時 BETWEEN {from} AND {to} GROUP BY {dimension}"
+    indexes_needed:
+      - columns: ["room_id", "usage_date"]
+        reason: "会議室別・期間別の集計"
+        access_pattern: "GET /api/v1/admin/usage-analytics"
+  - name: "sales_results"
+    rdra_info: "売上実績"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "JOIN usage_history ON room_id"
+    indexes_needed: []
+
+kvs: []
+object_storage: []

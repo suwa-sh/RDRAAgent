@@ -1,0 +1,32 @@
+uc: "鍵の貸出を記録する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/rentals/{rentalId}/key-out"
+    summary: "鍵貸出記録（物理会議室利用開始）"
+    request_schema: null
+    response_schema: "KeyOutResponse"
+    tags: ["rentals", "keys", "rental"]
+async_events: []
+schemas:
+  - name: "KeyOutResponse"
+    properties:
+      - name: "rentalId"
+        type: "string"
+        required: true
+      - name: "keyId"
+        type: "string"
+        required: true
+      - name: "keyStatus"
+        type: "string"
+        required: true
+      - name: "usageId"
+        type: "string"
+        required: true
+      - name: "usageStatus"
+        type: "string"
+        required: true
+      - name: "lentAt"
+        type: "string"
+        required: true

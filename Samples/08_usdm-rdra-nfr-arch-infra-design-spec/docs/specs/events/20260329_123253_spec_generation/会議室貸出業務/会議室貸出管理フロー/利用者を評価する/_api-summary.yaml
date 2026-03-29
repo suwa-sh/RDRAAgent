@@ -1,0 +1,40 @@
+uc: "利用者を評価する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/usages/{usageId}/user-rating"
+    summary: "利用者評価登録（使用許諾判断の参考情報蓄積）"
+    request_schema: "CreateUserRatingRequest"
+    response_schema: "UserRatingResponse"
+    tags: ["usages", "ratings", "rental"]
+async_events: []
+schemas:
+  - name: "CreateUserRatingRequest"
+    properties:
+      - name: "score"
+        type: "integer"
+        required: true
+      - name: "comment"
+        type: "string"
+        required: false
+  - name: "UserRatingResponse"
+    properties:
+      - name: "evaluationId"
+        type: "string"
+        required: true
+      - name: "usageId"
+        type: "string"
+        required: true
+      - name: "userId"
+        type: "string"
+        required: true
+      - name: "score"
+        type: "integer"
+        required: true
+      - name: "comment"
+        type: "string"
+        required: false
+      - name: "evaluatedAt"
+        type: "string"
+        required: true

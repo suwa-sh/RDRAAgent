@@ -1,0 +1,116 @@
+version: "1.0"
+event_id: "20260329_210416_spec_storybook"
+created_at: "2026-03-29T21:04:16+09:00"
+source: "usdm-rdra-nfr-arch-infra-design-spec スキル Step9: Spec から Storybook Story 生成"
+
+changes:
+  components_added:
+    layout:
+      - name: "UserLayout"
+        path: "src/components/layout/UserLayout.tsx"
+        description: "利用者ポータル共通レイアウト（ヘッダー + コンテンツ + フッター）"
+      - name: "OwnerLayout"
+        path: "src/components/layout/OwnerLayout.tsx"
+        description: "オーナーポータル共通レイアウト（サイドバー + ヘッダー + メイン）"
+      - name: "AdminLayout"
+        path: "src/components/layout/AdminLayout.tsx"
+        description: "管理者ポータル共通レイアウト（サイドバー + ヘッダー + メイン）"
+
+    common:
+      - name: "StatusBadge"
+        path: "src/components/common/StatusBadge.tsx"
+        description: "RDRA 全7状態モデル統合バッジ"
+      - name: "EmptyState"
+        path: "src/components/common/EmptyState.tsx"
+        description: "データ0件時の空状態表示"
+      - name: "LoadingSkeleton"
+        path: "src/components/common/LoadingSkeleton.tsx"
+        description: "ローディング骨格（card/table-row/detail/form）"
+      - name: "ErrorBanner"
+        path: "src/components/common/ErrorBanner.tsx"
+        description: "HTTPステータス別エラーバナー"
+      - name: "ProcessingState"
+        path: "src/components/common/ProcessingState.tsx"
+        description: "非同期処理中表示（processing/completed/failed）"
+      - name: "ConfirmActionModal"
+        path: "src/components/common/ConfirmActionModal.tsx"
+        description: "確認ダイアログ（default/destructive）"
+      - name: "EntityEditForm"
+        path: "src/components/common/EntityEditForm.tsx"
+        description: "エンティティ編集フォーム汎用パターン"
+      - name: "SearchFilterPanel"
+        path: "src/components/common/SearchFilterPanel.tsx"
+        description: "検索フィルターパネル汎用パターン"
+      - name: "PaginatedList"
+        path: "src/components/common/PaginatedList.tsx"
+        description: "ページネーション付き一覧（table/cardモード）"
+
+  stories_added:
+    pages_user:
+      - "BookingRequest"
+      - "InquiryToOwner"
+      - "InquiryToService"
+      - "OwnerRegistration"
+      - "OwnerReview"
+      - "PaymentSettings"
+      - "ReservationCancel"
+      - "ReservationEdit"
+      - "RoomDetail"
+      - "RoomReview"
+      - "RoomSearch"
+      - "SettlementConfirm"
+      - "VirtualRoomBooking"
+
+    pages_owner:
+      - "CancelPolicy"
+      - "InquiryReply"
+      - "KeyHandover"
+      - "KeyReturn"
+      - "OperationRules"
+      - "OwnerProfileEdit"
+      - "ReservationReview"
+      - "RoomEdit"
+      - "RoomPublish"
+      - "RoomRegistration"
+      - "RoomReviews"
+      - "SalesPerformance"
+      - "SettlementResult"
+      - "UsageCount"
+      - "UserReviewCheck"
+      - "UserReviewList"
+      - "UserReviewRegister"
+      - "VirtualRoomRegistration"
+      - "Withdrawal"
+
+    pages_admin:
+      - "InquiryManagement"
+      - "OwnerReviewDetail"
+      - "OwnerReviewList"
+      - "RevenueAnalytics"
+      - "SettlementExecution"
+      - "SettlementManagement"
+      - "UsageAnalytics"
+      - "UsageHistory"
+
+    common:
+      - "StatusBadge"
+      - "EmptyState"
+      - "LoadingSkeleton"
+      - "ErrorBanner"
+      - "ProcessingState"
+      - "ConfirmActionModal"
+      - "EntityEditForm"
+      - "SearchFilterPanel"
+      - "PaginatedList"
+      - "UserPortalShell"
+      - "OwnerPortalShell"
+      - "AdminPortalShell"
+
+  stats:
+    layout_components: 3
+    common_components: 9
+    page_stories_user: 13
+    page_stories_owner: 19
+    page_stories_admin: 8
+    common_stories: 12
+    total_new_stories: 52

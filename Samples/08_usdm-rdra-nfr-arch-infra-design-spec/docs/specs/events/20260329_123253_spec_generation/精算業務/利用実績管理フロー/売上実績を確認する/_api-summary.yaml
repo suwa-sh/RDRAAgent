@@ -1,0 +1,42 @@
+uc: "売上実績を確認する"
+business: "精算業務"
+buc: "利用実績管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owner/sales-summary"
+    summary: "オーナーが自身の会議室の売上実績を集計軸・期間で取得する"
+    response_schema: "SalesSummaryResponse"
+    tags: ["精算", "利用実績", "オーナー"]
+async_events: []
+schemas:
+  - name: "SalesSummaryResponse"
+    properties:
+      - name: "summary"
+        type: "object"
+        required: true
+      - name: "summary.total_amount"
+        type: "integer"
+        required: true
+      - name: "summary.total_count"
+        type: "integer"
+        required: true
+      - name: "summary.growth_rate"
+        type: "number"
+        required: false
+      - name: "items"
+        type: "array"
+        required: true
+  - name: "SalesSummaryItem"
+    properties:
+      - name: "label"
+        type: "string"
+        required: true
+      - name: "amount"
+        type: "integer"
+        required: true
+      - name: "count"
+        type: "integer"
+        required: true
+      - name: "growth_rate"
+        type: "number"
+        required: false

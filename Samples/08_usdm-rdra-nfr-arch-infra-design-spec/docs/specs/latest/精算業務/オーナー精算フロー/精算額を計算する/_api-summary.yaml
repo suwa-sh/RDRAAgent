@@ -1,0 +1,61 @@
+uc: "精算額を計算する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/admin/settlements/calculate"
+    summary: "精算額計算実行（対象月のオーナー別精算額を計算し精算計算済みに遷移）"
+    request_schema: "SettlementCalculateRequest"
+    response_schema: "SettlementCalculateResponse"
+    tags: ["admin", "settlements"]
+  - method: "GET"
+    path: "/api/v1/admin/settlements"
+    summary: "精算一覧取得（管理者、状態・対象月フィルター）"
+    request_schema: "AdminSettlementListQuery"
+    response_schema: "AdminSettlementListResponse"
+    tags: ["admin", "settlements"]
+async_events: []
+schemas:
+  - name: "SettlementCalculateRequest"
+    properties:
+      - name: "target_month"
+        type: "string"
+        required: true
+        description: "精算対象月（YYYY-MM形式）"
+      - name: "force"
+        type: "boolean"
+        required: false
+  - name: "SettlementCalculateResponse"
+    properties:
+      - name: "target_month"
+        type: "string"
+        required: true
+      - name: "settlement_count"
+        type: "integer"
+        required: true
+      - name: "settlements"
+        type: "array"
+        required: true
+  - name: "SettlementItem"
+    properties:
+      - name: "settlement_id"
+        type: "string"
+        required: true
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "owner_name"
+        type: "string"
+        required: true
+      - name: "total_usage_amount"
+        type: "integer"
+        required: true
+      - name: "total_fee_amount"
+        type: "integer"
+        required: true
+      - name: "settlement_amount"
+        type: "integer"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true

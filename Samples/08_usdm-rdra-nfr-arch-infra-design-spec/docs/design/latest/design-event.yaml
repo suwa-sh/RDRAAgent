@@ -1,0 +1,714 @@
+version: "1.0"
+event_id: "20260329_100000_design_system"
+created_at: "2026-03-29T10:00:00+09:00"
+source: "初期デザインシステム生成: 貸し会議室マッチングSaaS"
+
+brand:
+  name: "RoomConnect"
+  colors:
+    primary:
+      hex: "#2563EB"
+      name: "Blue 600"
+    secondary:
+      hex: "#0D9488"
+      name: "Teal 600"
+  typography:
+    sans: "Noto Sans JP, Inter, system-ui, sans-serif"
+    mono: "JetBrains Mono, Fira Code, monospace"
+    scale:
+      xs: "0.75rem"
+      sm: "0.875rem"
+      base: "1rem"
+      lg: "1.125rem"
+      xl: "1.25rem"
+      2xl: "1.5rem"
+      3xl: "1.875rem"
+  voice:
+    tone: "professional-friendly"
+    principles:
+      - "信頼性"
+      - "明快さ"
+      - "親しみやすさ"
+  logo:
+    variants:
+      - name: "full"
+        path: "assets/logo-full.svg"
+      - name: "icon"
+        path: "assets/logo-icon.svg"
+      - name: "stacked"
+        path: "assets/logo-stacked.svg"
+  icons:
+    style: "outlined"
+    source_dir: "assets/icons/"
+
+portals:
+  - id: "user"
+    name: "利用者"
+    actor: "利用者"
+    primary_color: "#2563EB"
+    screen_count: 15
+  - id: "owner"
+    name: "オーナー"
+    actor: "会議室オーナー"
+    primary_color: "#0D9488"
+    screen_count: 20
+  - id: "admin"
+    name: "管理者"
+    actor: "サービス運営担当者"
+    primary_color: "#334155"
+    screen_count: 8
+
+tokens:
+  primitive:
+    colors:
+      gray:
+        50: "#F8FAFC"
+        100: "#F1F5F9"
+        200: "#E2E8F0"
+        300: "#CBD5E1"
+        400: "#94A3B8"
+        500: "#64748B"
+        600: "#475569"
+        700: "#334155"
+        800: "#1E293B"
+        900: "#0F172A"
+        950: "#020617"
+      blue:
+        50: "#EFF6FF"
+        500: "#3B82F6"
+        600: "#2563EB"
+        700: "#1D4ED8"
+      teal:
+        50: "#F0FDFA"
+        500: "#14B8A6"
+        600: "#0D9488"
+        700: "#0F766E"
+      green:
+        50: "#F0FDF4"
+        600: "#16A34A"
+        700: "#15803D"
+      red:
+        50: "#FEF2F2"
+        600: "#DC2626"
+        700: "#B91C1C"
+      amber:
+        50: "#FFFBEB"
+        400: "#FBBF24"
+        500: "#F59E0B"
+      orange:
+        50: "#FFF7ED"
+        500: "#F97316"
+      violet:
+        50: "#F5F3FF"
+        500: "#8B5CF6"
+        600: "#7C3AED"
+      white: "#FFFFFF"
+    spacing:
+      1: "0.25rem"
+      2: "0.5rem"
+      3: "0.75rem"
+      4: "1rem"
+      5: "1.25rem"
+      6: "1.5rem"
+      8: "2rem"
+      12: "3rem"
+      16: "4rem"
+    radius:
+      sm: "0.25rem"
+      md: "0.375rem"
+      lg: "0.5rem"
+      xl: "0.75rem"
+      full: "9999px"
+    shadow:
+      sm: "0 1px 3px 0 rgb(0 0 0 / 0.1)"
+      md: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+      lg: "0 10px 15px -3px rgb(0 0 0 / 0.1)"
+      xl: "0 20px 25px -5px rgb(0 0 0 / 0.1)"
+    font_size:
+      xs: "0.75rem"
+      sm: "0.875rem"
+      base: "1rem"
+      lg: "1.125rem"
+      xl: "1.25rem"
+    duration:
+      fast: "100ms"
+      normal: "200ms"
+      slow: "300ms"
+  semantic:
+    background: "{primitive.colors.white}"
+    foreground: "{primitive.colors.gray.900}"
+    border: "{primitive.colors.gray.200}"
+    success: "#16A34A"
+    warning: "#F97316"
+    destructive: "#DC2626"
+    info: "#3B82F6"
+    rating: "#FBBF24"
+    virtual_accent: "#8B5CF6"
+  component:
+    button:
+      height_md: "40px"
+      radius: "{primitive.radius.lg}"
+      font_size: "{primitive.font_size.sm}"
+    card:
+      padding: "{primitive.spacing.5}"
+      radius: "{primitive.radius.xl}"
+      shadow: "{primitive.shadow.sm}"
+    input:
+      height: "40px"
+      radius: "{primitive.radius.lg}"
+    badge:
+      height: "24px"
+      radius: "{primitive.radius.full}"
+    room_card:
+      image_height: "200px"
+      price_font_size: "{primitive.font_size.xl}"
+    rating:
+      star_size: "20px"
+    calendar:
+      cell_size: "40px"
+    sidebar:
+      width: "256px"
+    table:
+      row_height: "48px"
+    modal:
+      width_md: "560px"
+  dark_overrides:
+    semantic:
+      background: "{primitive.colors.gray.950}"
+      foreground: "{primitive.colors.gray.50}"
+      border: "{primitive.colors.gray.800}"
+    component:
+      card:
+        bg: "{primitive.colors.gray.900}"
+
+components:
+  ui:
+    - name: "Button"
+      variants:
+        - "default"
+        - "secondary"
+        - "outline"
+        - "ghost"
+        - "destructive"
+      sizes:
+        - "sm"
+        - "md"
+        - "lg"
+    - name: "Badge"
+      variants:
+        - "default"
+        - "success"
+        - "warning"
+        - "destructive"
+        - "info"
+        - "virtual"
+        - "outline"
+    - name: "Card"
+      variants:
+        - "default"
+        - "hoverable"
+    - name: "Input"
+      variants:
+        - "default"
+        - "error"
+        - "disabled"
+  # --- Spec スキル Step9 で追加: 共通コンポーネント ---
+  common:
+    - name: "StatusBadge"
+      description: "RDRA 全7状態モデル統合バッジ"
+    - name: "EmptyState"
+      description: "データ0件時の空状態表示"
+    - name: "LoadingSkeleton"
+      description: "ローディング骨格（card/table-row/detail/form）"
+    - name: "ErrorBanner"
+      description: "HTTPステータス別エラーバナー"
+    - name: "ProcessingState"
+      description: "非同期処理中表示"
+    - name: "ConfirmActionModal"
+      description: "確認ダイアログ（default/destructive）"
+    - name: "EntityEditForm"
+      description: "エンティティ編集フォーム汎用パターン"
+    - name: "SearchFilterPanel"
+      description: "検索フィルターパネル汎用パターン"
+    - name: "PaginatedList"
+      description: "ページネーション付き一覧（table/card）"
+
+  # --- Spec スキル Step9 で追加: レイアウトコンポーネント ---
+  layout:
+    - name: "UserLayout"
+      description: "利用者ポータル共通レイアウト"
+    - name: "OwnerLayout"
+      description: "オーナーポータル共通レイアウト"
+    - name: "AdminLayout"
+      description: "管理者ポータル共通レイアウト"
+
+  domain:
+    - name: "RoomCard"
+      description: "会議室一覧カード（物理/バーチャル）"
+      screens:
+        - "会議室検索画面"
+        - "会議室詳細画面"
+      props:
+        - "name"
+        - "variant"
+        - "imageUrl"
+        - "rating"
+        - "capacity"
+        - "pricePerHour"
+      variants:
+        - "physical"
+        - "virtual"
+    - name: "BookingCalendar"
+      description: "予約カレンダー（空き状況表示・日時選択）"
+      screens:
+        - "予約申請画面"
+        - "バーチャル会議室予約画面"
+        - "予約変更画面"
+      props:
+        - "year"
+        - "month"
+        - "days"
+      states:
+        - "available"
+        - "booked"
+        - "selected"
+        - "disabled"
+    - name: "ReservationStatusBadge"
+      description: "予約ステータスバッジ"
+      screens:
+        - "予約審査画面"
+        - "予約許諾画面"
+      props:
+        - "status"
+    - name: "StarRating"
+      description: "星評価（表示・入力）"
+      screens:
+        - "会議室評価登録画面"
+        - "会議室評価一覧画面"
+        - "会議室詳細画面"
+      props:
+        - "value"
+        - "count"
+        - "readOnly"
+        - "size"
+    - name: "OwnerVerificationBadge"
+      description: "オーナー審査状態バッジ"
+      screens:
+        - "オーナー審査画面"
+        - "オーナー審査管理画面"
+      props:
+        - "status"
+    - name: "PriceDisplay"
+      description: "料金表示（¥/時間）"
+      screens:
+        - "会議室検索画面"
+        - "会議室詳細画面"
+        - "予約申請画面"
+      props:
+        - "amount"
+        - "unit"
+        - "currency"
+    - name: "KeyHandoverTracker"
+      description: "鍵貸出・返却ステッパー"
+      screens:
+        - "鍵貸出記録画面"
+        - "鍵返却記録画面"
+      props:
+        - "currentStep"
+        - "lentAt"
+        - "returnDue"
+    - name: "SettlementSummaryCard"
+      description: "精算情報サマリーカード"
+      screens:
+        - "精算結果確認画面"
+        - "精算額計算画面"
+      props:
+        - "month"
+        - "status"
+        - "totalUsageFee"
+        - "commissionAmount"
+        - "settlementAmount"
+    - name: "InquiryThread"
+      description: "問合せ会話スレッド"
+      screens:
+        - "問合せ送信画面"
+        - "問合せ回答画面"
+        - "問合せ対応画面"
+      props:
+        - "messages"
+    - name: "SearchFilter"
+      description: "会議室検索フィルター"
+      screens:
+        - "会議室検索画面"
+      props:
+        - "roomType"
+        - "toolType"
+        - "capacity"
+        - "priceRange"
+        - "rating"
+
+screens:
+  - name: "会議室検索画面"
+    portal: "user"
+    route: "/rooms"
+    components:
+      - "SearchFilter"
+      - "RoomCard"
+  - name: "会議室詳細画面"
+    portal: "user"
+    route: "/rooms/:id"
+    components:
+      - "StarRating"
+      - "BookingCalendar"
+      - "PriceDisplay"
+  - name: "予約申請画面"
+    portal: "user"
+    route: "/rooms/:id/book"
+    components:
+      - "BookingCalendar"
+      - "PriceDisplay"
+  - name: "バーチャル会議室予約画面"
+    portal: "user"
+    route: "/rooms/:id/book"
+    components:
+      - "BookingCalendar"
+  - name: "予約変更画面"
+    portal: "user"
+    route: "/reservations/:id/edit"
+    components:
+      - "BookingCalendar"
+  - name: "予約取消画面"
+    portal: "user"
+    route: "/reservations/:id/cancel"
+    components:
+      - "PriceDisplay"
+      - "Button"
+  - name: "会議室評価登録画面"
+    portal: "user"
+    route: "/reservations/:id/review"
+    components:
+      - "StarRating"
+  - name: "問合せ送信画面"
+    portal: "user"
+    route: "/inquiries/new"
+    components:
+      - "InquiryThread"
+  - name: "オーナー審査画面"
+    portal: "admin"
+    route: "/admin/owners/:id/review"
+    components:
+      - "OwnerVerificationBadge"
+  - name: "オーナー審査管理画面"
+    portal: "admin"
+    route: "/admin/owners/reviews"
+    components:
+      - "OwnerVerificationBadge"
+  - name: "予約審査画面"
+    portal: "owner"
+    route: "/owner/reservations/:id/review"
+    components:
+      - "ReservationStatusBadge"
+      - "StarRating"
+  - name: "鍵貸出記録画面"
+    portal: "owner"
+    route: "/owner/rentals/:id/key-out"
+    components:
+      - "KeyHandoverTracker"
+  - name: "鍵返却記録画面"
+    portal: "owner"
+    route: "/owner/rentals/:id/key-return"
+    components:
+      - "KeyHandoverTracker"
+  - name: "精算結果確認画面"
+    portal: "owner"
+    route: "/owner/settlements"
+    components:
+      - "SettlementSummaryCard"
+  - name: "精算額計算画面"
+    portal: "admin"
+    route: "/admin/settlements/calculate"
+    components:
+      - "SettlementSummaryCard"
+  - name: "問合せ回答画面"
+    portal: "owner"
+    route: "/owner/inquiries/:id"
+    components:
+      - "InquiryThread"
+  - name: "問合せ対応画面"
+    portal: "admin"
+    route: "/admin/inquiries/:id"
+    components:
+      - "InquiryThread"
+  - name: "会議室評価一覧画面"
+    portal: "owner"
+    route: "/owner/rooms/:id/reviews"
+    components:
+      - "StarRating"
+  - name: "予約許諾画面"
+    portal: "owner"
+    route: "/owner/reservations/:id/approve"
+    components:
+      - "ReservationStatusBadge"
+      - "Button"
+
+  # --- Spec スキル Step9 で追加 (20260329_210416_spec_storybook) ---
+  - name: "予約変更画面"
+    portal: "user"
+    route: "/reservations/:id/edit"
+    components:
+      - "BookingCalendar"
+      - "ReservationStatusBadge"
+      - "Button"
+  - name: "決済方法設定画面"
+    portal: "user"
+    route: "/payment/settings"
+    components:
+      - "Input"
+      - "Button"
+  - name: "バーチャル会議室予約画面"
+    portal: "user"
+    route: "/rooms/:id/book/virtual"
+    components:
+      - "BookingCalendar"
+      - "Button"
+  - name: "オーナー問合せ画面"
+    portal: "user"
+    route: "/inquiries/owner/new"
+    components:
+      - "InquiryThread"
+      - "Input"
+      - "Button"
+  - name: "サービス問合せ画面"
+    portal: "user"
+    route: "/inquiries/service/new"
+    components:
+      - "InquiryThread"
+      - "Input"
+      - "Button"
+  - name: "オーナー評価登録画面"
+    portal: "user"
+    route: "/reservations/:id/review/owner"
+    components:
+      - "StarRating"
+      - "Input"
+      - "Button"
+  - name: "オーナー登録申請画面"
+    portal: "user"
+    route: "/owner/register"
+    components:
+      - "Input"
+      - "Button"
+  - name: "運用ルール設定画面"
+    portal: "owner"
+    route: "/owner/rooms/:id/rules"
+    components:
+      - "Input"
+      - "Button"
+  - name: "キャンセルポリシー設定画面"
+    portal: "owner"
+    route: "/owner/rooms/:id/cancel-policy"
+    components:
+      - "Input"
+      - "PriceDisplay"
+      - "Button"
+  - name: "会議室公開管理画面"
+    portal: "owner"
+    route: "/owner/rooms/:id/publish"
+    components:
+      - "Badge"
+      - "Button"
+  - name: "会議室情報編集画面"
+    portal: "owner"
+    route: "/owner/rooms/:id/edit"
+    components:
+      - "Input"
+      - "Button"
+  - name: "バーチャル会議室登録画面"
+    portal: "owner"
+    route: "/owner/rooms/new/virtual"
+    components:
+      - "Input"
+      - "Button"
+  - name: "鍵返却記録画面"
+    portal: "owner"
+    route: "/owner/rentals/:id/key-return"
+    components:
+      - "KeyHandoverTracker"
+      - "Button"
+  - name: "利用者評価確認画面"
+    portal: "owner"
+    route: "/owner/user-reviews/:id"
+    components:
+      - "StarRating"
+      - "Card"
+  - name: "利用者評価登録画面"
+    portal: "owner"
+    route: "/owner/user-reviews/new"
+    components:
+      - "StarRating"
+      - "Input"
+      - "Button"
+  - name: "オーナー情報編集画面"
+    portal: "owner"
+    route: "/owner/profile/edit"
+    components:
+      - "Input"
+      - "Button"
+  - name: "退会申請画面"
+    portal: "owner"
+    route: "/owner/withdraw"
+    components:
+      - "Button"
+  - name: "売上実績確認画面"
+    portal: "owner"
+    route: "/owner/sales"
+    components:
+      - "PriceDisplay"
+      - "Card"
+  - name: "利用回数確認画面"
+    portal: "owner"
+    route: "/owner/usage"
+    components:
+      - "Card"
+  - name: "利用者評価一覧画面"
+    portal: "owner"
+    route: "/owner/user-reviews"
+    components:
+      - "StarRating"
+      - "Card"
+  - name: "オーナー審査詳細画面"
+    portal: "admin"
+    route: "/admin/owners/:id/review"
+    components:
+      - "OwnerVerificationBadge"
+      - "Button"
+  - name: "利用履歴管理画面"
+    portal: "admin"
+    route: "/admin/usage"
+    components:
+      - "Badge"
+      - "Input"
+      - "Button"
+  - name: "利用状況分析画面"
+    portal: "admin"
+    route: "/admin/analytics"
+    components:
+      - "Card"
+      - "Badge"
+  - name: "精算実行画面"
+    portal: "admin"
+    route: "/admin/settlements/:id/execute"
+    components:
+      - "SettlementSummaryCard"
+      - "Button"
+
+states:
+  - model: "オーナー"
+    entries:
+      - state: "申請中"
+        label: "未審査"
+        color: "amber"
+        actions:
+          admin: "審査（承認/却下）"
+      - state: "承認済"
+        label: "認証済"
+        color: "green"
+      - state: "却下"
+        label: "却下"
+        color: "red"
+      - state: "退会"
+        label: "退会"
+        color: "gray"
+  - model: "予約"
+    entries:
+      - state: "申請中"
+        label: "申請中"
+        color: "amber"
+        actions:
+          user: "取消可"
+          owner: "審査（承認/拒否）"
+      - state: "確定"
+        label: "確定"
+        color: "green"
+        actions:
+          user: "変更/取消可"
+          owner: "鍵貸出"
+      - state: "利用中"
+        label: "利用中"
+        color: "blue"
+        actions:
+          owner: "鍵返却"
+      - state: "完了"
+        label: "完了"
+        color: "gray"
+        actions:
+          user: "評価登録"
+          owner: "利用者評価"
+      - state: "取消"
+        label: "取消"
+        color: "red"
+      - state: "拒否"
+        label: "拒否"
+        color: "red"
+  - model: "鍵"
+    entries:
+      - state: "保管中"
+        label: "保管中"
+        color: "gray"
+      - state: "貸出中"
+        label: "貸出中"
+        color: "blue"
+      - state: "返却済"
+        label: "返却済"
+        color: "green"
+  - model: "決済"
+    entries:
+      - state: "未決済"
+        label: "未決済"
+        color: "gray"
+      - state: "決済中"
+        label: "処理中"
+        color: "amber"
+      - state: "決済完了"
+        label: "決済済"
+        color: "green"
+      - state: "決済失敗"
+        label: "失敗"
+        color: "red"
+  - model: "精算"
+    entries:
+      - state: "計算中"
+        label: "計算中"
+        color: "amber"
+      - state: "確定"
+        label: "確定"
+        color: "blue"
+      - state: "支払済"
+        label: "支払済"
+        color: "green"
+      - state: "支払失敗"
+        label: "失敗"
+        color: "red"
+
+nfr_decisions:
+  - nfr: "可用性 24h運用"
+    decision: "エラー/ローディング状態を全画面に定義"
+  - nfr: "性能 ~10,000同時ユーザー"
+    decision: "検索結果にページネーション・仮想スクロール"
+  - nfr: "性能 p99 500ms"
+    decision: "Skeleton UI でパーシーブドパフォーマンス改善"
+  - nfr: "セキュリティ RBAC 3ロール"
+    decision: "ポータル別ナビゲーション・権限ベース表示切替"
+  - nfr: "セキュリティ PII"
+    decision: "マスク表示、オートコンプリート制御"
+  - nfr: "運用 モバイル対応"
+    decision: "利用者ポータルはモバイルファースト設計"
+
+storybook:
+  framework: "nextjs-vite"
+  addons:
+    - "addon-docs"
+    - "addon-a11y"
+  categories:
+    ui: "UI"
+    domain: "Domain"

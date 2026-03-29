@@ -1,0 +1,38 @@
+uc: "利用回数を確認する"
+business: "精算業務"
+buc: "利用実績管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owner/usage-stats"
+    summary: "オーナー向け利用回数統計取得（物件別/期間別、所有権ベース参照）"
+    request_schema: "OwnerUsageStatsQuery"
+    response_schema: "OwnerUsageStatsResponse"
+    tags: ["owner", "usage-stats"]
+async_events: []
+schemas:
+  - name: "OwnerUsageStatsQuery"
+    properties:
+      - name: "dimension"
+        type: "string"
+        required: true
+        enum: ["room", "period"]
+      - name: "from"
+        type: "string"
+        required: true
+      - name: "to"
+        type: "string"
+        required: true
+  - name: "OwnerUsageStatsResponse"
+    properties:
+      - name: "dimension"
+        type: "string"
+        required: true
+      - name: "period"
+        type: "object"
+        required: true
+      - name: "items"
+        type: "array"
+        required: true
+      - name: "kpi"
+        type: "object"
+        required: true

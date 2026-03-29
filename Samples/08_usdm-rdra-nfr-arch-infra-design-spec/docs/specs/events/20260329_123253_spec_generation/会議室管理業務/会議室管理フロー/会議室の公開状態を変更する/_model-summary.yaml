@@ -1,0 +1,65 @@
+uc: "会議室の公開状態を変更する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+
+models:
+  - name: "RoomPublishControl"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室情報"
+  - name: "RoomStatusState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室情報"
+  - name: "UpdateRoomStatusRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "会議室情報"
+  - name: "UpdateRoomStatusRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室情報"
+  - name: "UpdateRoomStatusCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "会議室情報"
+  - name: "Room"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "会議室情報"
+  - name: "RoomRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議室情報"
+
+tables:
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id}"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "公開中 または 非公開"
+          - name: "updated_at"
+            value: "NOW()"
+        where: "room_id = {room_id}"
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "PK による単一レコード取得"
+        access_pattern: "PUT /api/v1/rooms/{room_id}/status"
+      - columns: ["owner_id", "status"]
+        reason: "オーナーの公開中会議室一覧"
+        access_pattern: "GET /api/v1/rooms?owner_id={owner_id}&status=public"
+
+kvs: []
+object_storage: []

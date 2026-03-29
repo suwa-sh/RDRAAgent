@@ -1,0 +1,43 @@
+uc: "利用状況を分析する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/admin/usage-analytics"
+    summary: "利用状況分析取得（集計軸・期間指定、KPI+明細）"
+    request_schema: "UsageAnalyticsQuery"
+    response_schema: "UsageAnalyticsResponse"
+    tags: ["admin", "usage-analytics"]
+async_events: []
+schemas:
+  - name: "UsageAnalyticsQuery"
+    properties:
+      - name: "dimension"
+        type: "string"
+        required: true
+        enum: ["user", "room", "period"]
+      - name: "from"
+        type: "string"
+        format: "date"
+        required: true
+      - name: "to"
+        type: "string"
+        format: "date"
+        required: true
+      - name: "page"
+        type: "integer"
+        required: false
+      - name: "per_page"
+        type: "integer"
+        required: false
+  - name: "UsageAnalyticsResponse"
+    properties:
+      - name: "kpi"
+        type: "object"
+        required: true
+      - name: "items"
+        type: "array"
+        required: true
+      - name: "pagination"
+        type: "object"
+        required: true

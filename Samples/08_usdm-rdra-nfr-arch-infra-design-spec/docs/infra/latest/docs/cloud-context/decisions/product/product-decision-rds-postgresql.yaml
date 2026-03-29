@@ -1,0 +1,41 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-rds-postgresql"
+title: "データベースの選定: RDS PostgreSQL vs Aurora PostgreSQL"
+status: "accepted"
+generated_at: "2026-03-28T21:00:00+09:00"
+source_refs:
+  - "aws-rds-postgresql"
+inputs_ref:
+  - "product-kashikaigishitsu-saas-input"
+
+decision:
+  context: "18エンティティのトランザクション整合性を保証し、金銭取引（決済・精算）を安全に処理するデータベースを選定する"
+  conflict_type: "capability"
+  options:
+    - id: "rds-postgresql"
+      description: "Amazon RDS for PostgreSQL (Multi-AZ)"
+      pros:
+        - "シンプルな構成で運用負荷が低い"
+        - "Multi-AZ 同期レプリケーションで 99.9% SLA を達成"
+        - "PITR（35日リテンション）で RPO 障害直前を実現"
+        - "コスト効率が高い（db.r6g.large で十分な性能）"
+      cons:
+        - "スケールアウト時にリードレプリカの手動管理が必要"
+        - "ストレージ I/O が Aurora ほど最適化されていない"
+    - id: "aurora-postgresql"
+      description: "Amazon Aurora PostgreSQL"
+      pros:
+        - "最大 15 リードレプリカで読み取りスケーリング"
+        - "ストレージの自動拡張・6重レプリケーション"
+        - "Aurora Serverless v2 による自動スケーリング"
+      cons:
+        - "コストが RDS の 1.5-2 倍"
+        - "現在の規模（~50 RPS、~100GB）では過剰"
+  chosen_option: "rds-postgresql"
+  rationale: "現在のワークロード規模（baseline 50 RPS、spike 100 RPS、データ量 ~100GB）では RDS Multi-AZ で十分。コスト効率を優先し、スケーリング要件が増大した場合に Aurora への移行を検討する"
+  risk_assessment: "中リスク。将来的にデータ量が大幅に増加した場合、Aurora への移行が必要になる可能性がある。ただし PostgreSQL エンジンの互換性により移行は容易"
+  affected_elements:
+    - "database_rdb"
+  review_date: "2027-03-28"

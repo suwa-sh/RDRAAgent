@@ -1,0 +1,43 @@
+uc: "バーチャル会議室を評価する"
+business: "会議室利用業務"
+buc: "会議室評価フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reviews"
+    summary: "バーチャル会議室評価登録（review_type=room, room_type=virtual、物理評価と共通API）"
+    request_schema: "ReviewRequest"
+    response_schema: "ReviewResponse"
+    tags: ["reviews", "virtual"]
+async_events: []
+schemas:
+  - name: "ReviewRequest"
+    properties:
+      - name: "review_type"
+        type: "string"
+        required: true
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "reservation_id"
+        type: "string"
+        required: true
+      - name: "score"
+        type: "integer"
+        required: true
+      - name: "comment"
+        type: "string"
+        required: false
+  - name: "ReviewResponse"
+    properties:
+      - name: "review_id"
+        type: "string"
+        required: true
+      - name: "review_type"
+        type: "string"
+        required: true
+      - name: "score"
+        type: "integer"
+        required: true
+      - name: "created_at"
+        type: "string"
+        required: true

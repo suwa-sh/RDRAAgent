@@ -1,0 +1,67 @@
+uc: "精算結果を確認する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owner/settlements"
+    summary: "オーナー向け精算一覧取得（自身の精算のみ、状態フィルター）"
+    request_schema: "OwnerSettlementListQuery"
+    response_schema: "OwnerSettlementListResponse"
+    tags: ["owner", "settlements"]
+  - method: "GET"
+    path: "/api/v1/owner/settlements/{settlement_id}"
+    summary: "オーナー向け精算詳細取得（ReBAC認可チェック）"
+    request_schema: null
+    response_schema: "OwnerSettlementDetailResponse"
+    tags: ["owner", "settlements"]
+async_events: []
+schemas:
+  - name: "OwnerSettlementListQuery"
+    properties:
+      - name: "status"
+        type: "string"
+        required: false
+        enum: ["pending", "calculated", "processing", "paid"]
+      - name: "page"
+        type: "integer"
+        required: false
+      - name: "per_page"
+        type: "integer"
+        required: false
+  - name: "OwnerSettlementListResponse"
+    properties:
+      - name: "total_paid_amount"
+        type: "integer"
+        required: true
+      - name: "settlements"
+        type: "array"
+        required: true
+      - name: "pagination"
+        type: "object"
+        required: true
+  - name: "OwnerSettlementDetailResponse"
+    properties:
+      - name: "settlement_id"
+        type: "string"
+        required: true
+      - name: "target_month"
+        type: "string"
+        required: true
+      - name: "total_usage_amount"
+        type: "integer"
+        required: true
+      - name: "total_fee_amount"
+        type: "integer"
+        required: true
+      - name: "settlement_amount"
+        type: "integer"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "payment_date"
+        type: "string"
+        required: false
+      - name: "payment_gateway_id"
+        type: "string"
+        required: false

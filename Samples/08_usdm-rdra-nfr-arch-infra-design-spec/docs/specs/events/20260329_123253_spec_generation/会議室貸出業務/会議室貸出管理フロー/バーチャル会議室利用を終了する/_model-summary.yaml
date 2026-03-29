@@ -1,0 +1,69 @@
+uc: "バーチャル会議室利用を終了する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+
+models:
+  - name: "VirtualRoomEndJob"
+    tier: "tier-cronjob-worker"
+    layer: "handler"
+    type: "command"
+    rdra_info: "会議室利用"
+  - name: "EndVirtualUsageRequest"
+    tier: "tier-cronjob-worker"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "会議室利用"
+  - name: "EndVirtualUsageRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室利用"
+  - name: "EndVirtualUsageCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "会議室利用"
+  - name: "RoomUsage"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "会議室利用"
+  - name: "RoomUsageRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議室利用"
+
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "status = '確定' AND room_type = 'virtual' AND end_at <= NOW()"
+    indexes_needed:
+      - columns: ["status", "room_type", "end_at"]
+        reason: "CronJob による利用終了対象予約の効率的な取得"
+        access_pattern: "定期バッチ: 利用終了対象の確定済みバーチャル予約"
+  - name: "room_usages"
+    rdra_info: "会議室利用"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "usage_id = {usage_id} AND status = '利用中' FOR UPDATE（冪等チェック）"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "利用終了"
+          - name: "ended_at"
+            value: "NOW()"
+          - name: "usage_minutes"
+            value: "TIMESTAMPDIFF(MINUTE, started_at, NOW())"
+        where: "usage_id = {usage_id}"
+    indexes_needed:
+      - columns: ["reservation_id", "status"]
+        reason: "利用中レコードの冪等チェック"
+        access_pattern: "POST /internal/v1/virtual-usages/end"
+
+kvs: []
+object_storage: []

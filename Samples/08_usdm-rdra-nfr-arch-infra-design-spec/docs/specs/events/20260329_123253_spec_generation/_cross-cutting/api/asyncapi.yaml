@@ -1,0 +1,391 @@
+asyncapi: "3.0.0"
+info:
+  title: "会議室シェアリングサービス 非同期イベント"
+  version: "1.0.0"
+  description: |
+    会議室シェアリングサービスにおける非同期メッセージングイベントの仕様。
+    以下の3系統の非同期処理を定義する:
+    1. 精算支払連携（決済機関向け）: Backend API → SQS → FaaS Worker → 決済機関
+    2. 会議URL自動通知: Backend API → SQS → FaaS Worker → メール送信
+    3. バーチャル会議室利用開始/終了: CronJob → Internal API（SQS経由ではなく直接HTTP）
+    4. 問合せ通知: Backend API → SQS → FaaS Worker → メール送信
+
+servers:
+  sqs-main:
+    host: "sqs.ap-northeast-1.amazonaws.com"
+    protocol: "sqs"
+    description: "AWS SQS（メインリージョン: 東京）。FaaSワーカートリガー用MQ。メッセージ可視性タイムアウト300秒（FaaS実行時間上限と一致）"
+    bindings:
+      sqs:
+        region: "ap-northeast-1"
+
+defaultContentType: "application/json"
+
+channels:
+  # ===== 1. 精算支払連携 =====
+
+  settlement/payment/requested:
+    address: "settlement-payment-requested"
+    description: |
+      精算支払要求チャネル。
+      Backend API（精算を実行する UC）が精算額確定後に発行。
+      FaaS Worker が受信して決済機関 API を呼び出す。
+      冪等性キー（idempotency_key）により重複処理を防ぐ。
+    messages:
+      SettlementPaymentRequested:
+        $ref: "#/components/messages/SettlementPaymentRequested"
+    bindings:
+      sqs:
+        queue:
+          name: "settlement-payment-requested"
+          fifoQueue: true
+          contentBasedDeduplication: false
+        deadLetterQueue:
+          name: "settlement-payment-requested-dlq"
+          fifoQueue: false
+          maxReceiveCount: 3
+
+  settlement/payment/completed:
+    address: "settlement-payment-completed"
+    description: |
+      精算支払完了チャネル。
+      FaaS Worker が決済機関からの応答を受けて発行。
+      Backend API が受信して精算情報を支払済み状態に更新する。
+    messages:
+      SettlementPaymentCompleted:
+        $ref: "#/components/messages/SettlementPaymentCompleted"
+    bindings:
+      sqs:
+        queue:
+          name: "settlement-payment-completed"
+          fifoQueue: false
+  # ===== 2. 会議URL自動通知 =====
+
+  meeting/url/notification:
+    address: "meeting-url-notification"
+    description: |
+      会議URL通知チャネル。
+      予約を審査する UC（バーチャル会議室許諾時）または予約を許諾する UC が発行。
+      FaaS Worker が受信して利用者にメール通知する。
+    messages:
+      MeetingUrlNotification:
+        $ref: "#/components/messages/MeetingUrlNotification"
+    bindings:
+      sqs:
+        queue:
+          name: "meeting-url-notification"
+          fifoQueue: false
+        deadLetterQueue:
+          name: "meeting-url-notification-dlq"
+          fifoQueue: false
+          maxReceiveCount: 3
+
+  # ===== 3. 問合せ通知 =====
+
+  inquiry/notification:
+    address: "inquiry-notification"
+    description: |
+      問合せ通知チャネル。
+      オーナーへ問合せを送信する UC が発行。
+      FaaS Worker が受信してオーナーにメール通知する。
+    messages:
+      InquiryNotification:
+        $ref: "#/components/messages/InquiryNotification"
+    bindings:
+      sqs:
+        queue:
+          name: "inquiry-notification"
+          fifoQueue: false
+        deadLetterQueue:
+          name: "inquiry-notification-dlq"
+          fifoQueue: false
+          maxReceiveCount: 3
+
+  inquiry/reply/notification:
+    address: "inquiry-reply-notification"
+    description: |
+      問合せ回答通知チャネル。
+      問合せに回答する UC が発行。
+      FaaS Worker が受信して利用者にメール通知する。
+    messages:
+      InquiryReplyNotification:
+        $ref: "#/components/messages/InquiryReplyNotification"
+    bindings:
+      sqs:
+        queue:
+          name: "inquiry-reply-notification"
+          fifoQueue: false
+        deadLetterQueue:
+          name: "inquiry-reply-notification-dlq"
+          fifoQueue: false
+          maxReceiveCount: 3
+
+operations:
+  # ===== 精算支払連携 =====
+
+  publishSettlementPaymentRequested:
+    action: send
+    channel:
+      $ref: "#/channels/settlement~1payment~1requested"
+    summary: "精算を実行する（Backend API）→ 精算支払要求イベント発行"
+    description: |
+      精算計算済み→支払処理中の状態遷移後に発行。
+      冪等性キーで重複実行を防ぐ。
+      FaaSワーカーが受信して決済機関 API を呼び出す。
+    messages:
+      - $ref: "#/channels/settlement~1payment~1requested/messages/SettlementPaymentRequested"
+
+  consumeSettlementPaymentRequested:
+    action: receive
+    channel:
+      $ref: "#/channels/settlement~1payment~1requested"
+    summary: "FaaS Worker → 精算支払要求イベント受信・決済機関連携"
+    description: |
+      FaaS Worker が SQS トリガーで起動し、決済機関 API を呼び出す。
+      処理完了後に settlement.payment.completed イベントを発行する。
+      失敗時は DLQ に退避し、アラートを発報する。
+    messages:
+      - $ref: "#/channels/settlement~1payment~1requested/messages/SettlementPaymentRequested"
+
+  publishSettlementPaymentCompleted:
+    action: send
+    channel:
+      $ref: "#/channels/settlement~1payment~1completed"
+    summary: "FaaS Worker → 精算支払完了イベント発行"
+    description: |
+      決済機関からの成功応答を受けて発行。
+      Backend API が受信して精算情報を支払済みに更新する。
+    messages:
+      - $ref: "#/channels/settlement~1payment~1completed/messages/SettlementPaymentCompleted"
+
+  consumeSettlementPaymentCompleted:
+    action: receive
+    channel:
+      $ref: "#/channels/settlement~1payment~1completed"
+    summary: "Backend API → 精算支払完了イベント受信・精算状態更新"
+    messages:
+      - $ref: "#/channels/settlement~1payment~1completed/messages/SettlementPaymentCompleted"
+
+  # ===== 会議URL通知 =====
+
+  publishMeetingUrlNotification:
+    action: send
+    channel:
+      $ref: "#/channels/meeting~1url~1notification"
+    summary: "予約を審査する / 予約を許諾する（Backend API）→ 会議URL通知イベント発行"
+    description: |
+      バーチャル会議室の予約が許諾・確定した際に発行。
+      FaaS Worker が受信して利用者にメールで会議URLを通知する。
+    messages:
+      - $ref: "#/channels/meeting~1url~1notification/messages/MeetingUrlNotification"
+
+  consumeMeetingUrlNotification:
+    action: receive
+    channel:
+      $ref: "#/channels/meeting~1url~1notification"
+    summary: "FaaS Worker → 会議URL通知イベント受信・メール送信"
+    description: |
+      FaaS Worker が SQS トリガーで起動し、利用者にメールで会議URLを送信する。
+      FaaS 実行時間上限（300秒）以内で完了する。
+    messages:
+      - $ref: "#/channels/meeting~1url~1notification/messages/MeetingUrlNotification"
+
+  # ===== 問合せ通知 =====
+
+  publishInquiryNotification:
+    action: send
+    channel:
+      $ref: "#/channels/inquiry~1notification"
+    summary: "オーナーへ問合せを送信する（Backend API）→ 問合せ通知イベント発行"
+    messages:
+      - $ref: "#/channels/inquiry~1notification/messages/InquiryNotification"
+
+  consumeInquiryNotification:
+    action: receive
+    channel:
+      $ref: "#/channels/inquiry~1notification"
+    summary: "FaaS Worker → 問合せ通知イベント受信・オーナーへメール送信"
+    messages:
+      - $ref: "#/channels/inquiry~1notification/messages/InquiryNotification"
+
+  publishInquiryReplyNotification:
+    action: send
+    channel:
+      $ref: "#/channels/inquiry~1reply~1notification"
+    summary: "問合せに回答する（Backend API）→ 問合せ回答通知イベント発行"
+    messages:
+      - $ref: "#/channels/inquiry~1reply~1notification/messages/InquiryReplyNotification"
+
+  consumeInquiryReplyNotification:
+    action: receive
+    channel:
+      $ref: "#/channels/inquiry~1reply~1notification"
+    summary: "FaaS Worker → 問合せ回答通知イベント受信・利用者へメール送信"
+    messages:
+      - $ref: "#/channels/inquiry~1reply~1notification/messages/InquiryReplyNotification"
+
+components:
+  messages:
+    SettlementPaymentRequested:
+      name: "SettlementPaymentRequested"
+      title: "精算支払要求"
+      summary: "オーナーへの精算支払を決済機関に依頼するイベント"
+      contentType: "application/json"
+      headers:
+        $ref: "#/components/schemas/EventHeaders"
+      payload:
+        $ref: "#/components/schemas/SettlementPaymentRequestedPayload"
+
+    SettlementPaymentCompleted:
+      name: "SettlementPaymentCompleted"
+      title: "精算支払完了"
+      summary: "決済機関からの精算支払完了を通知するイベント"
+      contentType: "application/json"
+      headers:
+        $ref: "#/components/schemas/EventHeaders"
+      payload:
+        $ref: "#/components/schemas/SettlementPaymentCompletedPayload"
+
+    MeetingUrlNotification:
+      name: "MeetingUrlNotification"
+      title: "会議URL通知"
+      summary: "バーチャル会議室予約確定時に利用者へ会議URLを通知するイベント"
+      contentType: "application/json"
+      headers:
+        $ref: "#/components/schemas/EventHeaders"
+      payload:
+        $ref: "#/components/schemas/MeetingUrlNotificationPayload"
+
+    InquiryNotification:
+      name: "InquiryNotification"
+      title: "問合せ通知"
+      summary: "問合せ登録後にオーナーへ通知するイベント"
+      contentType: "application/json"
+      headers:
+        $ref: "#/components/schemas/EventHeaders"
+      payload:
+        $ref: "#/components/schemas/InquiryNotificationPayload"
+
+    InquiryReplyNotification:
+      name: "InquiryReplyNotification"
+      title: "問合せ回答通知"
+      summary: "問合せ回答後に利用者へ通知するイベント"
+      contentType: "application/json"
+      headers:
+        $ref: "#/components/schemas/EventHeaders"
+      payload:
+        $ref: "#/components/schemas/InquiryReplyNotificationPayload"
+
+  schemas:
+    EventHeaders:
+      type: object
+      required: [correlationId, timestamp, source, eventType, version]
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+          description: "リクエスト追跡ID（分散トレーシング）"
+        timestamp:
+          type: string
+          format: date-time
+          description: "イベント発生日時（UTC）"
+        source:
+          type: string
+          description: "イベント発生元サービス（例: backend-api, faas-worker）"
+        eventType:
+          type: string
+          description: "イベント種別（チャネル名と一致）"
+        version:
+          type: string
+          description: "メッセージスキーマバージョン（例: 1.0.0）"
+
+    SettlementPaymentRequestedPayload:
+      type: object
+      required: [settlement_id, owner_id, payment_amount, idempotency_key, requested_at]
+      properties:
+        settlement_id:
+          type: string
+          description: "精算ID（精算情報テーブルの主キー）"
+        owner_id:
+          type: string
+          description: "支払先オーナーID"
+        payment_amount:
+          type: integer
+          description: "支払金額（円）"
+          minimum: 0
+        idempotency_key:
+          type: string
+          format: uuid
+          description: "冪等性キー。重複処理防止に使用する。決済機関 API 呼び出し時に付与する"
+        requested_at:
+          type: string
+          format: date-time
+          description: "精算実行要求日時"
+
+    SettlementPaymentCompletedPayload:
+      type: object
+      required: [settlement_id, owner_id, payment_gateway_id, completed_at]
+      properties:
+        settlement_id:
+          type: string
+          description: "精算ID"
+        owner_id:
+          type: string
+          description: "支払先オーナーID"
+        payment_gateway_id:
+          type: string
+          description: "決済機関から返却された決済連携ID"
+        completed_at:
+          type: string
+          format: date-time
+          description: "決済機関での処理完了日時"
+
+    MeetingUrlNotificationPayload:
+      type: object
+      required: [reservation_id, user_id, room_id]
+      properties:
+        reservation_id:
+          type: string
+          description: "確定した予約ID"
+        user_id:
+          type: string
+          description: "通知先利用者ID"
+        room_id:
+          type: string
+          description: "バーチャル会議室ID（会議URL・ツール種別の取得に使用）"
+        meeting_url:
+          type: string
+          format: uri
+          description: "会議URL（publisherが取得済みの場合に含める）"
+
+    InquiryNotificationPayload:
+      type: object
+      required: [inquiryId, recipientId, inquiryType]
+      properties:
+        inquiryId:
+          type: string
+          description: "問合せID"
+        recipientId:
+          type: string
+          description: "通知先ID（オーナーIDまたはサービス運営担当者ID）"
+        inquiryType:
+          type: string
+          enum: ["service", "owner"]
+          description: "問合せ種別（サービス運営宛 / オーナー宛）"
+        userId:
+          type: string
+          description: "問合せ送信者（利用者）ID"
+
+    InquiryReplyNotificationPayload:
+      type: object
+      required: [inquiryId, userId, replyContent]
+      properties:
+        inquiryId:
+          type: string
+          description: "問合せID"
+        userId:
+          type: string
+          description: "通知先利用者ID"
+        replyContent:
+          type: string
+          description: "回答内容（メール本文の一部として使用）"

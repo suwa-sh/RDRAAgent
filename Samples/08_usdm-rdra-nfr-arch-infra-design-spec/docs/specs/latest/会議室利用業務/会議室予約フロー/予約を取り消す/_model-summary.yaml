@@ -1,0 +1,71 @@
+uc: "予約を取り消す"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+models:
+  - name: "ReservationDetailPage"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "予約情報"
+  - name: "CancelState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "予約情報"
+  - name: "CancelReservationRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "予約情報"
+  - name: "CancelReservationRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "予約情報"
+  - name: "CancelReservationCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "予約情報"
+  - name: "Reservation"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "予約情報"
+  - name: "ReservationRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "予約情報"
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id=? AND status IN (申請,確定,変更)"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "取消"
+          - name: "cancel_fee"
+            value: "キャンセル料計算結果"
+          - name: "updated_at"
+            value: "NOW()"
+        where: "reservation_id=?"
+    indexes_needed:
+      - columns: ["user_id", "status"]
+        reason: "利用者が自身の予約一覧を状態でフィルタリングするため"
+        access_pattern: "GET /api/v1/reservations?status=確定 予約一覧取得"
+  - name: "cancel_policies"
+    rdra_info: "キャンセルポリシー"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id=?"
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "会議室IDに紐づくキャンセルポリシーを取得するため"
+        access_pattern: "DELETE /api/v1/reservations/{id} キャンセル料計算"
+kvs: []
+object_storage: []

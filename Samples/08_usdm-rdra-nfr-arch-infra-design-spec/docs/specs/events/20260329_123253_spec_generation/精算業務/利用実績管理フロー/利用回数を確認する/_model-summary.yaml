@@ -1,0 +1,65 @@
+uc: "利用回数を確認する"
+business: "精算業務"
+buc: "利用実績管理フロー"
+
+models:
+  - name: "UsageStatsPage"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "売上実績"
+  - name: "UsageStatsState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "売上実績"
+  - name: "GetUsageStatsRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "売上実績"
+  - name: "GetUsageStatsRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "売上実績"
+  - name: "GetUsageStatsQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "売上実績"
+  - name: "UsageStats"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "value-object"
+    rdra_info: "売上実績"
+  - name: "UsageRepository"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "利用履歴"
+
+tables:
+  - name: "sales_records"
+    rdra_info: "売上実績"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "owner_id = {owner_id} AND period BETWEEN {from} AND {to} GROUP BY room_id"
+    indexes_needed:
+      - columns: ["owner_id", "period"]
+        reason: "オーナー別・期間別の利用回数集計"
+        access_pattern: "GET /api/v1/owner/usage-stats"
+  - name: "room_usages"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id IN (owner_rooms) AND used_at BETWEEN {from} AND {to} GROUP BY room_id"
+    indexes_needed:
+      - columns: ["room_id", "used_at"]
+        reason: "会議室別利用回数集計"
+        access_pattern: "GET /api/v1/owner/usage-stats"
+
+kvs: []
+object_storage: []

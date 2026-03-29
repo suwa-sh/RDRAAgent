@@ -1,0 +1,29 @@
+uc: "会議室の評価を確認する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/rooms/{room_id}/reviews"
+    summary: "会議室の評価一覧と平均スコアを取得する"
+    request_schema: null
+    response_schema: "RoomReviewListResponse"
+    tags: ["rooms", "reviews"]
+async_events: []
+schemas:
+  - name: "RoomReviewListResponse"
+    properties:
+      - name: "reviews"
+        type: "array"
+        required: true
+      - name: "average_score"
+        type: "number"
+        required: true
+      - name: "total_count"
+        type: "integer"
+        required: true
+      - name: "page"
+        type: "integer"
+        required: true
+      - name: "total_pages"
+        type: "integer"
+        required: true

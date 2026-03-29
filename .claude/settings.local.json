@@ -41,7 +41,10 @@
       "Bash(mkdir -p .claude/skills/usdm-rdra-nfr-arch-workspace/iteration-1/eval-3-coverage-report/with_skill/outputs)",
       "Bash(cp samples/05_usdm-rdra-nfr-arch/docs/arch/latest/coverage-report.md .claude/skills/usdm-rdra-nfr-arch-workspace/iteration-1/eval-3-coverage-report/with_skill/outputs/)",
       "Bash(mkdir -p /Users/suwa_sh/src/github.com/suwa-sh/RDRAAgent/.claude/skills)",
-      "Bash(mv /Users/suwa_sh/.claude/skills/usdm-rdra-nfr-arch-infra-design /Users/suwa_sh/src/github.com/suwa-sh/RDRAAgent/.claude/skills/)"
+      "Bash(mv /Users/suwa_sh/.claude/skills/usdm-rdra-nfr-arch-infra-design /Users/suwa_sh/src/github.com/suwa-sh/RDRAAgent/.claude/skills/)",
+      "Bash(ROOT=/Users/suwa_sh/src/github.com/suwa-sh/RDRAAgent/Samples/08_usdm-rdra-nfr-arch-infra-design-spec)",
+      "Bash(SB=\"$ROOT/docs/design/latest/storybook-app\")",
+      "Read(//Users/suwa_sh/src/github.com/suwa-sh/RDRAAgent/samples/08_usdm-rdra-nfr-arch-infra-design-spec/$SB/src/stories/**)"
     ],
     "deny": [],
     "ask": []

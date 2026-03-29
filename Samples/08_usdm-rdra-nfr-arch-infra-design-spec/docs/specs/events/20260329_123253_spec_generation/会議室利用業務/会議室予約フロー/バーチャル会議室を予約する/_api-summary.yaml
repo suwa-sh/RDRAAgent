@@ -1,0 +1,40 @@
+uc: "バーチャル会議室を予約する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations"
+    summary: "バーチャル会議室予約申請（room_type=virtual、物理会議室予約と共通API）"
+    request_schema: "ReservationRequest"
+    response_schema: "ReservationResponse"
+    tags: ["reservations", "virtual"]
+async_events: []
+schemas:
+  - name: "ReservationRequest"
+    properties:
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "start_datetime"
+        type: "string"
+        required: true
+      - name: "end_datetime"
+        type: "string"
+        required: true
+      - name: "payment_method"
+        type: "string"
+        required: true
+  - name: "ReservationResponse"
+    properties:
+      - name: "reservation_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "room_type"
+        type: "string"
+        required: true
+      - name: "fee"
+        type: "integer"
+        required: true

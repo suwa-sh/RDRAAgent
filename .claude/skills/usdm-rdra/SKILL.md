@@ -2,14 +2,15 @@
 name: usdm-rdra
 description: >
   RDRA x USDM x Event Sourcing による差分パイプライン型の要件定義スキル。
-  変更要望テキストを USDM 分解し、RDRA モデルを差分更新し、UC 単位の Spec（BDD 完了条件付き）を生成する。
+  変更要望テキストを USDM 分解し、RDRA モデルを差分更新する。
   初回も USDM 分解を通してから USDM YAML を入力として rdra スキルでフルビルドし、2回目以降は差分モードで動作する。
+  Spec 生成は後続の usdm-rdra-nfr-arch-infra-design-spec スキルの責務。
   「差分で要件更新」「変更要望を反映」「パイプラインで要件定義」「USDM で分解」「差分 RDRA」などで発動。
 ---
 
 # RDRA Pipeline スキル（差分パイプライン型）
 
-変更要望テキストから USDM 分解 → RDRA 差分更新 → Spec 生成をイベントソーシング方式で行う。
+変更要望テキストから USDM 分解 → RDRA 差分更新をイベントソーシング方式で行う。
 
 ## 前提条件
 
@@ -26,10 +27,9 @@ docs/
   rdra/
     events/{event_id}/*.tsv, _changes.md
     latest/*.tsv, 関連データ.txt, ZeroOne.txt, システム概要.json
-  specs/
-    events/{event_id}/{UC名}/spec.md, tier-*.md
-    latest/{UC名}/spec.md, tier-*.md
 ```
+
+> **Note**: Spec 生成は後続の `usdm-rdra-nfr-arch-infra-design-spec` スキルの責務。
 
 ## 全体フロー
 
@@ -38,9 +38,9 @@ docs/
   → Step1: USDM 分解（要求・理由・仕様に構造化）
   → Step2: RDRA 差分生成（影響モデルの差分 TSV 生成）
   → Step3: RDRA スナップショット更新（latest/ へマージ）
-  → Step4: Spec 生成（UC x ティア、BDD 完了条件）
-  → Step5: Spec スナップショット更新（latest/ へ反映）
 ```
+
+> Spec 生成は `usdm-rdra-nfr-arch-infra-design-spec` スキルで実行する（本スキルの後段）。
 
 ## モード判定
 
@@ -66,7 +66,6 @@ docs/
 3. **USDM YAML を入力とした RDRA フルビルド**: Phase1-5 + RDRA統合（`初期要望.txt` ではなく `docs/usdm/latest/requirements.yaml` を入力とする）
 4. **docs 配置**: `1_RDRA/` → `docs/rdra/latest/` + `docs/rdra/events/{event_id}/`
 5. **一時ディレクトリ削除**: `0_RDRAZeroOne/` と `1_RDRA/` をディレクトリごと削除
-6. **Spec 生成**: Step4-5 を実行し、全 UC の Spec を生成・スナップショット更新する
 
 ### 出力チェック
 
@@ -77,9 +76,6 @@ USDM:
 RDRA:
 - `docs/rdra/latest/` に以下のファイルが揃っていること:
   - `システム概要.json`, `アクター.tsv`, `外部システム.tsv`, `情報.tsv`, `状態.tsv`, `条件.tsv`, `バリエーション.tsv`, `BUC.tsv`, `関連データ.txt`, `ZeroOne.txt`
-
-Spec:
-- `docs/specs/latest/` に各 UC のディレクトリが生成されていること
 
 ---
 
@@ -186,58 +182,6 @@ node <skill-path>/scripts/validateChanges.js docs/rdra/events/{event_id}
 
 ---
 
-## Step4: Spec 生成（UC x ティア + BDD）
-
-差分 RDRA モデルから、影響を受けた UC の Spec を生成する。
-
-### 共通コンテキスト
-
-- `references/specs/spec-template.md` — Spec フォーマット定義
-- `docs/rdra/events/{event_id}/_changes.md` — 変更サマリ
-- `docs/rdra/latest/*.tsv` — 更新後の RDRA モデル
-- `docs/specs/latest/` — 既存の Spec（あれば）
-
-### タスク
-
-`references/specs/spec-generate.md` に従い、影響を受けた UC の Spec を生成する。
-
-### 出力
-
-- `docs/specs/events/{event_id}/{UC名}/spec.md`
-- `docs/specs/events/{event_id}/{UC名}/tier-frontend.md`
-- `docs/specs/events/{event_id}/{UC名}/tier-backend.md`
-- `docs/specs/events/{event_id}/{UC名}/tier-infra.md`（必要な場合）
-
-### バリデーション
-
-出力後、バリデータを実行して Spec の構造を検証する:
-
-```bash
-node <skill-path>/scripts/validateSpec.js docs/specs/events/{event_id}
-```
-
-- 終了コード 0（PASS）: 次の Step へ進む
-- 終了コード 1（FAIL）: エラー内容を確認し修正。主な修正対象:
-  - spec.md の必須セクション（概要、関連RDRAモデル、E2E完了条件、ティア別仕様）の欠落
-  - BDD シナリオ（Given/When/Then）の欠落
-  - tier ファイルの不足
-
----
-
-## Step5: Spec スナップショット更新
-
-生成された Spec を `docs/specs/latest/` に反映する。
-
-### タスク
-
-`references/specs/spec-snapshot-update.md` に従い、latest/ を更新する。
-
-### 出力
-
-- 更新された `docs/specs/latest/{UC名}/`
-
----
-
 ## 実装同期確認（オプション）
 
 ユーザーが明示的に指示した場合に実行する。
@@ -314,21 +258,4 @@ Phase2-4 も同様に、共通コンテキストの `初期要望.txt` を `docs
 質問や確認は不要です。指示に従い即座に実行してください。
 ```
 
-### Step4 例: Spec 生成
-
-```
-以下のファイルを順に読み込んで理解してください:
-
-1. テンプレート
-   - .claude/skills/usdm-rdra/references/specs/spec-template.md
-
-2. 入力データ
-   - docs/rdra/events/{event_id}/_changes.md
-   - docs/rdra/latest/*.tsv（全ファイル）
-   - docs/specs/latest/（既存 Spec があれば）
-
-3. タスク指示
-   - .claude/skills/usdm-rdra/references/specs/spec-generate.md
-
-質問や確認は不要です。指示に従い即座に実行してください。
-```
+> **Note**: Spec 生成の subagent テンプレートは `usdm-rdra-nfr-arch-infra-design-spec` スキルの SKILL.md を参照。

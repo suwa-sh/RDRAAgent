@@ -1,0 +1,25 @@
+uc: "予約を取り消す"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "DELETE"
+    path: "/api/v1/reservations/{reservation_id}"
+    summary: "予約取消（キャンセルポリシーに基づくキャンセル料計算・取消状態遷移）"
+    response_schema: "ReservationCancelResponse"
+    tags: ["reservations"]
+async_events: []
+schemas:
+  - name: "ReservationCancelResponse"
+    properties:
+      - name: "reservation_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "cancel_fee"
+        type: "integer"
+        required: true
+      - name: "cancelled_at"
+        type: "string"
+        required: true

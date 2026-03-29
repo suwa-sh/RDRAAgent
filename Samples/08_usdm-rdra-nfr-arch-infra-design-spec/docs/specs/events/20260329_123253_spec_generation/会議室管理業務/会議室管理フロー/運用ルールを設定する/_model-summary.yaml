@@ -1,0 +1,86 @@
+uc: "運用ルールを設定する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+
+models:
+  - name: "OperationRuleForm"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "運用ルール"
+  - name: "OperationRuleState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "運用ルール"
+  - name: "SetOperationRuleRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "運用ルール"
+  - name: "SetOperationRuleRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "運用ルール"
+  - name: "SetOperationRuleCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "運用ルール"
+  - name: "OperationRule"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "運用ルール"
+  - name: "OperationRuleRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "運用ルール"
+
+tables:
+  - name: "operation_rules"
+    rdra_info: "運用ルール"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id}"
+      - type: "INSERT"
+        columns:
+          - name: "rule_id"
+            value: "UUID 自動採番"
+          - name: "room_id"
+            value: "対象会議室ID"
+          - name: "available_hours"
+            value: "利用可能時間帯"
+          - name: "min_usage_time"
+            value: "最低利用時間（分）"
+          - name: "max_usage_time"
+            value: "最大利用時間（分）"
+          - name: "can_rent"
+            value: "貸出可否"
+        where: ""
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "会議室の運用ルール取得"
+        access_pattern: "PUT /api/v1/rooms/{room_id}/operation-rules"
+  - name: "cancel_policies"
+    rdra_info: "キャンセルポリシー"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id}"
+    indexes_needed: []
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "公開可能（運用ルール+キャンセルポリシー両方設定済みの場合）"
+        where: "room_id = {room_id}"
+    indexes_needed: []
+
+kvs: []
+object_storage: []

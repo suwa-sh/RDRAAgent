@@ -1,0 +1,141 @@
+version: "1.0"
+datastore: "kvs"
+description: "全46UC の _model-summary.yaml kvs セクションを統合した KVS キーパターン定義。arch-design.yaml で tier-datastore-kvs が定義されている。"
+
+key_patterns:
+
+  # -----------------------------------------------------------------------
+  # セッション管理
+  # -----------------------------------------------------------------------
+  - pattern: "session:user:{user_id}"
+    purpose: "session"
+    value_type: "object — { user_id, role, owner_id?, expires_at }"
+    ttl: "15m"
+    used_by:
+      - "予約を申請する"
+      - "バーチャル会議室を予約する"
+      - "予約を変更する"
+      - "予約を取り消す"
+      - "予約を許諾する"
+      - "会議室を登録する"
+      - "バーチャル会議室を登録する"
+      - "会議室情報を変更する"
+      - "会議室の公開状態を変更する"
+      - "オーナー登録申請を行う"
+      - "オーナー情報を変更する"
+      - "退会を申請する"
+      - "鍵の貸出を記録する"
+      - "鍵の返却を記録する"
+      - "利用者を評価する"
+      - "精算を実行する"
+      - "精算額を計算する"
+    description: "認証済みユーザーのセッション情報。JWT 検証後にサーバーサイドセッションとして保持。15分スライドウィンドウ TTL。"
+
+  - pattern: "session:owner:{owner_id}"
+    purpose: "session"
+    value_type: "object — { owner_id, role: 'owner', email, expires_at }"
+    ttl: "15m"
+    used_by:
+      - "会議室を登録する"
+      - "バーチャル会議室を登録する"
+      - "キャンセルポリシーを設定する"
+      - "運用ルールを設定する"
+      - "問合せに回答する"
+      - "予約を審査する"
+      - "利用者を評価する"
+      - "売上実績を確認する"
+      - "利用回数を確認する"
+    description: "オーナーセッション情報。"
+
+  # -----------------------------------------------------------------------
+  # 検索結果キャッシュ
+  # -----------------------------------------------------------------------
+  - pattern: "search:{hash(conditions)}"
+    purpose: "cache"
+    value_type: "object — { rooms: RoomSummary[], total: integer, page: integer }"
+    ttl: "60s"
+    used_by:
+      - "会議室を検索する"
+    description: "会議室検索結果のキャッシュ。検索条件をハッシュ化したキーで保持。60秒 TTL。検索条件が変わるたびに異なるキーが生成される。"
+
+  - pattern: "room_detail:{room_id}"
+    purpose: "cache"
+    value_type: "object — { room, operation_rules, cancel_policy, recent_reviews }"
+    ttl: "5m"
+    used_by:
+      - "会議室の詳細を確認する"
+      - "会議室の評価を確認する"
+    description: "会議室詳細ページのキャッシュ（会議室情報＋運用ルール＋最新レビュー統合）。会議室情報更新時に無効化。"
+
+  # -----------------------------------------------------------------------
+  # レート制限
+  # -----------------------------------------------------------------------
+  - pattern: "rate_limit:api:{user_id}:{endpoint}"
+    purpose: "rate-limit"
+    value_type: "integer — リクエスト回数カウンター"
+    ttl: "1m"
+    used_by:
+      - "予約を申請する"
+      - "バーチャル会議室を予約する"
+      - "オーナーへ問合せする"
+      - "サービスへ問合せする"
+      - "オーナーへ問合せを送信する"
+    description: "エンドポイント別・ユーザー別のリクエスト回数制限。1分あたり上限超過で 429 を返す。"
+
+  - pattern: "rate_limit:api:anon:{ip}:{endpoint}"
+    purpose: "rate-limit"
+    value_type: "integer — リクエスト回数カウンター"
+    ttl: "1m"
+    used_by:
+      - "会議室を検索する"
+      - "会議室の詳細を確認する"
+    description: "未認証ユーザー（IP別）のレート制限。検索・詳細閲覧エンドポイントに適用。"
+
+  # -----------------------------------------------------------------------
+  # 分散ロック
+  # -----------------------------------------------------------------------
+  - pattern: "lock:reservation:{room_id}:{date}"
+    purpose: "lock"
+    value_type: "string — ロック取得者の request_id"
+    ttl: "5s"
+    used_by:
+      - "予約を申請する"
+      - "バーチャル会議室を予約する"
+      - "予約を変更する"
+    description: "予約作成・変更時の重複予約防止ロック。同一会議室・日付への同時リクエストを直列化する。5秒 TTL（処理完了後即時解放）。"
+
+  - pattern: "lock:key:{room_id}"
+    purpose: "lock"
+    value_type: "string — ロック取得者の request_id"
+    ttl: "10s"
+    used_by:
+      - "鍵の貸出を記録する"
+      - "鍵の返却を記録する"
+    description: "鍵の貸出・返却操作の排他ロック。DB の SELECT FOR UPDATE と組み合わせて二重操作を防止。"
+
+  - pattern: "lock:settlement:{settlement_id}"
+    purpose: "lock"
+    value_type: "string — ロック取得者の request_id"
+    ttl: "30s"
+    used_by:
+      - "精算を実行する"
+    description: "精算実行の二重起動防止ロック。FaaS Worker での精算実行時に取得。"
+
+  # -----------------------------------------------------------------------
+  # 一時データ・トークン
+  # -----------------------------------------------------------------------
+  - pattern: "idempotency:{idempotency_key}"
+    purpose: "idempotency"
+    value_type: "object — { status, response_body, created_at }"
+    ttl: "24h"
+    used_by:
+      - "精算を実行する"
+    description: "冪等キーによる二重支払防止。精算実行 API に付与された冪等キーの処理結果を保持。24時間有効。"
+
+  - pattern: "virtual_usage_started:{reservation_id}"
+    purpose: "idempotency"
+    value_type: "boolean — true"
+    ttl: "2h"
+    used_by:
+      - "バーチャル会議室利用を開始する"
+    description: "バーチャル会議室利用開始の冪等チェック。CronJob が複数回起動しても重複開始しないためのフラグ。"

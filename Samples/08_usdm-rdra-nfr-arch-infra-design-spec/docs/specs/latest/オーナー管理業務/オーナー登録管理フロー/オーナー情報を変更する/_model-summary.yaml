@@ -1,0 +1,66 @@
+uc: "オーナー情報を変更する"
+business: "オーナー管理業務"
+buc: "オーナー登録管理フロー"
+
+models:
+  - name: "OwnerProfileForm"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "オーナー情報"
+  - name: "OwnerProfileState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "オーナー情報"
+  - name: "UpdateOwnerRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "オーナー情報"
+  - name: "UpdateOwnerRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "オーナー情報"
+  - name: "UpdateOwnerCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "オーナー情報"
+  - name: "Owner"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "オーナー情報"
+  - name: "OwnerRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "オーナー情報"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "owner_id = {owner_id}"
+      - type: "UPDATE"
+        columns:
+          - name: "name"
+            value: "変更後の氏名"
+          - name: "phone"
+            value: "変更後の連絡先"
+          - name: "email"
+            value: "変更後のメールアドレス"
+          - name: "updated_at"
+            value: "NOW()"
+        where: "owner_id = {owner_id}"
+    indexes_needed:
+      - columns: ["owner_id"]
+        reason: "PK による単一レコード取得"
+        access_pattern: "PUT /api/v1/owners/{owner_id}"
+
+kvs: []
+object_storage: []

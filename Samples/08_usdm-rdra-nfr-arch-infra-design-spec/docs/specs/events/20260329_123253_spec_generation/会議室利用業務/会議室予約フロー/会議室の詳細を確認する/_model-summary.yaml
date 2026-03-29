@@ -1,0 +1,78 @@
+uc: "会議室の詳細を確認する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+models:
+  - name: "RoomDetailPage"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室情報"
+  - name: "RoomDetailState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室情報"
+  - name: "GetRoomDetailRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "会議室情報"
+  - name: "RoomDetailRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室情報"
+  - name: "GetRoomDetailQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "会議室情報"
+  - name: "Room"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "会議室情報"
+  - name: "RoomRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議室情報"
+tables:
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id=? AND status=公開中"
+    indexes_needed:
+      - columns: ["id", "status"]
+        reason: "公開中の会議室を room_id で取得するため"
+        access_pattern: "GET /api/v1/rooms/{room_id} 公開状態チェック"
+  - name: "operation_rules"
+    rdra_info: "運用ルール"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id=?"
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "会議室IDに紐づく運用ルールを取得するため"
+        access_pattern: "GET /api/v1/rooms/{room_id} 運用ルール取得"
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id=? ORDER BY 評価日時 DESC LIMIT 10"
+    indexes_needed:
+      - columns: ["room_id", "created_at"]
+        reason: "会議室IDの最新レビュー10件を評価日時降順で取得するため"
+        access_pattern: "GET /api/v1/rooms/{room_id} 最新レビュー取得"
+kvs: []
+object_storage:
+  - name: "room-images"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "GET"
+        path_pattern: "/rooms/{room_id}/images/*"
+        note: "CDN経由で会議室画像を取得"

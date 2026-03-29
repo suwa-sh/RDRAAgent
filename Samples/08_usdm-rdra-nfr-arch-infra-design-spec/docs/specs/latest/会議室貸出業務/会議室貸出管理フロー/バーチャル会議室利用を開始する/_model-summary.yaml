@@ -1,0 +1,71 @@
+uc: "バーチャル会議室利用を開始する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+
+models:
+  - name: "VirtualRoomStartJob"
+    tier: "tier-cronjob-worker"
+    layer: "handler"
+    type: "command"
+    rdra_info: "会議室利用"
+  - name: "StartVirtualUsageRequest"
+    tier: "tier-cronjob-worker"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "会議室利用"
+  - name: "StartVirtualUsageRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室利用"
+  - name: "StartVirtualUsageCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "会議室利用"
+  - name: "RoomUsage"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "会議室利用"
+  - name: "RoomUsageRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議室利用"
+
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "status = '確定' AND room_type = 'virtual' AND start_at <= NOW()"
+    indexes_needed:
+      - columns: ["status", "room_type", "start_at"]
+        reason: "CronJob による利用開始対象予約の効率的な取得"
+        access_pattern: "定期バッチ: 利用開始対象の確定済みバーチャル予約"
+  - name: "room_usages"
+    rdra_info: "会議室利用"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "reservation_id = {reservation_id} FOR UPDATE（冪等チェック）"
+      - type: "INSERT"
+        columns:
+          - name: "usage_id"
+            value: "UUID 自動採番"
+          - name: "reservation_id"
+            value: "対象予約ID"
+          - name: "status"
+            value: "利用開始"
+          - name: "started_at"
+            value: "NOW()"
+        where: ""
+    indexes_needed:
+      - columns: ["reservation_id"]
+        reason: "冪等チェック（既に開始済みか確認）"
+        access_pattern: "POST /internal/v1/virtual-usages/start"
+
+kvs: []
+object_storage: []

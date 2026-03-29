@@ -1,0 +1,49 @@
+uc: "予約を審査する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/reservations/{reservationId}/review"
+    summary: "予約審査（許諾/拒否）"
+    request_schema: "ReviewReservationRequest"
+    response_schema: "ReviewReservationResponse"
+    tags: ["reservations", "rental"]
+async_events:
+  - channel: "meeting-url-notification"
+    direction: "publish"
+    message_schema: "MeetingUrlNotificationEvent"
+    summary: "バーチャル会議室予約許諾時に会議URL通知イベントを発行"
+schemas:
+  - name: "ReviewReservationRequest"
+    properties:
+      - name: "decision"
+        type: "string"
+        required: true
+      - name: "rejectReason"
+        type: "string"
+        required: false
+  - name: "ReviewReservationResponse"
+    properties:
+      - name: "reservationId"
+        type: "string"
+        required: true
+      - name: "previousStatus"
+        type: "string"
+        required: true
+      - name: "newStatus"
+        type: "string"
+        required: true
+      - name: "decisionAt"
+        type: "string"
+        required: true
+  - name: "MeetingUrlNotificationEvent"
+    properties:
+      - name: "reservationId"
+        type: "string"
+        required: true
+      - name: "userId"
+        type: "string"
+        required: true
+      - name: "meetingUrl"
+        type: "string"
+        required: true

@@ -1,0 +1,59 @@
+uc: "利用者評価一覧を確認する"
+business: "精算業務"
+buc: "利用実績管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owner/user-reviews"
+    summary: "オーナーが自身に紐づく利用者評価をページネーション付きで取得する"
+    response_schema: "UserReviewListResponse"
+    tags: ["精算", "利用実績", "オーナー", "評価"]
+async_events: []
+schemas:
+  - name: "UserReviewListResponse"
+    properties:
+      - name: "summary"
+        type: "object"
+        required: true
+      - name: "summary.average_score"
+        type: "number"
+        required: true
+      - name: "summary.total_count"
+        type: "integer"
+        required: true
+      - name: "items"
+        type: "array"
+        required: true
+      - name: "pagination"
+        type: "object"
+        required: true
+  - name: "UserReviewItem"
+    properties:
+      - name: "review_id"
+        type: "string"
+        required: true
+      - name: "user_id"
+        type: "string"
+        required: true
+      - name: "score"
+        type: "integer"
+        required: true
+      - name: "comment"
+        type: "string"
+        required: false
+      - name: "reviewed_at"
+        type: "string"
+        required: true
+  - name: "PaginationMeta"
+    properties:
+      - name: "page"
+        type: "integer"
+        required: true
+      - name: "per_page"
+        type: "integer"
+        required: true
+      - name: "total_count"
+        type: "integer"
+        required: true
+      - name: "total_pages"
+        type: "integer"
+        required: true

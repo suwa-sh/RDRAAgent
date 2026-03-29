@@ -1,0 +1,31 @@
+uc: "バーチャル会議室利用を開始する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/internal/v1/virtual-usages/start"
+    summary: "バーチャル会議室利用開始（CronJob専用内部API）"
+    request_schema: "StartVirtualUsageRequest"
+    response_schema: "StartVirtualUsageResponse"
+    tags: ["internal", "virtual-rooms", "rental"]
+async_events: []
+schemas:
+  - name: "StartVirtualUsageRequest"
+    properties:
+      - name: "reservationId"
+        type: "string"
+        required: true
+  - name: "StartVirtualUsageResponse"
+    properties:
+      - name: "reservationId"
+        type: "string"
+        required: true
+      - name: "usageId"
+        type: "string"
+        required: true
+      - name: "startedAt"
+        type: "string"
+        required: true
+      - name: "alreadyStarted"
+        type: "boolean"
+        required: true

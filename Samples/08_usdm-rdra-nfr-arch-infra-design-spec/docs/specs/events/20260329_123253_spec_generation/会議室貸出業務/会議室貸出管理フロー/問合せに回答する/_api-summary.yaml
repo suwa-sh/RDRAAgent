@@ -1,0 +1,43 @@
+uc: "問合せに回答する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/inquiries/{inquiryId}/reply"
+    summary: "問合せ回答（未対応→回答済みへの状態遷移）"
+    request_schema: "ReplyInquiryRequest"
+    response_schema: "ReplyInquiryResponse"
+    tags: ["inquiries", "rental"]
+async_events:
+  - channel: "inquiry-reply-notification"
+    direction: "publish"
+    message_schema: "InquiryReplyNotificationEvent"
+    summary: "問合せ回答後に利用者への通知イベントを発行"
+schemas:
+  - name: "ReplyInquiryRequest"
+    properties:
+      - name: "replyContent"
+        type: "string"
+        required: true
+  - name: "ReplyInquiryResponse"
+    properties:
+      - name: "inquiryId"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "repliedAt"
+        type: "string"
+        required: true
+  - name: "InquiryReplyNotificationEvent"
+    properties:
+      - name: "inquiryId"
+        type: "string"
+        required: true
+      - name: "userId"
+        type: "string"
+        required: true
+      - name: "replyContent"
+        type: "string"
+        required: true

@@ -1,0 +1,2 @@
+RDRA モデル・NFR グレード・アーキテクチャ設計・デザインシステムからの Spec 一括生成
+入力: docs/rdra/latest/, docs/nfr/latest/, docs/arch/latest/, docs/design/latest/

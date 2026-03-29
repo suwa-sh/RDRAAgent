@@ -1,0 +1,59 @@
+uc: "サービスへ問合せする"
+business: "サービス運営業務"
+buc: "問合せ管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/inquiries"
+    summary: "問合せ作成（サービス宛）"
+    request_schema: "CreateInquiryRequest"
+    response_schema: "InquiryResponse"
+    tags: ["inquiries", "user"]
+  - method: "GET"
+    path: "/api/v1/inquiries"
+    summary: "問合せ一覧取得（利用者自身の問合せ）"
+    request_schema: "InquiryListQuery"
+    response_schema: "InquiryListResponse"
+    tags: ["inquiries", "user"]
+async_events: []
+schemas:
+  - name: "CreateInquiryRequest"
+    properties:
+      - name: "inquiry_type"
+        type: "string"
+        required: true
+        enum: ["service", "owner"]
+      - name: "category"
+        type: "string"
+        required: false
+        enum: ["usage", "reservation", "billing", "technical", "other"]
+      - name: "content"
+        type: "string"
+        required: true
+  - name: "InquiryResponse"
+    properties:
+      - name: "inquiry_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "created_at"
+        type: "string"
+        format: "datetime"
+        required: true
+  - name: "InquiryListQuery"
+    properties:
+      - name: "page"
+        type: "integer"
+        required: false
+      - name: "per_page"
+        type: "integer"
+        required: false
+  - name: "InquiryListResponse"
+    properties:
+      - name: "inquiries"
+        type: "array"
+        required: true
+      - name: "pagination"
+        type: "object"
+        required: true

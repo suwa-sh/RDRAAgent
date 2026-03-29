@@ -1,0 +1,62 @@
+uc: "手数料売上を分析する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+
+models:
+  - name: "FeeSalesAnalytics"
+    tier: "tier-frontend-admin"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "手数料売上"
+  - name: "FeeSalesState"
+    tier: "tier-frontend-admin"
+    layer: "state"
+    type: "state"
+    rdra_info: "手数料売上"
+  - name: "GetFeeSalesSummaryRequest"
+    tier: "tier-frontend-admin"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "手数料売上"
+  - name: "GetFeeSalesSummaryRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "手数料売上"
+  - name: "GetFeeSalesSummaryQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "手数料売上"
+  - name: "FeeSalesSummary"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "value-object"
+    rdra_info: "手数料売上"
+  - name: "FeeSalesRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "手数料売上"
+
+tables:
+  - name: "fee_sales"
+    rdra_info: "手数料売上"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "計上日 BETWEEN {from} AND {to} GROUP BY {dimension}"
+    indexes_needed:
+      - columns: ["room_id", "charged_at"]
+        reason: "会議室別・期間別の集計"
+        access_pattern: "GET /api/v1/admin/fee-sales/summary"
+  - name: "usage_history"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "JOIN fee_sales ON rental_id"
+    indexes_needed: []
+
+kvs: []
+object_storage: []

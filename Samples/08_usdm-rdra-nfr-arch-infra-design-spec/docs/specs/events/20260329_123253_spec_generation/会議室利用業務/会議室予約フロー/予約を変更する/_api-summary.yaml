@@ -1,0 +1,37 @@
+uc: "予約を変更する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/reservations/{reservation_id}"
+    summary: "予約日時変更（確定→変更状態遷移・利用料金再計算）"
+    request_schema: "ReservationUpdateRequest"
+    response_schema: "ReservationUpdateResponse"
+    tags: ["reservations"]
+async_events: []
+schemas:
+  - name: "ReservationUpdateRequest"
+    properties:
+      - name: "start_datetime"
+        type: "string"
+        required: true
+      - name: "end_datetime"
+        type: "string"
+        required: true
+  - name: "ReservationUpdateResponse"
+    properties:
+      - name: "reservation_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "start_datetime"
+        type: "string"
+        required: true
+      - name: "end_datetime"
+        type: "string"
+        required: true
+      - name: "fee"
+        type: "integer"
+        required: true

@@ -1,0 +1,28 @@
+uc: "会議室の公開状態を変更する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/rooms/{room_id}/status"
+    summary: "会議室の公開状態を変更する（公開中/非公開の切り替え）"
+    request_schema: "UpdateRoomStatusRequest"
+    response_schema: "RoomStatusResponse"
+    tags: ["rooms"]
+async_events: []
+schemas:
+  - name: "UpdateRoomStatusRequest"
+    properties:
+      - name: "status"
+        type: "string"
+        required: true
+  - name: "RoomStatusResponse"
+    properties:
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "updated_at"
+        type: "string"
+        required: true

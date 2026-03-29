@@ -1,0 +1,34 @@
+uc: "オーナー登録申請を行う"
+business: "オーナー管理業務"
+buc: "オーナー登録管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners/applications"
+    summary: "オーナー登録申請を受け付け、審査待ち状態で作成する"
+    request_schema: "CreateOwnerApplicationRequest"
+    response_schema: "OwnerApplicationResponse"
+    tags: ["owners", "applications"]
+async_events: []
+schemas:
+  - name: "CreateOwnerApplicationRequest"
+    properties:
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "phone"
+        type: "string"
+        required: true
+      - name: "email"
+        type: "string"
+        required: true
+  - name: "OwnerApplicationResponse"
+    properties:
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "created_at"
+        type: "string"
+        required: true

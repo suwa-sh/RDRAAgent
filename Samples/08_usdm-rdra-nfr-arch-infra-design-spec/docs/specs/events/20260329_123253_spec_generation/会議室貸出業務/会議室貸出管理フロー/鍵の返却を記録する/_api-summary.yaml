@@ -1,0 +1,35 @@
+uc: "鍵の返却を記録する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/rentals/{rentalId}/key-return"
+    summary: "鍵返却記録（物理会議室利用終了）"
+    request_schema: null
+    response_schema: "KeyReturnResponse"
+    tags: ["rentals", "keys", "rental"]
+async_events: []
+schemas:
+  - name: "KeyReturnResponse"
+    properties:
+      - name: "rentalId"
+        type: "string"
+        required: true
+      - name: "keyId"
+        type: "string"
+        required: true
+      - name: "keyStatus"
+        type: "string"
+        required: true
+      - name: "usageId"
+        type: "string"
+        required: true
+      - name: "usageStatus"
+        type: "string"
+        required: true
+      - name: "returnedAt"
+        type: "string"
+        required: true
+      - name: "usageMinutes"
+        type: "integer"
+        required: true

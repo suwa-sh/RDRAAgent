@@ -1,0 +1,84 @@
+uc: "鍵の貸出を記録する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+
+models:
+  - name: "KeyHandoverTracker"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "鍵"
+  - name: "KeyHandoverState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "鍵"
+  - name: "KeyOutRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "鍵"
+  - name: "KeyOutRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "鍵"
+  - name: "RecordKeyOutCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "鍵"
+  - name: "Key"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "鍵"
+  - name: "KeyRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "鍵"
+
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "reservation_id = {rental_id} AND status = '確定'"
+    indexes_needed: []
+  - name: "keys"
+    rdra_info: "鍵"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id} AND status = '保管中' FOR UPDATE"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "貸出中"
+          - name: "lent_at"
+            value: "NOW()"
+        where: "key_id = {key_id}"
+    indexes_needed:
+      - columns: ["room_id", "status"]
+        reason: "会議室の鍵の貸出状態確認"
+        access_pattern: "POST /api/v1/rentals/{id}/key-out"
+  - name: "room_usages"
+    rdra_info: "会議室利用"
+    operations:
+      - type: "INSERT"
+        columns:
+          - name: "usage_id"
+            value: "UUID 自動採番"
+          - name: "reservation_id"
+            value: "対象予約ID"
+          - name: "status"
+            value: "利用開始"
+          - name: "started_at"
+            value: "NOW()"
+        where: ""
+    indexes_needed: []
+
+kvs: []
+object_storage: []

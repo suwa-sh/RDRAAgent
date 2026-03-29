@@ -1,0 +1,37 @@
+uc: "オーナーへ問合せする"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/inquiries"
+    summary: "問合せ登録（オーナー宛/サービス宛、未対応状態で作成）"
+    request_schema: "InquiryRequest"
+    response_schema: "InquiryResponse"
+    tags: ["inquiries"]
+async_events: []
+schemas:
+  - name: "InquiryRequest"
+    properties:
+      - name: "inquiry_type"
+        type: "string"
+        required: true
+      - name: "target_id"
+        type: "string"
+        required: true
+      - name: "room_id"
+        type: "string"
+        required: false
+      - name: "content"
+        type: "string"
+        required: true
+  - name: "InquiryResponse"
+    properties:
+      - name: "inquiry_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "created_at"
+        type: "string"
+        required: true

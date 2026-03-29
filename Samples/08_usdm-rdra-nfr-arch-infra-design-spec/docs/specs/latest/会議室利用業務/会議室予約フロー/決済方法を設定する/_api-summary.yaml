@@ -1,0 +1,43 @@
+uc: "決済方法を設定する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/payment-methods"
+    summary: "決済方法登録（カード情報トークン化・暗号化保存）"
+    request_schema: "PaymentMethodRequest"
+    response_schema: "PaymentMethodResponse"
+    tags: ["payment-methods"]
+async_events: []
+schemas:
+  - name: "PaymentMethodRequest"
+    properties:
+      - name: "payment_type"
+        type: "string"
+        required: true
+      - name: "card_number"
+        type: "string"
+        required: false
+      - name: "expiry"
+        type: "string"
+        required: false
+      - name: "cvv"
+        type: "string"
+        required: false
+      - name: "emoney_id"
+        type: "string"
+        required: false
+  - name: "PaymentMethodResponse"
+    properties:
+      - name: "payment_method_id"
+        type: "string"
+        required: true
+      - name: "payment_type"
+        type: "string"
+        required: true
+      - name: "masked_identifier"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true

@@ -1,0 +1,31 @@
+uc: "オーナー登録を審査する"
+business: "オーナー管理業務"
+buc: "オーナー登録管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/owners/{owner_id}/review"
+    summary: "オーナー登録申請を承認または却下する"
+    request_schema: "ReviewOwnerRequest"
+    response_schema: "ReviewOwnerResponse"
+    tags: ["owners", "admin"]
+async_events: []
+schemas:
+  - name: "ReviewOwnerRequest"
+    properties:
+      - name: "decision"
+        type: "string"
+        required: true
+      - name: "reason"
+        type: "string"
+        required: false
+  - name: "ReviewOwnerResponse"
+    properties:
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "reviewed_at"
+        type: "string"
+        required: true

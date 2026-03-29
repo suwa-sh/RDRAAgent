@@ -1,0 +1,74 @@
+uc: "退会を申請する"
+business: "オーナー管理業務"
+buc: "オーナー登録管理フロー"
+
+models:
+  - name: "WithdrawalConfirmModal"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "オーナー情報"
+  - name: "WithdrawalState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "オーナー情報"
+  - name: "WithdrawalRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "オーナー情報"
+  - name: "WithdrawalRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "オーナー情報"
+  - name: "WithdrawOwnerCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "オーナー情報"
+  - name: "Owner"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "オーナー情報"
+  - name: "OwnerRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "オーナー情報"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "owner_id = {owner_id} AND status = '登録済み'"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "退会"
+          - name: "withdrawn_at"
+            value: "NOW()"
+        where: "owner_id = {owner_id}"
+    indexes_needed:
+      - columns: ["owner_id"]
+        reason: "PK による単一レコード取得"
+        access_pattern: "POST /api/v1/owners/{owner_id}/withdrawal"
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "非公開"
+        where: "owner_id = {owner_id}"
+    indexes_needed:
+      - columns: ["owner_id"]
+        reason: "オーナーの全会議室を非公開にする"
+        access_pattern: "退会時に所有会議室を一括非公開"
+
+kvs: []
+object_storage: []

@@ -1,0 +1,65 @@
+uc: "精算結果を確認する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+
+models:
+  - name: "SettlementResultPage"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "精算情報"
+  - name: "SettlementResultState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "精算情報"
+  - name: "GetSettlementResultRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "精算情報"
+  - name: "GetSettlementResultRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "精算情報"
+  - name: "GetSettlementResultQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "精算情報"
+  - name: "Settlement"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "value-object"
+    rdra_info: "精算情報"
+  - name: "SettlementRepository"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "精算情報"
+
+tables:
+  - name: "settlements"
+    rdra_info: "精算情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "owner_id = {owner_id} ORDER BY target_month DESC"
+    indexes_needed:
+      - columns: ["owner_id", "status"]
+        reason: "オーナー別精算履歴参照"
+        access_pattern: "GET /api/v1/owner/settlements"
+  - name: "owner_payments"
+    rdra_info: "オーナー精算"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "settlement_id = {settlement_id}"
+    indexes_needed:
+      - columns: ["settlement_id"]
+        reason: "精算詳細の支払情報取得"
+        access_pattern: "GET /api/v1/owner/settlements/{id}"
+
+kvs: []
+object_storage: []

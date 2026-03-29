@@ -1,0 +1,67 @@
+uc: "会議室の詳細を確認する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/rooms/{room_id}"
+    summary: "会議室詳細取得（会議室情報・運用ルール・評価一覧含む）"
+    response_schema: "RoomDetailResponse"
+    tags: ["rooms"]
+async_events: []
+schemas:
+  - name: "RoomDetailResponse"
+    properties:
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "room_type"
+        type: "string"
+        required: true
+      - name: "area"
+        type: "string"
+        required: false
+      - name: "size_sqm"
+        type: "number"
+        required: false
+      - name: "capacity"
+        type: "integer"
+        required: true
+      - name: "price_per_hour"
+        type: "integer"
+        required: true
+      - name: "facilities"
+        type: "array"
+        required: false
+      - name: "images"
+        type: "array"
+        required: false
+      - name: "tool_type"
+        type: "string"
+        required: false
+      - name: "max_connections"
+        type: "integer"
+        required: false
+      - name: "is_recordable"
+        type: "boolean"
+        required: false
+      - name: "operation_rule"
+        type: "object"
+        required: false
+      - name: "cancel_policy"
+        type: "object"
+        required: false
+      - name: "avg_rating"
+        type: "number"
+        required: false
+      - name: "review_count"
+        type: "integer"
+        required: false
+      - name: "recent_reviews"
+        type: "array"
+        required: false
+      - name: "owner_info"
+        type: "object"
+        required: true

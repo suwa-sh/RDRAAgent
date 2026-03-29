@@ -1,0 +1,34 @@
+uc: "キャンセルポリシーを設定する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/rooms/{room_id}/cancel-policy"
+    summary: "会議室のキャンセルポリシーを設定する"
+    request_schema: "SetCancelPolicyRequest"
+    response_schema: "CancelPolicyResponse"
+    tags: ["rooms", "cancel-policy"]
+async_events: []
+schemas:
+  - name: "SetCancelPolicyRequest"
+    properties:
+      - name: "cancel_deadline_days"
+        type: "integer"
+        required: true
+      - name: "cancel_rate_percent"
+        type: "integer"
+        required: true
+      - name: "refund_rule"
+        type: "string"
+        required: false
+  - name: "CancelPolicyResponse"
+    properties:
+      - name: "policy_id"
+        type: "string"
+        required: true
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "room_status"
+        type: "string"
+        required: true

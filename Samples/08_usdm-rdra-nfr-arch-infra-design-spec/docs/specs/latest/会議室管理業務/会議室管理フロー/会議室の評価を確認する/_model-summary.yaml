@@ -1,0 +1,55 @@
+uc: "会議室の評価を確認する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+
+models:
+  - name: "RoomReviewList"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室評価"
+  - name: "ReviewListState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室評価"
+  - name: "GetRoomReviewsRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "会議室評価"
+  - name: "GetRoomReviewsRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室評価"
+  - name: "GetRoomReviewsQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "会議室評価"
+  - name: "RoomReviewList"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "value-object"
+    rdra_info: "会議室評価"
+  - name: "RoomReviewRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議室評価"
+
+tables:
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id} ORDER BY reviewed_at DESC LIMIT {per_page} OFFSET {offset}"
+    indexes_needed:
+      - columns: ["room_id", "reviewed_at"]
+        reason: "会議室の評価一覧（新しい順）"
+        access_pattern: "GET /api/v1/rooms/{room_id}/reviews"
+
+kvs: []
+object_storage: []

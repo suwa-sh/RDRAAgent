@@ -1,0 +1,43 @@
+uc: "会議室を評価する"
+business: "会議室利用業務"
+buc: "会議室評価フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reviews"
+    summary: "会議室・オーナー評価登録（利用済みチェック・重複チェック・avg_rating更新）"
+    request_schema: "ReviewRequest"
+    response_schema: "ReviewResponse"
+    tags: ["reviews"]
+async_events: []
+schemas:
+  - name: "ReviewRequest"
+    properties:
+      - name: "review_type"
+        type: "string"
+        required: true
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "reservation_id"
+        type: "string"
+        required: true
+      - name: "score"
+        type: "integer"
+        required: true
+      - name: "comment"
+        type: "string"
+        required: false
+  - name: "ReviewResponse"
+    properties:
+      - name: "review_id"
+        type: "string"
+        required: true
+      - name: "review_type"
+        type: "string"
+        required: true
+      - name: "score"
+        type: "integer"
+        required: true
+      - name: "created_at"
+        type: "string"
+        required: true

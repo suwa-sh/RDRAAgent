@@ -1,0 +1,23 @@
+uc: "退会を申請する"
+business: "オーナー管理業務"
+buc: "オーナー登録管理フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners/{owner_id}/withdrawal"
+    summary: "オーナーの退会処理を実行する（会議室の非公開化・IdPユーザー無効化を含む）"
+    request_schema: null
+    response_schema: "WithdrawalResponse"
+    tags: ["owners"]
+async_events: []
+schemas:
+  - name: "WithdrawalResponse"
+    properties:
+      - name: "owner_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "withdrawn_at"
+        type: "string"
+        required: true

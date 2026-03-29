@@ -1,0 +1,63 @@
+uc: "会議室を検索する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/rooms"
+    summary: "会議室一覧検索（公開状態フィルタ・複数条件絞り込み・ページネーション）"
+    response_schema: "RoomSearchResponse"
+    tags: ["rooms", "search"]
+async_events: []
+schemas:
+  - name: "RoomSearchResponse"
+    properties:
+      - name: "rooms"
+        type: "array"
+        required: true
+      - name: "total"
+        type: "integer"
+        required: true
+      - name: "page"
+        type: "integer"
+        required: true
+      - name: "per_page"
+        type: "integer"
+        required: true
+      - name: "total_pages"
+        type: "integer"
+        required: true
+  - name: "Room"
+    properties:
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "room_type"
+        type: "string"
+        required: true
+      - name: "area"
+        type: "string"
+        required: false
+      - name: "capacity"
+        type: "integer"
+        required: true
+      - name: "price_per_hour"
+        type: "integer"
+        required: true
+      - name: "facilities"
+        type: "array"
+        required: false
+      - name: "image_url"
+        type: "string"
+        required: false
+      - name: "avg_rating"
+        type: "number"
+        required: false
+      - name: "tool_type"
+        type: "string"
+        required: false
+      - name: "max_connections"
+        type: "integer"
+        required: false

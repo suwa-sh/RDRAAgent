@@ -1,0 +1,75 @@
+uc: "手数料売上を分析する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/admin/fee-sales/summary"
+    summary: "手数料売上集計取得（売上分析区分・期間指定）"
+    request_schema: "FeeSalesSummaryQuery"
+    response_schema: "FeeSalesSummaryResponse"
+    tags: ["admin", "fee-sales", "analytics"]
+  - method: "GET"
+    path: "/api/v1/admin/fee-sales/export"
+    summary: "手数料売上CSVエクスポート"
+    request_schema: "FeeSalesExportQuery"
+    response_schema: "text/csv"
+    tags: ["admin", "fee-sales", "export"]
+async_events: []
+schemas:
+  - name: "FeeSalesSummaryQuery"
+    properties:
+      - name: "dimension"
+        type: "string"
+        required: true
+        enum: ["room", "lease", "monthly", "owner"]
+      - name: "from"
+        type: "string"
+        format: "date"
+        required: true
+      - name: "to"
+        type: "string"
+        format: "date"
+        required: true
+      - name: "page"
+        type: "integer"
+        required: false
+      - name: "per_page"
+        type: "integer"
+        required: false
+  - name: "FeeSalesSummaryResponse"
+    properties:
+      - name: "dimension"
+        type: "string"
+        required: true
+      - name: "period"
+        type: "object"
+        required: true
+      - name: "summary"
+        type: "object"
+        required: true
+      - name: "items"
+        type: "array"
+        required: true
+      - name: "pagination"
+        type: "object"
+        required: true
+  - name: "FeeSalesSummaryItem"
+    properties:
+      - name: "key"
+        type: "string"
+        required: true
+      - name: "label"
+        type: "string"
+        required: true
+      - name: "fee_amount"
+        type: "integer"
+        required: true
+      - name: "fee_rate"
+        type: "number"
+        required: false
+      - name: "count"
+        type: "integer"
+        required: true
+      - name: "change_rate"
+        type: "number"
+        required: false

@@ -1,0 +1,54 @@
+uc: "会議URLを通知する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+
+models:
+  - name: "ApproveReservationCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "予約情報"
+  - name: "MqPublisher"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議URL"
+  - name: "MeetingUrlNotificationHandler"
+    tier: "tier-faas-worker"
+    layer: "handler"
+    type: "command"
+    rdra_info: "会議URL"
+  - name: "MeetingUrlRecord"
+    tier: "tier-faas-worker"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "会議URL"
+
+tables:
+  - name: "meeting_urls"
+    rdra_info: "会議URL"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id}"
+    indexes_needed:
+      - columns: ["room_id"]
+        reason: "予約確定時の会議URL取得"
+        access_pattern: "FaaS: 会議URL通知"
+  - name: "users"
+    rdra_info: "利用者情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "user_id = {user_id}"
+    indexes_needed: []
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "reservation_id = {reservation_id}"
+    indexes_needed: []
+
+kvs: []
+object_storage: []

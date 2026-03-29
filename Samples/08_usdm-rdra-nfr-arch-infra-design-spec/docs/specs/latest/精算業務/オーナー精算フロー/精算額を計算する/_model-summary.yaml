@@ -1,0 +1,86 @@
+uc: "精算額を計算する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+
+models:
+  - name: "SettlementCalculatePage"
+    tier: "tier-frontend-admin"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "精算情報"
+  - name: "SettlementCalculateState"
+    tier: "tier-frontend-admin"
+    layer: "state"
+    type: "state"
+    rdra_info: "精算情報"
+  - name: "CalculateSettlementRequest"
+    tier: "tier-frontend-admin"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "精算情報"
+  - name: "CalculateSettlementRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "精算情報"
+  - name: "CalculateSettlementCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "精算情報"
+  - name: "Settlement"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "精算情報"
+  - name: "SettlementRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "精算情報"
+
+tables:
+  - name: "usages"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "month = {target_month} GROUP BY owner_id"
+    indexes_needed:
+      - columns: ["owner_id", "month"]
+        reason: "月別オーナー別利用料合計集計"
+        access_pattern: "POST /api/v1/admin/settlements/calculate"
+  - name: "fee_sales"
+    rdra_info: "手数料売上"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "month = {target_month} GROUP BY owner_id"
+    indexes_needed:
+      - columns: ["owner_id", "month"]
+        reason: "月別オーナー別手数料合計集計"
+        access_pattern: "POST /api/v1/admin/settlements/calculate"
+  - name: "settlements"
+    rdra_info: "精算情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "status = '未精算'"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "精算計算済み"
+          - name: "usage_fee_total"
+            value: "計算済み利用料合計"
+          - name: "commission_total"
+            value: "計算済み手数料合計"
+          - name: "amount"
+            value: "精算額（利用料合計-手数料合計）"
+        where: "target_month = {target_month}"
+    indexes_needed:
+      - columns: ["status", "target_month"]
+        reason: "未精算一覧取得・精算計算済み更新"
+        access_pattern: "POST /api/v1/admin/settlements/calculate"
+
+kvs: []
+object_storage: []

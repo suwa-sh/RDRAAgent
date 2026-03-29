@@ -1,0 +1,55 @@
+uc: "オーナー登録審査一覧を確認する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+
+models:
+  - name: "OwnerReviewList"
+    tier: "tier-frontend-admin"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "オーナー情報"
+  - name: "OwnerListState"
+    tier: "tier-frontend-admin"
+    layer: "state"
+    type: "state"
+    rdra_info: "オーナー情報"
+  - name: "GetOwnerListRequest"
+    tier: "tier-frontend-admin"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "オーナー情報"
+  - name: "GetOwnerListRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "オーナー情報"
+  - name: "GetOwnerListQuery"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "オーナー情報"
+  - name: "OwnerList"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "value-object"
+    rdra_info: "オーナー情報"
+  - name: "OwnerRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "オーナー情報"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "status = {statusFilter} AND name LIKE {keyword} ORDER BY applied_at ASC LIMIT {per_page} OFFSET {offset}"
+    indexes_needed:
+      - columns: ["status", "applied_at"]
+        reason: "審査状態フィルタ + 申請日時ソート"
+        access_pattern: "GET /api/v1/admin/owners?status=pending"
+
+kvs: []
+object_storage: []

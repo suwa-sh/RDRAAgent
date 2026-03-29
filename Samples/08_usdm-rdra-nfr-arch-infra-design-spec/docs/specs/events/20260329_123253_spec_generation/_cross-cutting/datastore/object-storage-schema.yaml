@@ -1,0 +1,103 @@
+version: "1.0"
+datastore: "object-storage"
+description: "全46UC の _model-summary.yaml object_storage セクションを統合したオブジェクトストレージスキーマ定義。会議室画像・アセット等のファイル格納。"
+
+buckets:
+
+  # -----------------------------------------------------------------------
+  # room-images — 会議室画像バケット
+  # -----------------------------------------------------------------------
+  - name: "room-images"
+    description: "物理・バーチャル会議室の画像ファイル。利用者が会議室を選択する際の参考画像として提供。CDN経由で配信。"
+    paths:
+      - pattern: "rooms/{room_id}/images/{image_id}.jpg"
+        content_type: "image/jpeg"
+        max_size: "10MB"
+        used_by:
+          - "会議室を登録する"
+          - "バーチャル会議室を登録する"
+          - "会議室情報を変更する"
+          - "会議室の詳細を確認する"
+          - "会議室を検索する"
+        description: "会議室の JPEG 形式画像。rooms テーブルの facilities フィールドに image_ids として参照を保持。"
+      - pattern: "rooms/{room_id}/images/{image_id}.png"
+        content_type: "image/png"
+        max_size: "10MB"
+        used_by:
+          - "会議室を登録する"
+          - "バーチャル会議室を登録する"
+          - "会議室情報を変更する"
+          - "会議室の詳細を確認する"
+        description: "会議室の PNG 形式画像。"
+      - pattern: "rooms/{room_id}/thumbnail.jpg"
+        content_type: "image/jpeg"
+        max_size: "2MB"
+        used_by:
+          - "会議室を検索する"
+          - "会議室の詳細を確認する"
+        description: "会議室サムネイル画像（検索一覧表示用）。アップロード時に自動生成。"
+    lifecycle:
+      expiration_days: null
+      notes: "退会時（退会を申請する）にオーナーの全会議室が非公開になるが、画像ファイルは保持。法的要件により一定期間保管。"
+
+  # -----------------------------------------------------------------------
+  # owner-assets — オーナー関連アセットバケット
+  # -----------------------------------------------------------------------
+  - name: "owner-assets"
+    description: "オーナーのプロフィール画像・本人確認書類等。審査フローで参照する書類も含む。"
+    paths:
+      - pattern: "owners/{owner_id}/profile.jpg"
+        content_type: "image/jpeg"
+        max_size: "5MB"
+        used_by:
+          - "オーナー登録申請を行う"
+          - "オーナー情報を変更する"
+        description: "オーナーのプロフィール画像。"
+      - pattern: "owners/{owner_id}/documents/{doc_id}.pdf"
+        content_type: "application/pdf"
+        max_size: "20MB"
+        used_by:
+          - "オーナー登録申請を行う"
+          - "オーナー登録を審査する"
+          - "オーナー登録審査一覧を確認する"
+        description: "オーナー本人確認書類（PDF）。審査担当者が参照する。審査完了後も保管（コンプライアンス）。"
+    lifecycle:
+      expiration_days: null
+      notes: "退会後も一定期間（法的要件に従い）保管。"
+
+  # -----------------------------------------------------------------------
+  # inquiry-attachments — 問合せ添付ファイルバケット
+  # -----------------------------------------------------------------------
+  - name: "inquiry-attachments"
+    description: "問合せに添付されるファイル（画像・PDF）。利用者からオーナーまたはサービス運営への問合せに使用。"
+    paths:
+      - pattern: "inquiries/{inquiry_id}/attachments/{file_id}.{ext}"
+        content_type: "image/jpeg, image/png, application/pdf"
+        max_size: "10MB"
+        used_by:
+          - "サービスへ問合せする"
+          - "オーナーへ問合せする"
+          - "オーナーへ問合せを送信する"
+          - "問合せに回答する"
+          - "問合せに対応する"
+        description: "問合せ本文に添付されるファイル。対応完了後は一定期間保管。"
+    lifecycle:
+      expiration_days: 365
+      notes: "問合せ解決から1年後に自動削除。"
+
+  # -----------------------------------------------------------------------
+  # settlement-reports — 精算レポートバケット
+  # -----------------------------------------------------------------------
+  - name: "settlement-reports"
+    description: "月次精算レポートの PDF ファイル。オーナーへの精算明細書として生成・通知。"
+    paths:
+      - pattern: "settlements/{owner_id}/{year}/{month}/report.pdf"
+        content_type: "application/pdf"
+        max_size: "5MB"
+        used_by:
+          - "精算を実行する"
+          - "精算結果を確認する"
+        description: "月次精算明細書 PDF。精算実行後に自動生成し、オーナーへメール通知。オーナーがダウンロード可能。"
+    lifecycle:
+      expiration_days: null
+      notes: "経理・税務目的で永続保管（少なくとも7年）。"

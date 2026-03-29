@@ -1,0 +1,2875 @@
+openapi: "3.1.0"
+info:
+  title: "会議室シェアリングサービス API"
+  version: "1.0.0"
+  description: |
+    会議室シェアリングサービスの全 UC を統合した OpenAPI 3.1 仕様。
+    利用者・会議室オーナー・サービス運営担当者の3ロールに対応する。
+    認証は Bearer JWT トークンによる OAuth2/OIDC 方式。
+
+servers:
+  - url: "https://api.roomconnect.example.com"
+    description: "本番環境"
+  - url: "https://api.stg.roomconnect.example.com"
+    description: "ステージング環境"
+
+security:
+  - bearerAuth: []
+
+tags:
+  # オーナー管理業務
+  - name: "owners"
+    description: "オーナー登録管理フロー — オーナー情報を変更する / オーナー登録を審査する / オーナー登録申請を行う / 退会を申請する"
+  # サービス運営業務
+  - name: "admin"
+    description: "サービス運営管理フロー — オーナー登録審査一覧を確認する / 手数料売上を分析する / 問合せに対応する / 利用履歴を管理する / 利用状況を分析する"
+  # 会議室管理業務
+  - name: "rooms"
+    description: "会議室管理フロー — 会議室を登録する / バーチャル会議室を登録する / 会議室情報を変更する / 公開状態を変更する / 運用ルールを設定する / キャンセルポリシーを設定する / 評価を確認する"
+  # 会議室貸出業務
+  - name: "rentals"
+    description: "会議室貸出管理フロー — 予約を審査する / 鍵の貸出を記録する / 鍵の返却を記録する / 利用者の評価を確認する / 利用者を評価する"
+  # 会議室利用業務
+  - name: "reservations"
+    description: "会議室予約フロー — 会議室を検索する / 詳細を確認する / 予約を申請する / バーチャル会議室を予約する / 予約を許諾する / 予約を変更する / 予約を取り消す / 決済方法を設定する"
+  - name: "reviews"
+    description: "会議室評価フロー — 会議室を評価する / オーナーを評価する / バーチャル会議室を評価する / バーチャル会議室オーナーを評価する"
+  - name: "inquiries"
+    description: "問合せ管理 — オーナーへ問合せする / サービスへ問合せする / 問合せに回答する"
+  - name: "payment-methods"
+    description: "決済方法を設定する"
+  # 精算業務
+  - name: "settlements"
+    description: "オーナー精算フロー / 利用実績管理フロー"
+  - name: "internal"
+    description: "内部 API（CronJob専用） — バーチャル会議室利用を開始する / 終了する"
+
+paths:
+  # ===== オーナー管理業務: オーナー登録管理フロー =====
+
+  /api/v1/owners/applications:
+    post:
+      tags: ["owners"]
+      summary: "オーナー登録申請を行う"
+      description: "オーナー登録申請を受け付け、審査待ち状態で作成する"
+      operationId: "createOwnerApplication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOwnerApplicationRequest"
+      responses:
+        "201":
+          description: "申請受付成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerApplicationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/owners/{owner_id}:
+    put:
+      tags: ["owners"]
+      summary: "オーナー情報を変更する"
+      description: "オーナーの登録情報（氏名・連絡先・メールアドレス）を更新する"
+      operationId: "updateOwner"
+      parameters:
+        - $ref: "#/components/parameters/OwnerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOwnerRequest"
+      responses:
+        "200":
+          description: "更新成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/owners/{owner_id}/review:
+    put:
+      tags: ["owners", "admin"]
+      summary: "オーナー登録を審査する"
+      description: "オーナー登録申請を承認または却下する（サービス運営担当者専用）"
+      operationId: "reviewOwner"
+      parameters:
+        - $ref: "#/components/parameters/OwnerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewOwnerRequest"
+      responses:
+        "200":
+          description: "審査完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewOwnerResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/owners/{owner_id}/withdrawal:
+    post:
+      tags: ["owners"]
+      summary: "退会を申請する"
+      description: "オーナーの退会処理を実行する（会議室の非公開化・IdPユーザー無効化を含む）"
+      operationId: "withdrawOwner"
+      parameters:
+        - $ref: "#/components/parameters/OwnerId"
+      responses:
+        "200":
+          description: "退会処理完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WithdrawalResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===== サービス運営業務: サービス運営管理フロー =====
+
+  /api/v1/admin/owners:
+    get:
+      tags: ["admin", "owners"]
+      summary: "オーナー登録審査一覧を確認する"
+      description: "オーナー一覧取得（審査状態フィルター・キーワード検索・ページネーション）"
+      operationId: "listAdminOwners"
+      parameters:
+        - name: "status"
+          in: query
+          schema:
+            type: string
+            enum: ["pending", "approved", "rejected", "withdrawn"]
+        - name: "keyword"
+          in: query
+          schema:
+            type: string
+        - name: "sort"
+          in: query
+          schema:
+            type: string
+            enum: ["registered_at_asc", "registered_at_desc"]
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOwnerListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/owners/summary:
+    get:
+      tags: ["admin", "owners"]
+      summary: "オーナー審査状態サマリー取得"
+      operationId: "getOwnerReviewSummary"
+      responses:
+        "200":
+          description: "サマリー取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerReviewSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/fee-sales/summary:
+    get:
+      tags: ["admin"]
+      summary: "手数料売上を分析する（集計）"
+      description: "手数料売上集計取得（売上分析区分・期間指定）"
+      operationId: "getFeeSalesSummary"
+      parameters:
+        - name: "dimension"
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["room", "lease", "monthly", "owner"]
+        - name: "from"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: "to"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "集計成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeeSalesSummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/fee-sales/export:
+    get:
+      tags: ["admin"]
+      summary: "手数料売上CSVエクスポート"
+      operationId: "exportFeeSales"
+      parameters:
+        - name: "dimension"
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["room", "lease", "monthly", "owner"]
+        - name: "from"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: "to"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: "CSVダウンロード"
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/usage-analytics:
+    get:
+      tags: ["admin"]
+      summary: "利用状況を分析する"
+      description: "利用状況分析取得（集計軸・期間指定、KPI+明細）"
+      operationId: "getUsageAnalytics"
+      parameters:
+        - name: "dimension"
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["user", "room", "period"]
+        - name: "from"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: "to"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "分析データ取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageAnalyticsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/usage-history:
+    get:
+      tags: ["admin"]
+      summary: "利用履歴を管理する"
+      description: "利用履歴一覧取得（集計軸・期間・利用者・会議室フィルター）"
+      operationId: "listAdminUsageHistory"
+      parameters:
+        - name: "dimension"
+          in: query
+          schema:
+            type: string
+            enum: ["user", "room", "period"]
+        - name: "from"
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: "to"
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: "user_id"
+          in: query
+          schema:
+            type: string
+        - name: "room_id"
+          in: query
+          schema:
+            type: string
+        - name: "sort"
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "利用履歴取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUsageHistoryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/inquiries:
+    get:
+      tags: ["admin", "inquiries"]
+      summary: "問合せに対応する（一覧取得）"
+      description: "管理者向け問合せ一覧取得"
+      operationId: "listAdminInquiries"
+      parameters:
+        - name: "status"
+          in: query
+          schema:
+            type: string
+            enum: ["pending", "answered", "resolved"]
+        - name: "keyword"
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "問合せ一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminInquiryListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/inquiries/{inquiry_id}/answer:
+    post:
+      tags: ["admin", "inquiries"]
+      summary: "問合せへの回答送信（状態: 未対応→回答済み）"
+      operationId: "answerAdminInquiry"
+      parameters:
+        - name: "inquiry_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InquiryAnswerRequest"
+      responses:
+        "200":
+          description: "回答送信成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/admin/inquiries/{inquiry_id}/status:
+    put:
+      tags: ["admin", "inquiries"]
+      summary: "問合せ状態更新（状態: 回答済み→対応済み）"
+      operationId: "updateAdminInquiryStatus"
+      parameters:
+        - name: "inquiry_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InquiryStatusUpdateRequest"
+      responses:
+        "200":
+          description: "状態更新成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===== 会議室管理業務: 会議室管理フロー =====
+
+  /api/v1/rooms:
+    post:
+      tags: ["rooms"]
+      summary: "会議室を登録する"
+      description: "会議室を非公開状態で登録する（物理/バーチャル対応）"
+      operationId: "createRoom"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoomRequest"
+      responses:
+        "201":
+          description: "登録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomCreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    get:
+      tags: ["rooms"]
+      summary: "会議室を検索する"
+      description: "会議室一覧検索（公開状態フィルタ・複数条件絞り込み・ページネーション）"
+      operationId: "searchRooms"
+      parameters:
+        - name: "area"
+          in: query
+          schema:
+            type: string
+        - name: "capacity"
+          in: query
+          schema:
+            type: integer
+        - name: "price_max"
+          in: query
+          schema:
+            type: integer
+        - name: "amenities"
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: "avg_rating_min"
+          in: query
+          schema:
+            type: number
+        - name: "available_from"
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: "available_to"
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: "room_type"
+          in: query
+          schema:
+            type: string
+            enum: ["physical", "virtual"]
+        - name: "meeting_tool_type"
+          in: query
+          schema:
+            type: string
+            enum: ["Zoom", "Teams", "Google Meet"]
+        - name: "max_connections"
+          in: query
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "検索成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/rooms/virtual:
+    post:
+      tags: ["rooms"]
+      summary: "バーチャル会議室を登録する"
+      description: "バーチャル会議室（会議ツール種別・会議URL含む）を非公開状態で登録する"
+      operationId: "createVirtualRoom"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVirtualRoomRequest"
+      responses:
+        "201":
+          description: "登録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VirtualRoomCreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/rooms/{room_id}:
+    get:
+      tags: ["rooms"]
+      summary: "会議室の詳細を確認する"
+      description: "会議室詳細取得（会議室情報・運用ルール・評価一覧含む）"
+      operationId: "getRoom"
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      responses:
+        "200":
+          description: "詳細取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomDetailResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: ["rooms"]
+      summary: "会議室情報を変更する"
+      description: "会議室の基本情報（名称・価格・設備等）を更新する"
+      operationId: "updateRoom"
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomRequest"
+      responses:
+        "200":
+          description: "更新成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/rooms/{room_id}/status:
+    put:
+      tags: ["rooms"]
+      summary: "会議室の公開状態を変更する"
+      description: "会議室の公開状態を変更する（公開中/非公開の切り替え）"
+      operationId: "updateRoomStatus"
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomStatusRequest"
+      responses:
+        "200":
+          description: "状態変更成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/rooms/{room_id}/operation-rules:
+    put:
+      tags: ["rooms"]
+      summary: "運用ルールを設定する"
+      description: "会議室の運用ルール（利用可能時間・最低最大時間・貸出可否）を設定する"
+      operationId: "setOperationRules"
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetOperationRulesRequest"
+      responses:
+        "200":
+          description: "設定成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationRulesResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/rooms/{room_id}/cancel-policy:
+    put:
+      tags: ["rooms"]
+      summary: "キャンセルポリシーを設定する"
+      description: "会議室のキャンセルポリシーを設定する"
+      operationId: "setCancelPolicy"
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetCancelPolicyRequest"
+      responses:
+        "200":
+          description: "設定成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelPolicyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/rooms/{room_id}/reviews:
+    get:
+      tags: ["rooms"]
+      summary: "会議室の評価を確認する"
+      description: "会議室の評価一覧と平均スコアを取得する"
+      operationId: "listRoomReviews"
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "評価一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomReviewListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===== 会議室貸出業務: 会議室貸出管理フロー =====
+
+  /api/v1/reservations/{reservationId}/review:
+    put:
+      tags: ["rentals", "reservations"]
+      summary: "予約を審査する"
+      description: "予約審査（許諾/拒否）。バーチャル会議室許諾時に会議URL通知イベント発行"
+      operationId: "reviewReservation"
+      parameters:
+        - name: "reservationId"
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewReservationRequest"
+      responses:
+        "200":
+          description: "審査完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewReservationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/rentals/{rentalId}/key-out:
+    post:
+      tags: ["rentals"]
+      summary: "鍵の貸出を記録する"
+      description: "鍵貸出記録（物理会議室利用開始）"
+      operationId: "recordKeyOut"
+      parameters:
+        - name: "rentalId"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "鍵貸出記録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyOutResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/rentals/{rentalId}/key-return:
+    post:
+      tags: ["rentals"]
+      summary: "鍵の返却を記録する"
+      description: "鍵返却記録（物理会議室利用終了）"
+      operationId: "recordKeyReturn"
+      parameters:
+        - name: "rentalId"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "鍵返却記録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyReturnResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/users/{userId}/ratings:
+    get:
+      tags: ["rentals"]
+      summary: "利用者の評価を確認する"
+      description: "利用者評価一覧取得（使用許諾判断の参考情報）"
+      operationId: "getUserRatings"
+      parameters:
+        - name: "userId"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "評価一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRatingsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/usages/{usageId}/user-rating:
+    post:
+      tags: ["rentals"]
+      summary: "利用者を評価する"
+      description: "利用者評価登録（使用許諾判断の参考情報蓄積）"
+      operationId: "createUserRating"
+      parameters:
+        - name: "usageId"
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRatingRequest"
+      responses:
+        "201":
+          description: "評価登録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRatingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/reservations/{reservationId}/meeting-url:
+    get:
+      tags: ["reservations"]
+      summary: "会議URLを通知する（状況確認）"
+      description: "会議URL通知状況確認（利用者参照）"
+      operationId: "getMeetingUrlStatus"
+      parameters:
+        - name: "reservationId"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "会議URL通知状況取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingUrlStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===== 会議室利用業務: 会議室予約フロー =====
+
+  /api/v1/reservations:
+    post:
+      tags: ["reservations"]
+      summary: "予約を申請する / バーチャル会議室を予約する"
+      description: "予約申請（運用ルール・重複チェック後に申請状態で作成）。room_type=virtual でバーチャル会議室対応"
+      operationId: "createReservation"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationRequest"
+      responses:
+        "201":
+          description: "予約申請成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: "重複予約"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/reservations/{reservation_id}:
+    put:
+      tags: ["reservations"]
+      summary: "予約を変更する"
+      description: "予約日時変更（確定→変更状態遷移・利用料金再計算）"
+      operationId: "updateReservation"
+      parameters:
+        - name: "reservation_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationUpdateRequest"
+      responses:
+        "200":
+          description: "変更成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: ["reservations"]
+      summary: "予約を取り消す"
+      description: "予約取消（キャンセルポリシーに基づくキャンセル料計算・取消状態遷移）"
+      operationId: "cancelReservation"
+      parameters:
+        - name: "reservation_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "取消成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationCancelResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/reservations/{reservation_id}/approve:
+    post:
+      tags: ["reservations"]
+      summary: "予約を許諾する"
+      description: "予約許諾（申請→確定状態遷移・バーチャルの場合会議URL通知イベント発行）"
+      operationId: "approveReservation"
+      parameters:
+        - name: "reservation_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "許諾成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/payment-methods:
+    post:
+      tags: ["payment-methods"]
+      summary: "決済方法を設定する"
+      description: "決済方法登録（カード情報トークン化・暗号化保存）"
+      operationId: "createPaymentMethod"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentMethodRequest"
+      responses:
+        "201":
+          description: "決済方法登録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethodResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ===== 会議室利用業務: 会議室評価フロー =====
+
+  /api/v1/reviews:
+    post:
+      tags: ["reviews"]
+      summary: "会議室を評価する / オーナーを評価する / バーチャル会議室を評価する / バーチャル会議室オーナーを評価する"
+      description: |
+        会議室・オーナー評価登録（共通API）。
+        review_type で評価対象を指定: room（会議室）/ owner（オーナー）
+        room_type=virtual でバーチャル会議室対応
+      operationId: "createReview"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewRequest"
+      responses:
+        "201":
+          description: "評価登録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: "重複評価"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ===== 問合せ管理 =====
+
+  /api/v1/inquiries:
+    post:
+      tags: ["inquiries"]
+      summary: "オーナーへ問合せする / サービスへ問合せする"
+      description: "問合せ登録（オーナー宛またはサービス運営宛）。inquiry_type で宛先を指定"
+      operationId: "createInquiry"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInquiryRequest"
+      responses:
+        "201":
+          description: "問合せ登録成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      tags: ["inquiries"]
+      summary: "問合せ一覧取得（利用者自身の問合せ）"
+      operationId: "listMyInquiries"
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "問合せ一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/inquiries/{inquiryId}/reply:
+    put:
+      tags: ["inquiries", "rentals"]
+      summary: "問合せに回答する"
+      description: "問合せ回答（未対応→回答済みへの状態遷移）"
+      operationId: "replyInquiry"
+      parameters:
+        - name: "inquiryId"
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyInquiryRequest"
+      responses:
+        "200":
+          description: "回答成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyInquiryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===== 精算業務: オーナー精算フロー =====
+
+  /api/v1/admin/settlements:
+    get:
+      tags: ["admin", "settlements"]
+      summary: "精算額を計算する（一覧取得）"
+      description: "精算一覧取得（管理者、状態・対象月フィルター）"
+      operationId: "listAdminSettlements"
+      parameters:
+        - name: "status"
+          in: query
+          schema:
+            type: string
+            enum: ["pending", "calculated", "processing", "paid"]
+        - name: "target_month"
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "精算一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSettlementListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/settlements/calculate:
+    post:
+      tags: ["admin", "settlements"]
+      summary: "精算額を計算する"
+      description: "精算額計算実行（対象月のオーナー別精算額を計算し精算計算済みに遷移）"
+      operationId: "calculateSettlement"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettlementCalculateRequest"
+      responses:
+        "200":
+          description: "計算成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementCalculateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/settlements/{settlement_id}/execute:
+    post:
+      tags: ["admin", "settlements"]
+      summary: "精算を実行する"
+      description: "精算実行（精算計算済み→支払処理中、MQへ精算支払連携イベント発行）"
+      operationId: "executeSettlement"
+      parameters:
+        - name: "settlement_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "精算実行成功（処理中状態へ遷移）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementExecuteResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: "既に実行済みまたは実行不可な状態"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/admin/settlements/{settlement_id}/execute/status:
+    get:
+      tags: ["admin", "settlements"]
+      summary: "精算処理状態確認"
+      operationId: "getSettlementExecuteStatus"
+      parameters:
+        - name: "settlement_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "状態取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementExecuteStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/owner/settlements:
+    get:
+      tags: ["settlements"]
+      summary: "精算結果を確認する（一覧）"
+      description: "オーナー向け精算一覧取得（自身の精算のみ、状態フィルター）"
+      operationId: "listOwnerSettlements"
+      parameters:
+        - name: "status"
+          in: query
+          schema:
+            type: string
+            enum: ["pending", "calculated", "processing", "paid"]
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "精算一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerSettlementListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/owner/settlements/{settlement_id}:
+    get:
+      tags: ["settlements"]
+      summary: "精算結果を確認する（詳細）"
+      description: "オーナー向け精算詳細取得（ReBAC認可チェック）"
+      operationId: "getOwnerSettlement"
+      parameters:
+        - name: "settlement_id"
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "精算詳細取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerSettlementDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===== 精算業務: 利用実績管理フロー =====
+
+  /api/v1/owner/sales-summary:
+    get:
+      tags: ["settlements"]
+      summary: "売上実績を確認する"
+      description: "オーナーが自身の会議室の売上実績を集計軸・期間で取得する"
+      operationId: "getOwnerSalesSummary"
+      parameters:
+        - name: "dimension"
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["room", "period"]
+        - name: "from"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: "to"
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: "売上実績取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesSummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/owner/usage-stats:
+    get:
+      tags: ["settlements"]
+      summary: "利用回数を確認する"
+      description: "オーナー向け利用回数統計取得（物件別/期間別、所有権ベース参照）"
+      operationId: "getOwnerUsageStats"
+      parameters:
+        - name: "dimension"
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["room", "period"]
+        - name: "from"
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: "to"
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "利用回数統計取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerUsageStatsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/owner/user-reviews:
+    get:
+      tags: ["settlements"]
+      summary: "利用者評価一覧を確認する"
+      description: "オーナーが自身に紐づく利用者評価をページネーション付きで取得する"
+      operationId: "listOwnerUserReviews"
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: "利用者評価一覧取得成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserReviewListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ===== 内部 API（CronJob専用） =====
+
+  /internal/v1/virtual-usages/start:
+    post:
+      tags: ["internal"]
+      summary: "バーチャル会議室利用を開始する"
+      description: "バーチャル会議室利用開始（CronJob専用内部API）"
+      operationId: "startVirtualUsage"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartVirtualUsageRequest"
+      responses:
+        "200":
+          description: "利用開始成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartVirtualUsageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/virtual-usages/end:
+    post:
+      tags: ["internal"]
+      summary: "バーチャル会議室利用を終了する"
+      description: "バーチャル会議室利用終了（CronJob専用内部API）"
+      operationId: "endVirtualUsage"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EndVirtualUsageRequest"
+      responses:
+        "200":
+          description: "利用終了成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EndVirtualUsageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "OAuth2/OIDC JWT アクセストークン（有効期限15分、IdP発行）"
+
+  parameters:
+    OwnerId:
+      name: "owner_id"
+      in: path
+      required: true
+      schema:
+        type: string
+    RoomId:
+      name: "room_id"
+      in: path
+      required: true
+      schema:
+        type: string
+    Page:
+      name: "page"
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPage:
+      name: "per_page"
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    BadRequest:
+      description: "バリデーションエラー"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: "認証エラー（トークン無効・期限切れ）"
+    Forbidden:
+      description: "認可エラー（アクセス権限なし）"
+    NotFound:
+      description: "リソース未存在"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    # ===== 共通スキーマ =====
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: "エラーコード（例: VALIDATION_ERROR, NOT_FOUND, CONFLICT）"
+        message:
+          type: string
+          description: "エラーメッセージ"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    PaginationMeta:
+      type: object
+      required: [page, per_page, total_count, total_pages]
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_count:
+          type: integer
+        total_pages:
+          type: integer
+
+    PaginatedResponse:
+      type: object
+      required: [items, total, page, per_page]
+      properties:
+        items:
+          type: array
+          items: {}
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+
+    # ===== オーナー管理 =====
+
+    CreateOwnerApplicationRequest:
+      type: object
+      required: [name, phone, email]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        phone:
+          type: string
+          pattern: "^[0-9\\-]{10,13}$"
+        email:
+          type: string
+          format: email
+
+    OwnerApplicationResponse:
+      type: object
+      required: [owner_id, status, created_at]
+      properties:
+        owner_id:
+          type: string
+        status:
+          type: string
+          enum: ["pending"]
+        created_at:
+          type: string
+          format: date-time
+
+    UpdateOwnerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        phone:
+          type: string
+          pattern: "^[0-9\\-]{10,13}$"
+        email:
+          type: string
+          format: email
+
+    OwnerResponse:
+      type: object
+      required: [owner_id, name, phone, email, updated_at]
+      properties:
+        owner_id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        updated_at:
+          type: string
+          format: date-time
+
+    ReviewOwnerRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: ["approved", "rejected"]
+        reason:
+          type: string
+          maxLength: 500
+
+    ReviewOwnerResponse:
+      type: object
+      required: [owner_id, status, reviewed_at]
+      properties:
+        owner_id:
+          type: string
+        status:
+          type: string
+          enum: ["approved", "rejected"]
+        reviewed_at:
+          type: string
+          format: date-time
+
+    WithdrawalResponse:
+      type: object
+      required: [owner_id, status, withdrawn_at]
+      properties:
+        owner_id:
+          type: string
+        status:
+          type: string
+          enum: ["withdrawn"]
+        withdrawn_at:
+          type: string
+          format: date-time
+
+    AdminOwnerListResponse:
+      type: object
+      required: [owners, summary, pagination]
+      properties:
+        owners:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminOwnerItem"
+        summary:
+          $ref: "#/components/schemas/OwnerReviewSummaryResponse"
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    AdminOwnerItem:
+      type: object
+      required: [owner_id, name, email, contact, registered_at, review_status, elapsed_days]
+      properties:
+        owner_id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        contact:
+          type: string
+        registered_at:
+          type: string
+          format: date-time
+        review_status:
+          type: string
+          enum: ["pending", "approved", "rejected", "withdrawn"]
+        elapsed_days:
+          type: integer
+
+    OwnerReviewSummaryResponse:
+      type: object
+      required: [pending_count, approved_count, rejected_count, withdrawn_count]
+      properties:
+        pending_count:
+          type: integer
+        approved_count:
+          type: integer
+        rejected_count:
+          type: integer
+        withdrawn_count:
+          type: integer
+
+    # ===== サービス運営 =====
+
+    FeeSalesSummaryResponse:
+      type: object
+      required: [dimension, period, summary, items, pagination]
+      properties:
+        dimension:
+          type: string
+          enum: ["room", "lease", "monthly", "owner"]
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date
+            to:
+              type: string
+              format: date
+        summary:
+          type: object
+          properties:
+            total_fee_amount:
+              type: integer
+            total_count:
+              type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeeSalesSummaryItem"
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    FeeSalesSummaryItem:
+      type: object
+      required: [key, label, fee_amount, count]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        fee_amount:
+          type: integer
+        fee_rate:
+          type: number
+        count:
+          type: integer
+        change_rate:
+          type: number
+
+    UsageAnalyticsResponse:
+      type: object
+      required: [kpi, items, pagination]
+      properties:
+        kpi:
+          type: object
+          properties:
+            total_usages:
+              type: integer
+            total_amount:
+              type: integer
+            avg_usage_hours:
+              type: number
+        items:
+          type: array
+          items: {}
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    AdminUsageHistoryResponse:
+      type: object
+      required: [items, summary, pagination]
+      properties:
+        items:
+          type: array
+          items: {}
+        summary:
+          type: object
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    AdminInquiryListResponse:
+      type: object
+      required: [inquiries, pagination]
+      properties:
+        inquiries:
+          type: array
+          items: {}
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    InquiryAnswerRequest:
+      type: object
+      required: [answer_content]
+      properties:
+        answer_content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    InquiryStatusUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: ["resolved"]
+
+    InquiryStatusResponse:
+      type: object
+      required: [inquiry_id, status]
+      properties:
+        inquiry_id:
+          type: string
+        status:
+          type: string
+          enum: ["pending", "answered", "resolved"]
+        answered_at:
+          type: string
+          format: date-time
+
+    # ===== 会議室管理 =====
+
+    CreateRoomRequest:
+      type: object
+      required: [name, room_type, price_per_hour]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        room_type:
+          type: string
+          enum: ["physical", "virtual"]
+        price_per_hour:
+          type: integer
+          minimum: 0
+        location:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        amenities:
+          type: array
+          items:
+            type: string
+            enum: ["projector", "whiteboard", "wifi", "video_conference", "audio", "air_conditioning", "food_ok", "smoking_ok"]
+        meeting_tool_type:
+          type: string
+          enum: ["Zoom", "Teams", "Google Meet"]
+        max_connections:
+          type: integer
+          minimum: 1
+        recording_available:
+          type: boolean
+
+    RoomCreatedResponse:
+      type: object
+      required: [room_id, status, created_at]
+      properties:
+        room_id:
+          type: string
+        status:
+          type: string
+          enum: ["private"]
+        created_at:
+          type: string
+          format: date-time
+
+    CreateVirtualRoomRequest:
+      type: object
+      required: [name, meeting_tool_type, max_connections, recording_available, price_per_hour, meeting_url]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        meeting_tool_type:
+          type: string
+          enum: ["Zoom", "Teams", "Google Meet"]
+        max_connections:
+          type: integer
+          minimum: 1
+        recording_available:
+          type: boolean
+        price_per_hour:
+          type: integer
+          minimum: 0
+        meeting_url:
+          type: string
+          format: uri
+        meeting_url_expires_at:
+          type: string
+          format: date-time
+
+    VirtualRoomCreatedResponse:
+      type: object
+      required: [room_id, meeting_url_id, status, created_at]
+      properties:
+        room_id:
+          type: string
+        meeting_url_id:
+          type: string
+        status:
+          type: string
+          enum: ["private"]
+        created_at:
+          type: string
+          format: date-time
+
+    UpdateRoomRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        price_per_hour:
+          type: integer
+          minimum: 0
+        location:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        amenities:
+          type: array
+          items:
+            type: string
+        meeting_tool_type:
+          type: string
+          enum: ["Zoom", "Teams", "Google Meet"]
+        max_connections:
+          type: integer
+          minimum: 1
+        recording_available:
+          type: boolean
+
+    RoomResponse:
+      type: object
+      required: [room_id, name, status, updated_at]
+      properties:
+        room_id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: ["private", "publishable", "public"]
+        updated_at:
+          type: string
+          format: date-time
+
+    UpdateRoomStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: ["private", "publishable", "public"]
+
+    RoomStatusResponse:
+      type: object
+      required: [room_id, status, updated_at]
+      properties:
+        room_id:
+          type: string
+        status:
+          type: string
+          enum: ["private", "publishable", "public"]
+        updated_at:
+          type: string
+          format: date-time
+
+    SetOperationRulesRequest:
+      type: object
+      required: [available_from, available_to, min_hours, max_hours, is_rentable]
+      properties:
+        available_from:
+          type: string
+          description: "利用可能開始時刻（HH:MM形式）"
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+        available_to:
+          type: string
+          description: "利用可能終了時刻（HH:MM形式）"
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+        min_hours:
+          type: integer
+          minimum: 1
+        max_hours:
+          type: integer
+          minimum: 1
+        is_rentable:
+          type: boolean
+
+    OperationRulesResponse:
+      type: object
+      required: [rule_id, room_id, room_status]
+      properties:
+        rule_id:
+          type: string
+        room_id:
+          type: string
+        room_status:
+          type: string
+          enum: ["private", "publishable", "public"]
+
+    SetCancelPolicyRequest:
+      type: object
+      required: [cancel_deadline_days, cancel_rate_percent]
+      properties:
+        cancel_deadline_days:
+          type: integer
+          minimum: 0
+        cancel_rate_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        refund_rule:
+          type: string
+          maxLength: 500
+
+    CancelPolicyResponse:
+      type: object
+      required: [policy_id, room_id, room_status]
+      properties:
+        policy_id:
+          type: string
+        room_id:
+          type: string
+        room_status:
+          type: string
+          enum: ["private", "publishable", "public"]
+
+    RoomSearchResponse:
+      type: object
+      required: [rooms, total, page, per_page, total_pages]
+      properties:
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomSummary"
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_pages:
+          type: integer
+
+    RoomSummary:
+      type: object
+      required: [room_id, name, room_type, capacity, price_per_hour]
+      properties:
+        room_id:
+          type: string
+        name:
+          type: string
+        room_type:
+          type: string
+          enum: ["physical", "virtual"]
+        area:
+          type: string
+        capacity:
+          type: integer
+        price_per_hour:
+          type: integer
+        facilities:
+          type: array
+          items:
+            type: string
+        image_url:
+          type: string
+          format: uri
+        avg_rating:
+          type: number
+        tool_type:
+          type: string
+          enum: ["Zoom", "Teams", "Google Meet"]
+        max_connections:
+          type: integer
+
+    RoomDetailResponse:
+      type: object
+      required: [room_id, name, room_type, capacity, price_per_hour, owner_info]
+      properties:
+        room_id:
+          type: string
+        name:
+          type: string
+        room_type:
+          type: string
+          enum: ["physical", "virtual"]
+        area:
+          type: string
+        size_sqm:
+          type: number
+        capacity:
+          type: integer
+        price_per_hour:
+          type: integer
+        facilities:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        tool_type:
+          type: string
+          enum: ["Zoom", "Teams", "Google Meet"]
+        max_connections:
+          type: integer
+        is_recordable:
+          type: boolean
+        operation_rule:
+          type: object
+          properties:
+            available_from:
+              type: string
+            available_to:
+              type: string
+            min_hours:
+              type: integer
+            max_hours:
+              type: integer
+            is_rentable:
+              type: boolean
+        cancel_policy:
+          type: object
+          properties:
+            cancel_deadline_days:
+              type: integer
+            cancel_rate_percent:
+              type: integer
+            refund_rule:
+              type: string
+        avg_rating:
+          type: number
+        review_count:
+          type: integer
+        recent_reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewSummary"
+        owner_info:
+          type: object
+          required: [owner_id, name]
+          properties:
+            owner_id:
+              type: string
+            name:
+              type: string
+
+    RoomReviewListResponse:
+      type: object
+      required: [reviews, average_score, total_count, page, total_pages]
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewSummary"
+        average_score:
+          type: number
+          minimum: 1
+          maximum: 5
+        total_count:
+          type: integer
+        page:
+          type: integer
+        total_pages:
+          type: integer
+
+    ReviewSummary:
+      type: object
+      required: [review_id, score, created_at]
+      properties:
+        review_id:
+          type: string
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # ===== 会議室貸出 =====
+
+    ReviewReservationRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: ["approved", "rejected"]
+        rejectReason:
+          type: string
+          maxLength: 500
+
+    ReviewReservationResponse:
+      type: object
+      required: [reservationId, previousStatus, newStatus, decisionAt]
+      properties:
+        reservationId:
+          type: string
+        previousStatus:
+          type: string
+        newStatus:
+          type: string
+        decisionAt:
+          type: string
+          format: date-time
+
+    KeyOutResponse:
+      type: object
+      required: [rentalId, keyId, keyStatus, usageId, usageStatus, lentAt]
+      properties:
+        rentalId:
+          type: string
+        keyId:
+          type: string
+        keyStatus:
+          type: string
+          enum: ["lent"]
+        usageId:
+          type: string
+        usageStatus:
+          type: string
+          enum: ["started"]
+        lentAt:
+          type: string
+          format: date-time
+
+    KeyReturnResponse:
+      type: object
+      required: [rentalId, keyId, keyStatus, usageId, usageStatus, returnedAt, usageMinutes]
+      properties:
+        rentalId:
+          type: string
+        keyId:
+          type: string
+        keyStatus:
+          type: string
+          enum: ["stored"]
+        usageId:
+          type: string
+        usageStatus:
+          type: string
+          enum: ["ended"]
+        returnedAt:
+          type: string
+          format: date-time
+        usageMinutes:
+          type: integer
+
+    UserRatingsResponse:
+      type: object
+      required: [userId, userName, totalCount, ratings]
+      properties:
+        userId:
+          type: string
+        userName:
+          type: string
+        averageScore:
+          type: number
+          minimum: 1
+          maximum: 5
+        totalCount:
+          type: integer
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewSummary"
+
+    CreateUserRatingRequest:
+      type: object
+      required: [score]
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 1000
+
+    UserRatingResponse:
+      type: object
+      required: [evaluationId, usageId, userId, score, evaluatedAt]
+      properties:
+        evaluationId:
+          type: string
+        usageId:
+          type: string
+        userId:
+          type: string
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        evaluatedAt:
+          type: string
+          format: date-time
+
+    MeetingUrlStatusResponse:
+      type: object
+      required: [reservationId, notificationStatus]
+      properties:
+        reservationId:
+          type: string
+        meetingUrl:
+          type: string
+          format: uri
+        toolType:
+          type: string
+          enum: ["Zoom", "Teams", "Google Meet"]
+        notificationStatus:
+          type: string
+          enum: ["pending", "sent", "failed"]
+        notifiedAt:
+          type: string
+          format: date-time
+
+    # ===== 予約管理 =====
+
+    ReservationRequest:
+      type: object
+      required: [room_id, start_datetime, end_datetime, payment_method]
+      properties:
+        room_id:
+          type: string
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+        payment_method:
+          type: string
+          enum: ["credit_card", "e_money"]
+
+    ReservationResponse:
+      type: object
+      required: [reservation_id, status, room_id, start_datetime, end_datetime, fee, payment_method]
+      properties:
+        reservation_id:
+          type: string
+        status:
+          type: string
+          enum: ["pending"]
+        room_id:
+          type: string
+        room_type:
+          type: string
+          enum: ["physical", "virtual"]
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+        fee:
+          type: integer
+          minimum: 0
+        payment_method:
+          type: string
+          enum: ["credit_card", "e_money"]
+
+    ReservationUpdateRequest:
+      type: object
+      required: [start_datetime, end_datetime]
+      properties:
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+
+    ReservationUpdateResponse:
+      type: object
+      required: [reservation_id, status, start_datetime, end_datetime, fee]
+      properties:
+        reservation_id:
+          type: string
+        status:
+          type: string
+          enum: ["changed"]
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+        fee:
+          type: integer
+          minimum: 0
+
+    ReservationCancelResponse:
+      type: object
+      required: [reservation_id, status, cancel_fee, cancelled_at]
+      properties:
+        reservation_id:
+          type: string
+        status:
+          type: string
+          enum: ["cancelled"]
+        cancel_fee:
+          type: integer
+          minimum: 0
+        cancelled_at:
+          type: string
+          format: date-time
+
+    ReservationStatusResponse:
+      type: object
+      required: [reservation_id, status, updated_at]
+      properties:
+        reservation_id:
+          type: string
+        status:
+          type: string
+          enum: ["confirmed", "rejected"]
+        updated_at:
+          type: string
+          format: date-time
+
+    # ===== 評価 =====
+
+    ReviewRequest:
+      type: object
+      required: [review_type, room_id, reservation_id, score]
+      properties:
+        review_type:
+          type: string
+          enum: ["room", "owner"]
+        room_id:
+          type: string
+        reservation_id:
+          type: string
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 1000
+
+    ReviewResponse:
+      type: object
+      required: [review_id, review_type, score, created_at]
+      properties:
+        review_id:
+          type: string
+        review_type:
+          type: string
+          enum: ["room", "owner"]
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        created_at:
+          type: string
+          format: date-time
+
+    # ===== 問合せ =====
+
+    CreateInquiryRequest:
+      type: object
+      required: [inquiry_type, content]
+      properties:
+        inquiry_type:
+          type: string
+          enum: ["service", "owner"]
+        target_id:
+          type: string
+          description: "inquiry_type=owner の場合は owner_id"
+        room_id:
+          type: string
+        category:
+          type: string
+          enum: ["usage", "reservation", "billing", "technical", "other"]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    InquiryResponse:
+      type: object
+      required: [inquiry_id, status, created_at]
+      properties:
+        inquiry_id:
+          type: string
+        status:
+          type: string
+          enum: ["pending"]
+        created_at:
+          type: string
+          format: date-time
+
+    InquiryListResponse:
+      type: object
+      required: [inquiries, pagination]
+      properties:
+        inquiries:
+          type: array
+          items: {}
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    ReplyInquiryRequest:
+      type: object
+      required: [replyContent]
+      properties:
+        replyContent:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    ReplyInquiryResponse:
+      type: object
+      required: [inquiryId, status, repliedAt]
+      properties:
+        inquiryId:
+          type: string
+        status:
+          type: string
+          enum: ["answered"]
+        repliedAt:
+          type: string
+          format: date-time
+
+    # ===== 決済 =====
+
+    PaymentMethodRequest:
+      type: object
+      required: [payment_type]
+      properties:
+        payment_type:
+          type: string
+          enum: ["credit_card", "e_money"]
+        card_number:
+          type: string
+          description: "カード番号（クレジットカード選択時必須）"
+        expiry:
+          type: string
+          description: "有効期限（MM/YY形式）"
+          pattern: "^(0[1-9]|1[0-2])\\/(\\d{2})$"
+        cvv:
+          type: string
+        emoney_id:
+          type: string
+          description: "電子マネーID（電子マネー選択時必須）"
+
+    PaymentMethodResponse:
+      type: object
+      required: [payment_method_id, payment_type, masked_identifier, status]
+      properties:
+        payment_method_id:
+          type: string
+        payment_type:
+          type: string
+          enum: ["credit_card", "e_money"]
+        masked_identifier:
+          type: string
+          description: "マスク済み識別子（下4桁等）"
+        status:
+          type: string
+          enum: ["registered"]
+
+    # ===== 精算 =====
+
+    SettlementCalculateRequest:
+      type: object
+      required: [target_month]
+      properties:
+        target_month:
+          type: string
+          description: "精算対象月（YYYY-MM形式）"
+          pattern: "^\\d{4}-(0[1-9]|1[0-2])$"
+        force:
+          type: boolean
+          default: false
+
+    SettlementCalculateResponse:
+      type: object
+      required: [target_month, settlement_count, settlements]
+      properties:
+        target_month:
+          type: string
+        settlement_count:
+          type: integer
+        settlements:
+          type: array
+          items:
+            $ref: "#/components/schemas/SettlementItem"
+
+    SettlementItem:
+      type: object
+      required: [settlement_id, owner_id, owner_name, total_usage_amount, total_fee_amount, settlement_amount, status]
+      properties:
+        settlement_id:
+          type: string
+        owner_id:
+          type: string
+        owner_name:
+          type: string
+        total_usage_amount:
+          type: integer
+        total_fee_amount:
+          type: integer
+        settlement_amount:
+          type: integer
+        status:
+          type: string
+          enum: ["calculated"]
+
+    AdminSettlementListResponse:
+      type: object
+      required: [settlements, pagination]
+      properties:
+        settlements:
+          type: array
+          items:
+            $ref: "#/components/schemas/SettlementItem"
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    SettlementExecuteResponse:
+      type: object
+      required: [settlement_id, owner_settlement_id, status, message_id]
+      properties:
+        settlement_id:
+          type: string
+        owner_settlement_id:
+          type: string
+        status:
+          type: string
+          enum: ["processing"]
+        message_id:
+          type: string
+          description: "SQSメッセージID（冪等性確認用）"
+
+    SettlementExecuteStatusResponse:
+      type: object
+      required: [settlement_id, status]
+      properties:
+        settlement_id:
+          type: string
+        status:
+          type: string
+          enum: ["calculated", "processing", "paid", "failed"]
+        payment_completed_at:
+          type: string
+          format: date-time
+        error_message:
+          type: string
+
+    OwnerSettlementListResponse:
+      type: object
+      required: [total_paid_amount, settlements, pagination]
+      properties:
+        total_paid_amount:
+          type: integer
+        settlements:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerSettlementSummaryItem"
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    OwnerSettlementSummaryItem:
+      type: object
+      required: [settlement_id, target_month, settlement_amount, status]
+      properties:
+        settlement_id:
+          type: string
+        target_month:
+          type: string
+        settlement_amount:
+          type: integer
+        status:
+          type: string
+          enum: ["pending", "calculated", "processing", "paid"]
+
+    OwnerSettlementDetailResponse:
+      type: object
+      required: [settlement_id, target_month, total_usage_amount, total_fee_amount, settlement_amount, status]
+      properties:
+        settlement_id:
+          type: string
+        target_month:
+          type: string
+        total_usage_amount:
+          type: integer
+        total_fee_amount:
+          type: integer
+        settlement_amount:
+          type: integer
+        status:
+          type: string
+          enum: ["pending", "calculated", "processing", "paid"]
+        payment_date:
+          type: string
+          format: date
+        payment_gateway_id:
+          type: string
+
+    SalesSummaryResponse:
+      type: object
+      required: [summary, items]
+      properties:
+        summary:
+          type: object
+          required: [total_amount, total_count]
+          properties:
+            total_amount:
+              type: integer
+            total_count:
+              type: integer
+            growth_rate:
+              type: number
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalesSummaryItem"
+
+    SalesSummaryItem:
+      type: object
+      required: [label, amount, count]
+      properties:
+        label:
+          type: string
+        amount:
+          type: integer
+        count:
+          type: integer
+        growth_rate:
+          type: number
+
+    OwnerUsageStatsResponse:
+      type: object
+      required: [dimension, period, items, kpi]
+      properties:
+        dimension:
+          type: string
+          enum: ["room", "period"]
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+            to:
+              type: string
+        items:
+          type: array
+          items: {}
+        kpi:
+          type: object
+          properties:
+            total_count:
+              type: integer
+            total_hours:
+              type: number
+
+    UserReviewListResponse:
+      type: object
+      required: [summary, items, pagination]
+      properties:
+        summary:
+          type: object
+          required: [average_score, total_count]
+          properties:
+            average_score:
+              type: number
+              minimum: 1
+              maximum: 5
+            total_count:
+              type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserReviewItem"
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    UserReviewItem:
+      type: object
+      required: [review_id, user_id, score, reviewed_at]
+      properties:
+        review_id:
+          type: string
+        user_id:
+          type: string
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        reviewed_at:
+          type: string
+          format: date-time
+
+    # ===== 内部 API =====
+
+    StartVirtualUsageRequest:
+      type: object
+      required: [reservationId]
+      properties:
+        reservationId:
+          type: string
+
+    StartVirtualUsageResponse:
+      type: object
+      required: [reservationId, usageId, startedAt, alreadyStarted]
+      properties:
+        reservationId:
+          type: string
+        usageId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        alreadyStarted:
+          type: boolean
+          description: "冪等性保証: 既に開始済みの場合 true"
+
+    EndVirtualUsageRequest:
+      type: object
+      required: [usageId]
+      properties:
+        usageId:
+          type: string
+
+    EndVirtualUsageResponse:
+      type: object
+      required: [usageId, alreadyEnded]
+      properties:
+        usageId:
+          type: string
+        endedAt:
+          type: string
+          format: date-time
+        usageMinutes:
+          type: integer
+        alreadyEnded:
+          type: boolean
+          description: "冪等性保証: 既に終了済みの場合 true"

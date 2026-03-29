@@ -1,0 +1,52 @@
+uc: "会議室情報を変更する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/rooms/{room_id}"
+    summary: "会議室の基本情報（名称・価格・設備等）を更新する"
+    request_schema: "UpdateRoomRequest"
+    response_schema: "RoomResponse"
+    tags: ["rooms"]
+async_events: []
+schemas:
+  - name: "UpdateRoomRequest"
+    properties:
+      - name: "name"
+        type: "string"
+        required: false
+      - name: "price_per_hour"
+        type: "integer"
+        required: false
+      - name: "location"
+        type: "string"
+        required: false
+      - name: "capacity"
+        type: "integer"
+        required: false
+      - name: "amenities"
+        type: "array"
+        required: false
+      - name: "meeting_tool_type"
+        type: "string"
+        required: false
+      - name: "max_connections"
+        type: "integer"
+        required: false
+      - name: "recording_available"
+        type: "boolean"
+        required: false
+  - name: "RoomResponse"
+    properties:
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "updated_at"
+        type: "string"
+        required: true

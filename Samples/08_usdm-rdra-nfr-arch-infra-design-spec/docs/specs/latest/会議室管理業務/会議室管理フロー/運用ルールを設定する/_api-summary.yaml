@@ -1,0 +1,40 @@
+uc: "運用ルールを設定する"
+business: "会議室管理業務"
+buc: "会議室管理フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/rooms/{room_id}/operation-rules"
+    summary: "会議室の運用ルール（利用可能時間・最低最大時間・貸出可否）を設定する"
+    request_schema: "SetOperationRulesRequest"
+    response_schema: "OperationRulesResponse"
+    tags: ["rooms", "operation-rules"]
+async_events: []
+schemas:
+  - name: "SetOperationRulesRequest"
+    properties:
+      - name: "available_from"
+        type: "string"
+        required: true
+      - name: "available_to"
+        type: "string"
+        required: true
+      - name: "min_hours"
+        type: "integer"
+        required: true
+      - name: "max_hours"
+        type: "integer"
+        required: true
+      - name: "is_rentable"
+        type: "boolean"
+        required: true
+  - name: "OperationRulesResponse"
+    properties:
+      - name: "rule_id"
+        type: "string"
+        required: true
+      - name: "room_id"
+        type: "string"
+        required: true
+      - name: "room_status"
+        type: "string"
+        required: true

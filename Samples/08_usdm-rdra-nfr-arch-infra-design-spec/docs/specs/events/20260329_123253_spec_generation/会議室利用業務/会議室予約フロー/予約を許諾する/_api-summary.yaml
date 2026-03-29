@@ -1,0 +1,37 @@
+uc: "予約を許諾する"
+business: "会議室利用業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations/{reservation_id}/approve"
+    summary: "予約許諾（申請→確定状態遷移・バーチャルの場合会議URL通知イベント発行）"
+    response_schema: "ReservationStatusResponse"
+    tags: ["reservations"]
+async_events:
+  - channel: "reservation.approved.virtual"
+    direction: "publish"
+    message_schema: "ReservationApprovedVirtualEvent"
+    summary: "バーチャル会議室の予約確定時に会議URL通知をトリガーするイベント"
+schemas:
+  - name: "ReservationStatusResponse"
+    properties:
+      - name: "reservation_id"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "updated_at"
+        type: "string"
+        required: true
+  - name: "ReservationApprovedVirtualEvent"
+    properties:
+      - name: "reservation_id"
+        type: "string"
+        required: true
+      - name: "user_id"
+        type: "string"
+        required: true
+      - name: "room_id"
+        type: "string"
+        required: true

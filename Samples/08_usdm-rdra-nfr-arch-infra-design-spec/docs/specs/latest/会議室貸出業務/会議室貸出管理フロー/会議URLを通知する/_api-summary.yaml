@@ -1,0 +1,44 @@
+uc: "会議URLを通知する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/reservations/{reservationId}/meeting-url"
+    summary: "会議URL通知状況確認（利用者参照）"
+    request_schema: null
+    response_schema: "MeetingUrlStatusResponse"
+    tags: ["reservations", "meeting-url", "rental"]
+async_events:
+  - channel: "meeting-url-notification"
+    direction: "subscribe"
+    message_schema: "MeetingUrlNotificationEvent"
+    summary: "FaaSワーカーが会議URL通知イベントを受信して処理"
+schemas:
+  - name: "MeetingUrlStatusResponse"
+    properties:
+      - name: "reservationId"
+        type: "string"
+        required: true
+      - name: "meetingUrl"
+        type: "string"
+        required: false
+      - name: "toolType"
+        type: "string"
+        required: false
+      - name: "notificationStatus"
+        type: "string"
+        required: true
+      - name: "notifiedAt"
+        type: "string"
+        required: false
+  - name: "MeetingUrlNotificationEvent"
+    properties:
+      - name: "reservationId"
+        type: "string"
+        required: true
+      - name: "userId"
+        type: "string"
+        required: true
+      - name: "roomId"
+        type: "string"
+        required: true

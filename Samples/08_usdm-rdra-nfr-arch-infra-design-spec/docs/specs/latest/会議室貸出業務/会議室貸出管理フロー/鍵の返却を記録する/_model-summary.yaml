@@ -1,0 +1,81 @@
+uc: "鍵の返却を記録する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+
+models:
+  - name: "KeyReturnTracker"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "鍵"
+  - name: "KeyReturnState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "鍵"
+  - name: "KeyReturnRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "鍵"
+  - name: "KeyReturnRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "鍵"
+  - name: "RecordKeyReturnCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "鍵"
+  - name: "Key"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "鍵"
+  - name: "KeyRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "鍵"
+
+tables:
+  - name: "keys"
+    rdra_info: "鍵"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "room_id = {room_id} AND status = '貸出中' FOR UPDATE"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "保管中"
+          - name: "returned_at"
+            value: "NOW()"
+        where: "key_id = {key_id}"
+    indexes_needed:
+      - columns: ["room_id", "status"]
+        reason: "会議室の貸出中鍵の特定"
+        access_pattern: "POST /api/v1/rentals/{id}/key-return"
+  - name: "room_usages"
+    rdra_info: "会議室利用"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "reservation_id = {rental_id} AND status = '利用中' FOR UPDATE"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "利用終了"
+          - name: "ended_at"
+            value: "NOW()"
+          - name: "usage_minutes"
+            value: "TIMESTAMPDIFF(MINUTE, started_at, NOW())"
+        where: "usage_id = {usage_id}"
+    indexes_needed:
+      - columns: ["reservation_id", "status"]
+        reason: "利用中レコードの特定"
+        access_pattern: "POST /api/v1/rentals/{id}/key-return"
+
+kvs: []
+object_storage: []

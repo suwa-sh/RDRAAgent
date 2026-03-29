@@ -1,0 +1,69 @@
+uc: "予約を審査する"
+business: "会議室貸出業務"
+buc: "会議室貸出管理フロー"
+models:
+  - name: "ReservationReviewPage"
+    tier: "tier-frontend-user"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "予約情報"
+  - name: "ReviewState"
+    tier: "tier-frontend-user"
+    layer: "state"
+    type: "state"
+    rdra_info: "予約情報"
+  - name: "ReviewReservationRequest"
+    tier: "tier-frontend-user"
+    layer: "api-client"
+    type: "request"
+    rdra_info: "予約情報"
+  - name: "ReviewReservationRequestDTO"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "予約情報"
+  - name: "ReviewReservationCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "予約情報"
+  - name: "Reservation"
+    tier: "tier-backend-api"
+    layer: "domain"
+    type: "entity"
+    rdra_info: "予約情報"
+  - name: "ReservationRecord"
+    tier: "tier-backend-api"
+    layer: "gateway"
+    type: "record"
+    rdra_info: "予約情報"
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id=? AND status='申請'"
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "確定 or 取消"
+          - name: "rejection_reason"
+            value: "拒否理由テキスト（拒否時のみ）"
+        where: "id=? AND status='申請'"
+    indexes_needed:
+      - columns: ["room_id", "status"]
+        reason: "オーナーが自身の会議室の申請中予約を一覧表示するため"
+        access_pattern: "予約審査画面での申請一覧取得"
+  - name: "user_reviews"
+    rdra_info: "利用者評価"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "user_id=? AND review_type='user_rating'"
+    indexes_needed:
+      - columns: ["user_id", "review_type"]
+        reason: "審査時に利用者の評価スコアを参照するため"
+        access_pattern: "予約審査画面での利用者評価スコア表示"
+kvs: []
+object_storage: []
