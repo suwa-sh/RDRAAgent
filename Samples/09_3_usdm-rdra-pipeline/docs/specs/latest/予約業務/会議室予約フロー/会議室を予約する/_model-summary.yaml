@@ -1,0 +1,27 @@
+uc: "会議室を予約する"
+business: "予約業務"
+buc: "会議室予約フロー"
+
+models:
+  - name: "会議室を予約するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "予約情報"
+  - name: "会議室を予約するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "予約情報"
+
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる予約情報取得"

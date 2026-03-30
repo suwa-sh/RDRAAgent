@@ -1,0 +1,27 @@
+uc: "精算額を計算する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+
+models:
+  - name: "精算額を計算するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "利用履歴"
+  - name: "精算額を計算するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "利用履歴"
+
+tables:
+  - name: "usage_history"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる利用履歴取得"

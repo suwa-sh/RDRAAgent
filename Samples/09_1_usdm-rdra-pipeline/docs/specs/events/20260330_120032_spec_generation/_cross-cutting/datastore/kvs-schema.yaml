@@ -1,0 +1,24 @@
+version: "1.0"
+description: "RoomConnect KVS キーパターン定義"
+
+key_patterns:
+  - pattern: "idempotency:{idempotency_key}"
+    ttl: "24h"
+    purpose: "冪等キー管理。予約登録・精算実行等の重複リクエスト検知"
+    value_type: "JSON"
+    value_schema: "{ response: object, status_code: number }"
+    used_by:
+      - "予約を登録する"
+      - "予約を変更する"
+      - "予約を取消する"
+      - "鍵の貸出を記録する"
+      - "鍵の返却を記録する"
+      - "精算を実行する"
+
+  - pattern: "session:{user_id}"
+    ttl: "30d"
+    purpose: "リフレッシュトークン管理"
+    value_type: "string"
+    value_schema: "refresh_token"
+    used_by:
+      - "全UC（認証）"

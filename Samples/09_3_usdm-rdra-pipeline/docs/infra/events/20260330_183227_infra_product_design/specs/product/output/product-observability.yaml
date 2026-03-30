@@ -1,0 +1,279 @@
+schema_version: "1.0"
+artifact_type: "observability_spec"
+skill_type: "product"
+artifact_id: "product-observability"
+title: "貸し会議室サービス オブザーバビリティ仕様"
+status: "draft"
+generated_at: "2026-03-30T18:34:00"
+vendor: "aws"
+source_refs:
+  - "aws-well-architected-framework"
+inputs_ref:
+  - "product-kashi-kaigishitsu-workload-model"
+
+sli_slo:
+  - name: "availability"
+    sli: "成功したリクエスト数 / 全リクエスト数"
+    slo: "99%"
+    measurement_window: "30 日間ローリング"
+    error_budget: "1% (約 7.3 時間/月)"
+    alerting:
+      burn_rate_1h: 14.4
+      burn_rate_6h: 6.0
+      burn_rate_24h: 3.0
+
+  - name: "latency_p99"
+    sli: "リクエストレイテンシの p99"
+    slo: "500ms 以内"
+    measurement_window: "5 分間ウィンドウ"
+    alerting:
+      threshold: "500ms"
+      consecutive_breaches: 3
+
+  - name: "error_rate"
+    sli: "5xx レスポンス数 / 全レスポンス数"
+    slo: "< 1%"
+    measurement_window: "5 分間ウィンドウ"
+    alerting:
+      threshold: "1%"
+      consecutive_breaches: 2
+
+  - name: "throughput"
+    sli: "1秒あたりのリクエスト処理数"
+    slo: ">= 50 RPS (通常時)"
+    measurement_window: "1 分間ウィンドウ"
+    alerting:
+      threshold_low: 10
+      threshold_high: 200
+
+metrics:
+  infrastructure:
+    - name: "cpu_utilization"
+      source: "ECS Task"
+      namespace: "AWS/ECS"
+      period: 60
+      statistic: "Average"
+      alarm_threshold: 80
+    - name: "memory_utilization"
+      source: "ECS Task"
+      namespace: "AWS/ECS"
+      period: 60
+      statistic: "Average"
+      alarm_threshold: 85
+    - name: "disk_utilization"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "FreeStorageSpace"
+      period: 300
+      alarm_threshold: "20% remaining"
+    - name: "network_in_out"
+      source: "ECS / RDS"
+      namespace: "AWS/ECS"
+      period: 60
+    - name: "rds_connections"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "DatabaseConnections"
+      period: 60
+      alarm_threshold: 160
+    - name: "rds_replica_lag"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "ReplicaLag"
+      period: 60
+      alarm_threshold: 30
+    - name: "elasticache_memory"
+      source: "ElastiCache"
+      namespace: "AWS/ElastiCache"
+      metric_name: "DatabaseMemoryUsagePercentage"
+      period: 60
+      alarm_threshold: 80
+
+  application:
+    - name: "request_count"
+      source: "ALB"
+      namespace: "AWS/ApplicationELB"
+      period: 60
+    - name: "target_response_time"
+      source: "ALB"
+      namespace: "AWS/ApplicationELB"
+      period: 60
+      statistic: "p99"
+      alarm_threshold: 0.5
+    - name: "http_5xx_count"
+      source: "ALB"
+      namespace: "AWS/ApplicationELB"
+      period: 60
+      alarm_threshold: 10
+    - name: "healthy_host_count"
+      source: "ALB Target Group"
+      namespace: "AWS/ApplicationELB"
+      period: 60
+      alarm_threshold: 1
+    - name: "api_gateway_latency"
+      source: "API Gateway"
+      namespace: "AWS/ApiGateway"
+      period: 60
+      statistic: "p99"
+    - name: "api_gateway_4xx"
+      source: "API Gateway"
+      namespace: "AWS/ApiGateway"
+      period: 60
+    - name: "api_gateway_5xx"
+      source: "API Gateway"
+      namespace: "AWS/ApiGateway"
+      period: 60
+      alarm_threshold: 5
+    - name: "lambda_errors"
+      source: "Lambda"
+      namespace: "AWS/Lambda"
+      period: 60
+      alarm_threshold: 1
+    - name: "lambda_duration"
+      source: "Lambda"
+      namespace: "AWS/Lambda"
+      period: 60
+      statistic: "p99"
+
+logs:
+  - category: "access"
+    source: "ALB / API Gateway"
+    destination: "CloudWatch Logs"
+    retention_days: 90
+    format: "JSON"
+    fields:
+      - "timestamp"
+      - "trace_id"
+      - "method"
+      - "path"
+      - "status_code"
+      - "response_time_ms"
+      - "user_agent"
+      - "source_ip"
+
+  - category: "audit"
+    source: "Backend API (usecase layer)"
+    destination: "CloudWatch Logs"
+    retention_days: 365
+    format: "JSON"
+    fields:
+      - "timestamp"
+      - "trace_id"
+      - "actor_id"
+      - "actor_role"
+      - "action"
+      - "resource_type"
+      - "resource_id"
+      - "result"
+      - "ip_address"
+
+  - category: "diagnostic"
+    source: "Backend API / Lambda"
+    destination: "CloudWatch Logs"
+    retention_days: 30
+    format: "JSON"
+    fields:
+      - "timestamp"
+      - "trace_id"
+      - "span_id"
+      - "level"
+      - "service"
+      - "message"
+      - "context"
+
+  - category: "dependency"
+    source: "Backend API (gateway layer)"
+    destination: "CloudWatch Logs"
+    retention_days: 30
+    format: "JSON"
+    fields:
+      - "timestamp"
+      - "trace_id"
+      - "span_id"
+      - "dependency_name"
+      - "operation"
+      - "duration_ms"
+      - "status"
+
+tracing:
+  enabled: true
+  service: "AWS X-Ray"
+  sampling_rate: 0.05
+  propagation:
+    header: "X-Amzn-Trace-Id"
+    format: "AWS X-Ray"
+  instrumented_services:
+    - "API Gateway"
+    - "ECS (Backend API)"
+    - "Lambda (Batch Worker)"
+    - "RDS"
+    - "ElastiCache"
+
+dashboards:
+  - name: "Service Overview"
+    widgets:
+      - "SLI/SLO ステータス（可用性、レイテンシ、エラー率）"
+      - "リクエスト数（RPS）"
+      - "レスポンスタイム分布（p50, p95, p99）"
+      - "エラー率推移"
+      - "ヘルシーホスト数"
+
+  - name: "Infrastructure"
+    widgets:
+      - "ECS CPU/メモリ使用率"
+      - "RDS CPU/接続数/ストレージ"
+      - "ElastiCache メモリ使用率"
+      - "NAT Gateway データ転送量"
+
+  - name: "Business Metrics"
+    widgets:
+      - "予約作成数/時間"
+      - "精算バッチ実行状況"
+      - "外部決済連携エラー率"
+      - "ユーザー登録数推移"
+
+alerting:
+  notification_channels:
+    - type: "email"
+      target: "ops-team@example.com"
+      severity: ["critical", "warning"]
+    - type: "slack"
+      target: "#ops-alerts"
+      severity: ["critical", "warning", "info"]
+
+  escalation:
+    - level: 1
+      responder: "オンコール担当者"
+      response_time: "15分"
+      channels: ["slack", "email"]
+    - level: 2
+      responder: "チームリーダー"
+      response_time: "30分"
+      condition: "Level 1 から 30分以内に対応がない場合"
+      channels: ["email", "phone"]
+
+  rules:
+    - name: "高エラー率"
+      condition: "5xx エラー率 > 5% for 5分"
+      severity: "critical"
+      action: "Level 1 エスカレーション"
+    - name: "レイテンシ異常"
+      condition: "p99 レイテンシ > 2s for 5分"
+      severity: "warning"
+      action: "Slack 通知"
+    - name: "ヘルスチェック失敗"
+      condition: "ヘルシーホスト数 < 2 for 3分"
+      severity: "critical"
+      action: "Level 1 エスカレーション"
+    - name: "DB 接続数超過"
+      condition: "RDS 接続数 > 160 for 5分"
+      severity: "warning"
+      action: "Slack 通知"
+    - name: "精算バッチ失敗"
+      condition: "Lambda エラー発生"
+      severity: "critical"
+      action: "Level 1 エスカレーション + メール通知"
+    - name: "ディスク容量警告"
+      condition: "RDS FreeStorageSpace < 20%"
+      severity: "warning"
+      action: "Slack 通知"

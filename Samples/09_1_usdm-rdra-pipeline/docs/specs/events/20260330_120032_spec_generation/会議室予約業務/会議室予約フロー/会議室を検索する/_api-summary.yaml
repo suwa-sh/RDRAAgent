@@ -1,0 +1,41 @@
+uc: "会議室を検索する"
+business: "会議室予約業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/rooms"
+    summary: "会議室を検索する（機能性・価格帯・評価フィルター付き）"
+    response_schema: "PaginatedRoomListResponse"
+    tags:
+      - "会議室予約"
+async_events: []
+schemas:
+  - name: "RoomListItem"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "address"
+        type: "string"
+        required: true
+      - name: "price"
+        type: "integer"
+        required: true
+      - name: "capacity"
+        type: "integer"
+        required: true
+      - name: "features"
+        type: "array"
+        required: true
+      - name: "avgRating"
+        type: "number"
+        required: true
+      - name: "reviewCount"
+        type: "integer"
+        required: true
+      - name: "ownerName"
+        type: "string"
+        required: true

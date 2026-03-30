@@ -1,0 +1,17 @@
+uc: "精算結果を確認する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owners/{owner_id}/settlements"
+    summary: "精算額と支払い状況を確認する"
+    
+    response_schema: "精算結果確認Response"
+    tags:
+      - "精算業務"
+schemas:
+  - name: "精算結果確認Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

@@ -1,0 +1,27 @@
+uc: "問合せに回答する"
+business: "会議室貸出業務"
+buc: "問合せ対応フロー"
+
+models:
+  - name: "問合せに回答するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "問合せ"
+  - name: "問合せに回答するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "問合せ"
+
+tables:
+  - name: "inquiries"
+    rdra_info: "問合せ"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる問合せ取得"

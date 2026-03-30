@@ -1,0 +1,2 @@
+Spec Step9: Storybook Story generation for all UC pages and common components.
+Input: docs/specs/latest/ tier-frontend.md files, docs/specs/latest/_cross-cutting/ux-ui/, docs/design/latest/design-event.yaml

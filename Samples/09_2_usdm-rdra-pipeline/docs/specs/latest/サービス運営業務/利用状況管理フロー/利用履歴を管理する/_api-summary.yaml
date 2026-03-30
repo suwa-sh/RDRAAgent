@@ -1,0 +1,17 @@
+uc: "利用履歴を管理する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/admin/usage-history"
+    summary: "利用履歴一覧取得"
+    request_schema: ""
+    response_schema: "UsageHistoryListResponse"
+    tags:
+      - "利用状況管理フロー"
+schemas:
+  - name: "UsageHistoryListResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

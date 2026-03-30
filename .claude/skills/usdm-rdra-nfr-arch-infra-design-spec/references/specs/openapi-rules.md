@@ -156,9 +156,10 @@ components:
 
 ## サーバー URL
 
-- `servers[].url` のドメイン名は design-event.yaml の `brand.name` から導出する（小文字化）
+- `servers[].url` のドメイン名は design-event.yaml の `brand.name`（英語）から導出する（小文字化）
 - 例: brand.name が `RoomConnect` → `api.roomconnect.example.com`
 - `.example.com` は仕様ドキュメント用のプレースホルダ
+- `info.title` には `brand.name` を使用する。`info.description` で和名（`brand.system_name_ja`）に言及してもよい
 
 ## NFR 反映
 

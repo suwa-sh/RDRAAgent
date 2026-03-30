@@ -1,0 +1,17 @@
+uc: "鍵を受け取る"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations/{reservation_id}/actions/receive-key"
+    summary: "会議室の鍵を受け取り利用を開始する"
+    request_schema: "鍵受け取Request"
+    response_schema: "鍵受け取Response"
+    tags:
+      - "会議室貸出業務"
+schemas:
+  - name: "鍵受け取Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

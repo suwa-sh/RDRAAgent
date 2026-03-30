@@ -1,0 +1,17 @@
+uc: "オーナー退会する"
+business: "オーナー管理業務"
+buc: "オーナー退会フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners/{owner_id}/actions/withdraw"
+    summary: "オーナーの退会手続きを行う"
+    request_schema: "オーナー退会Request"
+    response_schema: "オーナー退会Response"
+    tags:
+      - "オーナー管理業務"
+schemas:
+  - name: "オーナー退会Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

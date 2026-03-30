@@ -1,0 +1,17 @@
+uc: "利用状況を分析する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/admin/usage-analytics"
+    summary: "利用状況分析"
+    request_schema: ""
+    response_schema: "UsageAnalyticsResponse"
+    tags:
+      - "利用状況管理フロー"
+schemas:
+  - name: "UsageAnalyticsResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

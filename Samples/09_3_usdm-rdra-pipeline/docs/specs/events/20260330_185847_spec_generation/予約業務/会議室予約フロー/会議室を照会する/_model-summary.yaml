@@ -1,0 +1,27 @@
+uc: "会議室を照会する"
+business: "予約業務"
+buc: "会議室予約フロー"
+
+models:
+  - name: "会議室を照会するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室情報"
+  - name: "会議室を照会するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "会議室情報"
+
+tables:
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id = :id"
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる会議室情報取得"

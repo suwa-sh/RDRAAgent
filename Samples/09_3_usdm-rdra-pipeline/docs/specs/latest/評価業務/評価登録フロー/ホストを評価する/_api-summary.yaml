@@ -1,0 +1,17 @@
+uc: "ホストを評価する"
+business: "評価業務"
+buc: "評価登録フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/host-reviews"
+    summary: "利用した会議室のホストを評価する"
+    request_schema: "ホスト評価Request"
+    response_schema: "ホスト評価Response"
+    tags:
+      - "評価業務"
+schemas:
+  - name: "ホスト評価Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

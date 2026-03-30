@@ -1,0 +1,17 @@
+uc: "オーナー申請する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners/{owner_id}/actions/apply"
+    summary: "サービスへの参加申請を行う"
+    request_schema: "オーナー申請Request"
+    response_schema: "オーナー申請Response"
+    tags:
+      - "オーナー管理業務"
+schemas:
+  - name: "オーナー申請Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

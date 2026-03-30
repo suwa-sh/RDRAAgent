@@ -1,0 +1,288 @@
+schema_version: "1.0"
+artifact_type: "workload_model"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-workload-model"
+title: "貸し会議室サービス ワークロードモデル"
+status: "draft"
+generated_at: "2026-03-30T11:32:05+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-compute-model"
+  - "product-decision-database-selection"
+  - "product-decision-cache-strategy"
+inputs_ref:
+  - "product-kashikaigishitsu-service-input"
+  - "foundation-context"
+  - "shared-platform-context"
+
+workload:
+  name: "貸し会議室サービス"
+  description: "会議室オーナーが物件情報を登録し利用者に貸し出すマッチングプラットフォーム。利用者は会議室を検索・予約・評価でき、オーナーは貸出管理・利用実績管理を行う。サービス運営担当者がオーナー審査・売上分析・精算処理を担い、決済機関と連携してオーナーへの月末精算を実行する。"
+  workload_type: "web_app"
+
+elements:
+  - id: "compute_frontend"
+    name: "フロントエンドコンピュート"
+    category: "compute"
+    description: "利用者・オーナー・運営担当者向け Web UI のホスティング。SSR/SPA のレスポンシブ Web アプリケーションを配信する"
+    requirements:
+      - id: "REQ-COMP-FE-001"
+        description: "SSR 対応の Web アプリケーションをホスティングする"
+        priority: "must"
+        rationale: "レスポンスタイム 5 秒以内（NFR B.2.1.1 grade 3）を達成するため初回表示を SSR で高速化"
+      - id: "REQ-COMP-FE-002"
+        description: "静的アセットを CDN 経由で配信する"
+        priority: "should"
+        rationale: "グローバル配信の低レイテンシ化とオリジン負荷軽減"
+      - id: "REQ-COMP-FE-003"
+        description: "オートスケーリングに対応する"
+        priority: "must"
+        rationale: "ピーク時同時アクセス通常の 2 倍（NFR B.1.2.1 grade 2）に対応"
+    constraints:
+      - "共有プラットフォームの EKS ランタイムまたは Lambda ランタイムを使用する"
+    dependencies:
+      - "api_gateway"
+      - "cdn"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "api_gateway"
+    name: "API ゲートウェイ"
+    category: "network"
+    description: "JWT トークン検証、粗粒度 RBAC、レート制限、WAF 統合を担うリバースプロキシ"
+    requirements:
+      - id: "REQ-NET-GW-001"
+        description: "JWT トークンの一元検証を行う"
+        priority: "must"
+        rationale: "OAuth2/OIDC ベースの認証（NFR E.5.1.1 grade 3）を集約"
+      - id: "REQ-NET-GW-002"
+        description: "ロール別エンドポイントアクセス制御を行う"
+        priority: "must"
+        rationale: "3 ロール（利用者・オーナー・運営）の粗粒度 RBAC"
+      - id: "REQ-NET-GW-003"
+        description: "WAF を統合し OWASP Top 10 対策を実施する"
+        priority: "must"
+        rationale: "NFR E.10.1.1 WAF(Lv2) カスタムルール + 定期チューニング"
+      - id: "REQ-NET-GW-004"
+        description: "レート制限を適用する"
+        priority: "must"
+        rationale: "外部ユーザー向けサービスの過負荷防止"
+    constraints:
+      - "TLS 1.2 以上を必須とする"
+    dependencies:
+      - "compute_backend"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "compute_backend"
+    name: "バックエンド API コンピュート"
+    category: "compute"
+    description: "ビジネスロジック、データアクセス、外部連携を担うモノリシック API サーバー。EKS 上のコンテナとしてデプロイ"
+    requirements:
+      - id: "REQ-COMP-BE-001"
+        description: "CaaS(k8s) 環境でコンテナとして実行する"
+        priority: "must"
+        rationale: "共有プラットフォームの EKS ランタイム（必須サービス）を使用"
+      - id: "REQ-COMP-BE-002"
+        description: "水平スケーリング（HPA）に対応する"
+        priority: "must"
+        rationale: "NFR B.3.1.1 CPU 拡張性(Lv2) スケールアウト対応"
+      - id: "REQ-COMP-BE-003"
+        description: "ヘルスチェックエンドポイントを実装する"
+        priority: "must"
+        rationale: "CTP-005 ヘルスチェック方針"
+      - id: "REQ-COMP-BE-004"
+        description: "冪等性を保証する（冪等キー KVS 管理）"
+        priority: "must"
+        rationale: "CTP-004 冪等性方針。金銭取引の重複処理防止"
+    constraints:
+      - "EKS Pod Identity によるサービスアカウント認証"
+      - "Namespace による論理分離"
+    dependencies:
+      - "database_primary"
+      - "cache"
+      - "message_queue"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "compute_worker"
+    name: "バッチワーカーコンピュート"
+    category: "compute"
+    description: "月末精算バッチ処理を担う非同期ワーカー。CronJob として EKS 上で実行"
+    requirements:
+      - id: "REQ-COMP-WK-001"
+        description: "月末精算バッチを 8 時間以内に完了する"
+        priority: "must"
+        rationale: "NFR B.2.2.1 バッチ処理時間(Lv2) 8 時間以内"
+      - id: "REQ-COMP-WK-002"
+        description: "ジョブ冪等性を保証する"
+        priority: "must"
+        rationale: "SP-012 ジョブ実行 ID による二重精算防止"
+    constraints:
+      - "CronJob(k8s) として実行"
+    dependencies:
+      - "database_primary"
+      - "external_payment"
+    source_refs: []
+
+  - id: "database_primary"
+    name: "プライマリデータベース"
+    category: "database"
+    description: "トランザクションデータの永続化を担う RDB。予約・決済・精算等の金銭取引データを ACID 準拠で管理"
+    requirements:
+      - id: "REQ-DB-001"
+        description: "ACID トランザクションを保証する"
+        priority: "must"
+        rationale: "金銭取引（予約・決済・精算）のデータ整合性確保"
+      - id: "REQ-DB-002"
+        description: "マルチ AZ 同期レプリケーションによる冗長構成とする"
+        priority: "must"
+        rationale: "NFR A.2.5.1 ストレージ冗長化(Lv3)"
+      - id: "REQ-DB-003"
+        description: "日次のフル + 増分バックアップを実施する"
+        priority: "must"
+        rationale: "NFR C.1.2.1 バックアップ方式(Lv3)"
+      - id: "REQ-DB-004"
+        description: "機密データ（カード番号等）の保管時暗号化を行う"
+        priority: "must"
+        rationale: "NFR E.6.1.1 データ暗号化(Lv1) 機密データのみ暗号化"
+      - id: "REQ-DB-005"
+        description: "30 日以上の世代管理を行う"
+        priority: "must"
+        rationale: "NFR C.1.2.3 バックアップ世代管理(Lv3)"
+    constraints:
+      - "PostgreSQL を推奨"
+      - "接続プールの適切な設定が必要"
+    dependencies: []
+    source_refs:
+      - "aws-rds-postgresql"
+
+  - id: "cache"
+    name: "キャッシュストア"
+    category: "cache"
+    description: "セッション情報の管理と冪等キーの TTL 付き管理を担う KVS"
+    requirements:
+      - id: "REQ-CACHE-001"
+        description: "セッション情報を TTL 付きで管理する"
+        priority: "must"
+        rationale: "E-005 セッション情報。アクセス頻度が高く KVS が適切"
+      - id: "REQ-CACHE-002"
+        description: "冪等キーを TTL 付きで管理する"
+        priority: "must"
+        rationale: "SP-014 冪等キー管理用 KVS"
+      - id: "REQ-CACHE-003"
+        description: "マルチ AZ レプリケーションで高可用性を確保する"
+        priority: "should"
+        rationale: "SLA 99.9% 達成のためキャッシュ層も冗長化"
+    constraints:
+      - "Redis を推奨"
+    dependencies: []
+    source_refs:
+      - "aws-elasticache-redis"
+
+  - id: "message_queue"
+    name: "メッセージキュー"
+    category: "messaging"
+    description: "バックエンド API からワーカーへの非同期処理メッセージを仲介する MQ"
+    requirements:
+      - id: "REQ-MQ-001"
+        description: "メッセージの永続化と at-least-once デリバリーを保証する"
+        priority: "must"
+        rationale: "精算処理の信頼性確保"
+      - id: "REQ-MQ-002"
+        description: "デッドレターキューを備える"
+        priority: "should"
+        rationale: "処理失敗メッセージの追跡と再処理"
+    constraints: []
+    dependencies: []
+    source_refs: []
+
+  - id: "cdn"
+    name: "コンテンツ配信ネットワーク"
+    category: "network"
+    description: "静的アセット（JS/CSS/画像）のキャッシュ配信とオリジン保護"
+    requirements:
+      - id: "REQ-CDN-001"
+        description: "静的アセットをエッジキャッシュから配信する"
+        priority: "should"
+        rationale: "p99 レイテンシ 500ms 以内の達成を支援"
+      - id: "REQ-CDN-002"
+        description: "HTTPS のみでの配信を強制する"
+        priority: "must"
+        rationale: "CTR-001 全通信 TLS 必須"
+    constraints: []
+    dependencies: []
+    source_refs: []
+
+  - id: "idp"
+    name: "認証基盤"
+    category: "security"
+    description: "OAuth2/OIDC ベースの認証基盤。マネージド IdP としてトークン発行・MFA・ソーシャルログインを提供"
+    requirements:
+      - id: "REQ-IDP-001"
+        description: "OAuth2/OIDC プロトコルでトークンを発行する"
+        priority: "must"
+        rationale: "CTP-001 認証方式"
+      - id: "REQ-IDP-002"
+        description: "MFA をサポートする"
+        priority: "must"
+        rationale: "NFR E.5.1.1 認証方式(Lv3) 多要素認証"
+      - id: "REQ-IDP-003"
+        description: "3 ロール（利用者・オーナー・運営）を管理する"
+        priority: "must"
+        rationale: "SP-008 マルチロール対応"
+    constraints:
+      - "外部マネージド IdP サービスを使用する"
+    dependencies: []
+    source_refs: []
+
+  - id: "external_payment"
+    name: "決済機関連携"
+    category: "integration"
+    description: "外部決済機関との API 連携。サーキットブレーカーとリトライ（指数バックオフ）を実装"
+    requirements:
+      - id: "REQ-EXT-PAY-001"
+        description: "冪等性を確保した決済 API 連携を行う"
+        priority: "must"
+        rationale: "SP-017 冪等性確保。二重精算防止"
+      - id: "REQ-EXT-PAY-002"
+        description: "サーキットブレーカーを実装する"
+        priority: "must"
+        rationale: "SP-018 障害時のシステム全体への影響局所化"
+      - id: "REQ-EXT-PAY-003"
+        description: "指数バックオフによるリトライを行う（最大 3 回、初回待機 1 秒）"
+        priority: "must"
+        rationale: "SR-013 リトライ方針"
+    constraints:
+      - "カード情報は自システムで保持する（PCI DSS 対応）"
+    dependencies: []
+    source_refs: []
+
+  - id: "observability_stack"
+    name: "オブザーバビリティ基盤"
+    category: "observability"
+    description: "メトリクス・ログ・トレースの統合監視基盤。共有プラットフォームのオブザーバビリティサービスを活用"
+    requirements:
+      - id: "REQ-OBS-001"
+        description: "CPU/メモリ/ディスク/ネットワーク/レイテンシ/エラーレート/スループットのメトリクスを収集する"
+        priority: "must"
+        rationale: "NFR C.1.3.1 監視範囲(Lv3)"
+      - id: "REQ-OBS-002"
+        description: "構造化 JSON ログを出力し 1 年間保管する"
+        priority: "must"
+        rationale: "NFR C.6.1.1 ログ保管期間(Lv4)"
+      - id: "REQ-OBS-003"
+        description: "分散トレーシング（trace_id 伝播）を実装する"
+        priority: "must"
+        rationale: "CTP-003 構造化ログと相関 ID"
+      - id: "REQ-OBS-004"
+        description: "SLI/SLO ベースのアラートを設定する"
+        priority: "should"
+        rationale: "可用性 99.9% SLA に対するエラーバジェット管理"
+    constraints:
+      - "共有プラットフォームの統合オブザーバビリティ（svc-observability）を使用する"
+    dependencies: []
+    source_refs: []

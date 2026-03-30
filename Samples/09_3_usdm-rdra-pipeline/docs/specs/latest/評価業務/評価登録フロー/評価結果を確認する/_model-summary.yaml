@@ -1,0 +1,27 @@
+uc: "評価結果を確認する"
+business: "評価業務"
+buc: "評価登録フロー"
+
+models:
+  - name: "評価結果を確認するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室評価"
+  - name: "評価結果を確認するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "会議室評価"
+
+tables:
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id = :id"
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる会議室評価取得"

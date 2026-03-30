@@ -1,0 +1,17 @@
+uc: "評価を登録する"
+business: "評価管理業務"
+buc: "評価登録フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations/:id/room-reviews"
+    summary: "会議室評価登録"
+    request_schema: "CreateRoomReviewRequest"
+    response_schema: "RoomReviewResponse"
+    tags:
+      - "評価登録フロー"
+schemas:
+  - name: "RoomReviewResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

@@ -1,0 +1,17 @@
+uc: "問合せに回答する"
+business: "会議室貸出業務"
+buc: "問合せ対応フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/inquiries/{inquiry_id}/actions/reply"
+    summary: "利用者からの問合せに回答する"
+    request_schema: "問合せ回答Request"
+    response_schema: "問合せ回答Response"
+    tags:
+      - "会議室貸出業務"
+schemas:
+  - name: "問合せ回答Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

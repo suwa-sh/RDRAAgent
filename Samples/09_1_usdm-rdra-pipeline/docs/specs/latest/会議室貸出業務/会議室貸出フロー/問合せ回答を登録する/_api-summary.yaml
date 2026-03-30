@@ -1,0 +1,18 @@
+uc: "問合せ回答を登録する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners/inquiries/{id}/replies"
+    summary: "オーナーが利用者からの問合せに回答する"
+    request_schema: "問合せ回答を登録するRequest"
+    response_schema: "問合せ回答を登録するResponse"
+    tags:
+      - "会議室貸出業務"
+async_events: []
+schemas:
+  - name: "問合せ回答を登録するResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

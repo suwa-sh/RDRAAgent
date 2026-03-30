@@ -1,0 +1,341 @@
+schema_version: "1.0"
+artifact_type: "observability_spec"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-observability"
+title: "貸し会議室サービス オブザーバビリティ仕様"
+status: "draft"
+generated_at: "2026-03-30T15:32:40"
+source_refs:
+  - "aws-well-architected-framework"
+decision_refs: []
+inputs_ref:
+  - "product-kashikaigishitsu-workload-model"
+
+sli_definitions:
+  - id: "SLI-001"
+    name: "可用性"
+    type: "availability"
+    description: "正常に応答したリクエストの割合"
+    measurement: "successful_requests / total_requests * 100"
+    data_source: "ALB access logs + API Gateway metrics"
+    good_event: "HTTP status < 500"
+    valid_event: "All HTTP requests (excluding health checks)"
+
+  - id: "SLI-002"
+    name: "レイテンシ"
+    type: "latency"
+    description: "リクエストの p99 レスポンスタイム"
+    measurement: "p99(response_time)"
+    data_source: "ALB target response time"
+    threshold: "500ms"
+
+  - id: "SLI-003"
+    name: "エラー率"
+    type: "error_rate"
+    description: "5xx エラーの割合"
+    measurement: "5xx_responses / total_responses * 100"
+    data_source: "ALB access logs"
+    threshold: "1%"
+
+  - id: "SLI-004"
+    name: "スループット"
+    type: "throughput"
+    description: "1秒あたりの処理リクエスト数"
+    measurement: "requests_per_second"
+    data_source: "ALB request count metric"
+    baseline: 50
+    peak: 100
+
+slo_definitions:
+  - id: "SLO-001"
+    sli_ref: "SLI-001"
+    target: "99%"
+    window: "30 days (rolling)"
+    error_budget: "1%"
+    burn_rate_alerts:
+      - name: "fast_burn"
+        factor: 14.4
+        short_window: "5m"
+        long_window: "1h"
+        severity: "critical"
+      - name: "slow_burn"
+        factor: 1
+        short_window: "6h"
+        long_window: "3d"
+        severity: "warning"
+
+  - id: "SLO-002"
+    sli_ref: "SLI-002"
+    target: "99%"
+    description: "p99 レスポンスタイムが 500ms 以内であるリクエストの割合"
+    window: "30 days (rolling)"
+
+  - id: "SLO-003"
+    sli_ref: "SLI-003"
+    target: "99%"
+    description: "5xx エラー率が 1% 以内"
+    window: "30 days (rolling)"
+
+metrics:
+  infrastructure:
+    - name: "cpu_utilization"
+      source: "ECS Fargate"
+      namespace: "AWS/ECS"
+      metric_name: "CPUUtilization"
+      statistic: "Average"
+      period: 60
+    - name: "memory_utilization"
+      source: "ECS Fargate"
+      namespace: "AWS/ECS"
+      metric_name: "MemoryUtilization"
+      statistic: "Average"
+      period: 60
+    - name: "disk_usage"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "FreeStorageSpace"
+      statistic: "Minimum"
+      period: 300
+    - name: "network_in"
+      source: "ECS/RDS"
+      namespace: "AWS/ECS"
+      metric_name: "NetworkRxBytes"
+      statistic: "Sum"
+      period: 60
+    - name: "network_out"
+      source: "ECS/RDS"
+      namespace: "AWS/ECS"
+      metric_name: "NetworkTxBytes"
+      statistic: "Sum"
+      period: 60
+
+  application:
+    - name: "request_count"
+      source: "ALB"
+      namespace: "AWS/ApplicationELB"
+      metric_name: "RequestCount"
+      statistic: "Sum"
+      period: 60
+    - name: "response_time_p99"
+      source: "ALB"
+      namespace: "AWS/ApplicationELB"
+      metric_name: "TargetResponseTime"
+      statistic: "p99"
+      period: 60
+    - name: "error_rate_5xx"
+      source: "ALB"
+      namespace: "AWS/ApplicationELB"
+      metric_name: "HTTPCode_Target_5XX_Count"
+      statistic: "Sum"
+      period: 60
+    - name: "error_rate_4xx"
+      source: "ALB"
+      namespace: "AWS/ApplicationELB"
+      metric_name: "HTTPCode_Target_4XX_Count"
+      statistic: "Sum"
+      period: 60
+
+  database:
+    - name: "db_connections"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "DatabaseConnections"
+      statistic: "Maximum"
+      period: 60
+    - name: "db_read_latency"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "ReadLatency"
+      statistic: "Average"
+      period: 60
+    - name: "db_write_latency"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "WriteLatency"
+      statistic: "Average"
+      period: 60
+    - name: "db_cpu"
+      source: "RDS"
+      namespace: "AWS/RDS"
+      metric_name: "CPUUtilization"
+      statistic: "Average"
+      period: 60
+
+  cache:
+    - name: "cache_hit_rate"
+      source: "ElastiCache"
+      namespace: "AWS/ElastiCache"
+      metric_name: "CacheHitRate"
+      statistic: "Average"
+      period: 60
+    - name: "cache_memory"
+      source: "ElastiCache"
+      namespace: "AWS/ElastiCache"
+      metric_name: "DatabaseMemoryUsagePercentage"
+      statistic: "Maximum"
+      period: 60
+    - name: "cache_connections"
+      source: "ElastiCache"
+      namespace: "AWS/ElastiCache"
+      metric_name: "CurrConnections"
+      statistic: "Maximum"
+      period: 60
+
+  queue:
+    - name: "sqs_messages_visible"
+      source: "SQS"
+      namespace: "AWS/SQS"
+      metric_name: "ApproximateNumberOfMessagesVisible"
+      statistic: "Maximum"
+      period: 60
+    - name: "sqs_age_oldest_message"
+      source: "SQS"
+      namespace: "AWS/SQS"
+      metric_name: "ApproximateAgeOfOldestMessage"
+      statistic: "Maximum"
+      period: 60
+    - name: "sqs_dlq_messages"
+      source: "SQS DLQ"
+      namespace: "AWS/SQS"
+      metric_name: "ApproximateNumberOfMessagesVisible"
+      statistic: "Sum"
+      period: 60
+
+logging:
+  format: "JSON structured"
+  required_fields:
+    - "timestamp"
+    - "trace_id"
+    - "span_id"
+    - "service"
+    - "level"
+    - "message"
+  log_groups:
+    - name: "access"
+      description: "HTTP リクエスト/レスポンスのメタデータ"
+      retention_days: 180
+      source: "ALB + API Gateway"
+    - name: "audit"
+      description: "状態遷移を伴うビジネスイベントの監査ログ"
+      retention_days: 365
+      source: "Backend API usecase layer"
+    - name: "diagnostic"
+      description: "アプリケーションエラーログ、デバッグログ"
+      retention_days: 90
+      source: "ECS tasks"
+    - name: "dependency"
+      description: "外部 DB/API 呼び出しの開始・終了、処理時間、成否"
+      retention_days: 180
+      source: "Backend API gateway layer"
+
+alerting:
+  channels:
+    - type: "sns_topic"
+      name: "critical-alerts"
+      targets:
+        - "ops-team-email"
+        - "ops-team-slack"
+    - type: "sns_topic"
+      name: "warning-alerts"
+      targets:
+        - "ops-team-slack"
+
+  rules:
+    - name: "high_error_rate"
+      description: "5xx エラー率が閾値を超えた"
+      metric: "error_rate_5xx"
+      condition: "error_rate > 5%"
+      period: 300
+      evaluation_periods: 2
+      severity: "critical"
+      channel: "critical-alerts"
+      runbook: "runbooks/high-error-rate.md"
+
+    - name: "high_latency"
+      description: "p99 レイテンシが閾値を超えた"
+      metric: "response_time_p99"
+      condition: "p99 > 1000ms"
+      period: 300
+      evaluation_periods: 3
+      severity: "warning"
+      channel: "warning-alerts"
+      runbook: "runbooks/high-latency.md"
+
+    - name: "health_check_failure"
+      description: "ヘルスチェック失敗"
+      metric: "healthy_host_count"
+      condition: "healthy_hosts < desired_count"
+      period: 60
+      evaluation_periods: 3
+      severity: "critical"
+      channel: "critical-alerts"
+      runbook: "runbooks/health-check-failure.md"
+
+    - name: "db_connection_high"
+      description: "DB 接続数が上限に近づいている"
+      metric: "db_connections"
+      condition: "connections > 160"
+      period: 300
+      evaluation_periods: 2
+      severity: "warning"
+      channel: "warning-alerts"
+      runbook: "runbooks/db-connection-high.md"
+
+    - name: "cache_memory_high"
+      description: "キャッシュメモリ使用率が高い"
+      metric: "cache_memory"
+      condition: "memory_usage > 80%"
+      period: 300
+      evaluation_periods: 3
+      severity: "warning"
+      channel: "warning-alerts"
+      runbook: "runbooks/cache-memory-high.md"
+
+    - name: "sqs_dlq_messages"
+      description: "DLQ にメッセージが溜まっている"
+      metric: "sqs_dlq_messages"
+      condition: "message_count > 0"
+      period: 300
+      evaluation_periods: 1
+      severity: "warning"
+      channel: "warning-alerts"
+      runbook: "runbooks/sqs-dlq-messages.md"
+
+    - name: "sqs_message_age"
+      description: "SQS メッセージの滞留時間が長い"
+      metric: "sqs_age_oldest_message"
+      condition: "age > 3600"
+      period: 300
+      evaluation_periods: 2
+      severity: "warning"
+      channel: "warning-alerts"
+      runbook: "runbooks/sqs-message-age.md"
+
+dashboards:
+  - name: "kashikaigishitsu-overview"
+    description: "貸し会議室サービス 全体概要ダッシュボード"
+    widgets:
+      - title: "SLO Status"
+        type: "slo_widget"
+        slo_refs: ["SLO-001", "SLO-002", "SLO-003"]
+      - title: "Request Rate"
+        type: "metric"
+        metrics: ["request_count"]
+      - title: "Error Rate"
+        type: "metric"
+        metrics: ["error_rate_5xx", "error_rate_4xx"]
+      - title: "Latency (p99)"
+        type: "metric"
+        metrics: ["response_time_p99"]
+      - title: "ECS CPU/Memory"
+        type: "metric"
+        metrics: ["cpu_utilization", "memory_utilization"]
+      - title: "Database"
+        type: "metric"
+        metrics: ["db_connections", "db_cpu", "db_read_latency", "db_write_latency"]
+      - title: "Cache"
+        type: "metric"
+        metrics: ["cache_hit_rate", "cache_memory", "cache_connections"]
+      - title: "Queue"
+        type: "metric"
+        metrics: ["sqs_messages_visible", "sqs_age_oldest_message", "sqs_dlq_messages"]

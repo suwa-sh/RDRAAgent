@@ -1,0 +1,51 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-compute-model"
+title: "コンピュートモデル選定: EKS コンテナ中心"
+status: "accepted"
+generated_at: "2026-03-30T11:32:05+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+inputs_ref:
+  - "product-kashikaigishitsu-service-input"
+  - "shared-platform-context"
+
+decision:
+  context: "貸し会議室サービスのコンピュート基盤として、共有プラットフォームが提供する EKS ランタイムと Lambda ランタイムのどちらを主要コンピュートとするか"
+  conflict_type: "capability"
+  options:
+    - id: "opt-eks"
+      description: "EKS コンテナ中心。フロントエンド・バックエンド・ワーカーを全て EKS 上にデプロイ"
+      pros:
+        - "共有プラットフォームの必須サービス（svc-eks-runtime）を活用できる"
+        - "長時間バッチ（精算 8 時間）に制約がない"
+        - "既存の NestJS/Next.js フレームワークとの親和性が高い"
+        - "HPA/VPA によるきめ細かいスケーリング制御"
+      cons:
+        - "最低 Pod 数の維持コストがかかる"
+        - "ノード管理のオーバーヘッド（Karpenter で軽減）"
+    - id: "opt-lambda"
+      description: "Lambda 中心。API を Lambda + API Gateway、バッチを Step Functions + Lambda で構成"
+      pros:
+        - "ゼロからのスケーリングでコスト効率が良い"
+        - "インフラ管理の運用負荷が低い"
+      cons:
+        - "Lambda のタイムアウト制約（15 分）で精算バッチに対応できない"
+        - "コールドスタートによるレイテンシ増大"
+        - "NestJS の Lambda 対応に追加作業が必要"
+    - id: "opt-hybrid"
+      description: "フロントエンド/バックエンドは EKS、バッチのみ Lambda + Step Functions"
+      pros:
+        - "各ワークロードに最適なコンピュートを選択"
+      cons:
+        - "バッチの Lambda タイムアウト制約は依然として課題"
+        - "運用対象のサービスが増える"
+  chosen_option: "opt-eks"
+  rationale: "共有プラットフォームの EKS が必須サービスとして提供されており、精算バッチの 8 時間制約に Lambda では対応できない。NestJS/Next.js との親和性も高く、統一的な運用が可能"
+  risk_assessment: "EKS の最低 Pod 維持コストが発生するが、balanced コスト戦略の範囲内。Karpenter による効率的なノード管理で軽減"
+  affected_elements:
+    - "compute_frontend"
+    - "compute_backend"
+    - "compute_worker"
+  review_date: "2026-06-30"

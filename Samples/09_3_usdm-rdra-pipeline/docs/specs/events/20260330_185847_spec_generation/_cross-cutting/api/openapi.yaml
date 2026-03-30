@@ -1,0 +1,1506 @@
+openapi: "3.1.0"
+info:
+  title: "RoomConnect API"
+  version: "1.0.0"
+  description: "貸し会議室サービス RoomConnect の統合 API 仕様"
+servers:
+  - url: "https://api.roomconnect.example.com"
+    description: "Production"
+security:
+  - bearerAuth: []
+tags:
+  - name: "オーナー管理業務"
+    description: "オーナー登録・審査・退会"
+  - name: "会議室管理業務"
+    description: "会議室登録・運用ルール・評価確認"
+  - name: "予約業務"
+    description: "会議室検索・予約・変更・取消"
+  - name: "会議室貸出業務"
+    description: "鍵管理・利用許諾・問合せ"
+  - name: "評価業務"
+    description: "会議室評価・ホスト評価・利用者評価"
+  - name: "サービス運営業務"
+    description: "手数料分析・運用管理・利用分析・問合せ対応"
+  - name: "精算業務"
+    description: "精算計算・精算実行・精算確認"
+paths:
+  /api/v1/terms:
+    get:
+      tags: ["オーナー管理業務"]
+      summary: "サービス規約を取得する"
+      operationId: "getTerms"
+      responses:
+        "200":
+          description: "規約内容"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceTermsResponse"
+  /api/v1/owners:
+    post:
+      tags: ["オーナー管理業務"]
+      summary: "オーナーを登録する"
+      operationId: "createOwner"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOwnerRequest"
+      responses:
+        "201":
+          description: "オーナー登録完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerResponse"
+        "400":
+          description: "バリデーションエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/owners/{owner_id}/actions/apply:
+    post:
+      tags: ["オーナー管理業務"]
+      summary: "オーナー申請を行う"
+      operationId: "applyOwner"
+      parameters:
+        - name: owner_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "オーナーID"
+      responses:
+        "200":
+          description: "申請完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerResponse"
+  /api/v1/owners/{owner_id}/actions/review:
+    post:
+      tags: ["オーナー管理業務"]
+      summary: "オーナー登録を審査する"
+      operationId: "reviewOwner"
+      parameters:
+        - name: owner_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "オーナーID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewOwnerRequest"
+      responses:
+        "200":
+          description: "審査結果"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerResponse"
+  /api/v1/owners/{owner_id}/actions/withdraw:
+    post:
+      tags: ["オーナー管理業務"]
+      summary: "オーナー退会を申請する"
+      operationId: "withdrawOwner"
+      parameters:
+        - name: owner_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "オーナーID"
+      responses:
+        "200":
+          description: "退会申請完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerResponse"
+  /api/v1/owners/{owner_id}/actions/process-withdrawal:
+    post:
+      tags: ["オーナー管理業務"]
+      summary: "退会を処理する"
+      operationId: "processWithdrawal"
+      parameters:
+        - name: owner_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "オーナーID"
+      responses:
+        "200":
+          description: "退会処理完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerResponse"
+  /api/v1/owners/{owner_id}/profile:
+    put:
+      tags: ["オーナー管理業務"]
+      summary: "プロフィールを編集する"
+      operationId: "updateOwnerProfile"
+      parameters:
+        - name: owner_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "オーナーID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOwnerProfileRequest"
+      responses:
+        "200":
+          description: "プロフィール更新完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerResponse"
+  /api/v1/rooms:
+    get:
+      tags: ["予約業務"]
+      summary: "会議室を検索する"
+      operationId: "searchRooms"
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: "ページ番号"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: "1ページあたり件数"
+        - name: area_min
+          in: query
+          schema:
+            type: number
+          description: "最小広さ(平方メートル)"
+        - name: area_max
+          in: query
+          schema:
+            type: number
+          description: "最大広さ(平方メートル)"
+        - name: price_min
+          in: query
+          schema:
+            type: number
+          description: "最小価格(円/時)"
+        - name: price_max
+          in: query
+          schema:
+            type: number
+          description: "最大価格(円/時)"
+        - name: min_rating
+          in: query
+          schema:
+            type: number
+          description: "最低評価点"
+      responses:
+        "200":
+          description: "会議室一覧"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedRoomResponse"
+    post:
+      tags: ["会議室管理業務"]
+      summary: "会議室を登録する"
+      operationId: "createRoom"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoomRequest"
+      responses:
+        "201":
+          description: "会議室登録完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomResponse"
+  /api/v1/rooms/{room_id}/rules:
+    put:
+      tags: ["会議室管理業務"]
+      summary: "運用ルールを設定する"
+      operationId: "updateRoomRules"
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "会議室ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomRulesRequest"
+      responses:
+        "200":
+          description: "運用ルール更新完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomRulesResponse"
+  /api/v1/rooms/{room_id}/reviews:
+    get:
+      tags: ["会議室管理業務"]
+      summary: "会議室の評価一覧を取得する"
+      operationId: "getRoomReviews"
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "会議室ID"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: "ページ番号"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: "1ページあたり件数"
+      responses:
+        "200":
+          description: "評価一覧"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedReviewResponse"
+  /api/v1/reservations:
+    post:
+      tags: ["予約業務"]
+      summary: "会議室を予約する"
+      operationId: "createReservation"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReservationRequest"
+      responses:
+        "201":
+          description: "予約作成完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+  /api/v1/reservations/{reservation_id}:
+    put:
+      tags: ["予約業務"]
+      summary: "予約を変更する"
+      operationId: "updateReservation"
+      parameters:
+        - name: reservation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "予約ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReservationRequest"
+      responses:
+        "200":
+          description: "予約変更完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+  /api/v1/reservations/{reservation_id}/actions/cancel:
+    post:
+      tags: ["予約業務"]
+      summary: "予約を取消する"
+      operationId: "cancelReservation"
+      parameters:
+        - name: reservation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "予約ID"
+      responses:
+        "200":
+          description: "予約取消完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+  /api/v1/reservations/{reservation_id}/actions/approve:
+    post:
+      tags: ["会議室貸出業務"]
+      summary: "利用許諾を判定する"
+      operationId: "approveReservation"
+      parameters:
+        - name: reservation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "予約ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveReservationRequest"
+      responses:
+        "200":
+          description: "利用許諾結果"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+  /api/v1/reservations/{reservation_id}/actions/receive-key:
+    post:
+      tags: ["会議室貸出業務"]
+      summary: "鍵を受け取る"
+      operationId: "receiveKey"
+      parameters:
+        - name: reservation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "予約ID"
+      responses:
+        "200":
+          description: "鍵受取確認完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyResponse"
+  /api/v1/reservations/{reservation_id}/actions/lend-key:
+    post:
+      tags: ["会議室貸出業務"]
+      summary: "鍵を貸出する"
+      operationId: "lendKey"
+      parameters:
+        - name: reservation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "予約ID"
+      responses:
+        "200":
+          description: "鍵貸出完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyResponse"
+  /api/v1/reservations/{reservation_id}/actions/return-key:
+    post:
+      tags: ["会議室貸出業務"]
+      summary: "鍵を返却する"
+      operationId: "returnKey"
+      parameters:
+        - name: reservation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "予約ID"
+      responses:
+        "200":
+          description: "鍵返却完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyResponse"
+  /api/v1/room-reviews:
+    post:
+      tags: ["評価業務"]
+      summary: "会議室を評価する"
+      operationId: "createRoomReview"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: "評価登録完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+  /api/v1/host-reviews:
+    post:
+      tags: ["評価業務"]
+      summary: "ホストを評価する"
+      operationId: "createHostReview"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: "評価登録完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+  /api/v1/user-reviews:
+    post:
+      tags: ["会議室貸出業務"]
+      summary: "利用者を評価する"
+      operationId: "createUserReview"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: "評価登録完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+  /api/v1/owners/{owner_id}/reviews:
+    get:
+      tags: ["評価業務"]
+      summary: "オーナーの評価結果を確認する"
+      operationId: "getOwnerReviews"
+      parameters:
+        - name: owner_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "オーナーID"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: "ページ番号"
+      responses:
+        "200":
+          description: "評価結果一覧"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedReviewResponse"
+  /api/v1/inquiries:
+    post:
+      tags: ["会議室貸出業務"]
+      summary: "オーナーに問合せる"
+      operationId: "createInquiry"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInquiryRequest"
+      responses:
+        "201":
+          description: "問合せ送信完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryResponse"
+  /api/v1/inquiries/{inquiry_id}/actions/reply:
+    post:
+      tags: ["会議室貸出業務"]
+      summary: "問合せに回答する"
+      operationId: "replyToInquiry"
+      parameters:
+        - name: inquiry_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "問合せID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyInquiryRequest"
+      responses:
+        "200":
+          description: "回答完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryResponse"
+  /api/v1/service-inquiries:
+    post:
+      tags: ["サービス運営業務"]
+      summary: "サービスに問合せる"
+      operationId: "createServiceInquiry"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInquiryRequest"
+      responses:
+        "201":
+          description: "問合せ送信完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryResponse"
+  /api/v1/service-inquiries/{inquiry_id}/actions/reply:
+    post:
+      tags: ["サービス運営業務"]
+      summary: "サービス問合せに回答する"
+      operationId: "replyToServiceInquiry"
+      parameters:
+        - name: inquiry_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "問合せID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyInquiryRequest"
+      responses:
+        "200":
+          description: "回答完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryResponse"
+  /api/v1/analytics/commissions:
+    get:
+      tags: ["サービス運営業務"]
+      summary: "手数料売上を分析する"
+      operationId: "getCommissionAnalytics"
+      parameters:
+        - name: period_from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: "分析期間開始日"
+        - name: period_to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: "分析期間終了日"
+      responses:
+        "200":
+          description: "手数料分析データ"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommissionAnalyticsResponse"
+  /api/v1/analytics/dashboard:
+    get:
+      tags: ["サービス運営業務"]
+      summary: "運用管理ダッシュボードデータを取得する"
+      operationId: "getDashboard"
+      responses:
+        "200":
+          description: "ダッシュボードデータ"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/usage-history:
+    get:
+      tags: ["サービス運営業務"]
+      summary: "利用履歴を管理する"
+      operationId: "getUsageHistory"
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: "ページ番号"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: "1ページあたり件数"
+      responses:
+        "200":
+          description: "利用履歴一覧"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUsageHistoryResponse"
+  /api/v1/analytics/usage:
+    get:
+      tags: ["サービス運営業務"]
+      summary: "利用状況を分析する"
+      operationId: "getUsageAnalytics"
+      parameters:
+        - name: period_from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: "分析期間開始日"
+        - name: period_to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: "分析期間終了日"
+      responses:
+        "200":
+          description: "利用状況分析データ"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageAnalyticsResponse"
+  /api/v1/owners/{owner_id}/settlements:
+    get:
+      tags: ["精算業務"]
+      summary: "精算結果を確認する"
+      operationId: "getOwnerSettlements"
+      parameters:
+        - name: owner_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "オーナーID"
+      responses:
+        "200":
+          description: "精算結果一覧"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedSettlementResponse"
+  /api/v1/settlements/actions/calculate:
+    post:
+      tags: ["精算業務"]
+      summary: "精算額を計算する"
+      operationId: "calculateSettlements"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalculateSettlementRequest"
+      responses:
+        "200":
+          description: "精算額計算完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementCalculationResponse"
+  /api/v1/settlements/actions/execute:
+    post:
+      tags: ["精算業務"]
+      summary: "精算を実行する"
+      operationId: "executeSettlements"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExecuteSettlementRequest"
+      responses:
+        "200":
+          description: "精算実行完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementExecutionResponse"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "IdP が発行した JWT トークン"
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: "エラーコード"
+        message:
+          type: string
+          description: "エラーメッセージ"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: "エラー対象フィールド"
+              message:
+                type: string
+                description: "フィールドエラーメッセージ"
+        trace_id:
+          type: string
+          description: "リクエストトレースID"
+    ServiceTermsResponse:
+      type: object
+      required:
+        - terms_id
+        - terms_name
+        - content
+        - effective_date
+      properties:
+        terms_id:
+          type: string
+          format: uuid
+          description: "規約ID"
+        terms_name:
+          type: string
+          description: "規約名"
+        content:
+          type: string
+          description: "規約内容"
+        effective_date:
+          type: string
+          format: date
+          description: "適用開始日"
+    CreateOwnerRequest:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          description: "氏名"
+        email:
+          type: string
+          format: email
+          description: "メールアドレス"
+        phone:
+          type: string
+          description: "電話番号"
+        profile:
+          type: string
+          description: "プロフィール"
+    UpdateOwnerProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "氏名"
+        email:
+          type: string
+          format: email
+          description: "メールアドレス"
+        phone:
+          type: string
+          description: "電話番号"
+        profile:
+          type: string
+          description: "プロフィール"
+    ReviewOwnerRequest:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum:
+            - "approve"
+            - "reject"
+          description: "審査結果(承認/却下)"
+        reason:
+          type: string
+          description: "審査理由"
+    OwnerResponse:
+      type: object
+      required:
+        - owner_id
+        - name
+        - email
+        - status
+      properties:
+        owner_id:
+          type: string
+          format: uuid
+          description: "オーナーID"
+        name:
+          type: string
+          description: "氏名"
+        email:
+          type: string
+          format: email
+          description: "メールアドレス"
+        phone:
+          type: string
+          description: "電話番号"
+        profile:
+          type: string
+          description: "プロフィール"
+        status:
+          type: string
+          enum:
+            - "未申請"
+            - "申請中"
+            - "審査中"
+            - "承認"
+            - "却下"
+            - "退会"
+          description: "オーナー申請状態"
+        registered_at:
+          type: string
+          format: date-time
+          description: "登録日時"
+    CreateRoomRequest:
+      type: object
+      required:
+        - room_name
+        - area
+        - price
+        - location
+      properties:
+        room_name:
+          type: string
+          description: "会議室名"
+        area:
+          type: number
+          description: "広さ(平方メートル)"
+        price:
+          type: number
+          description: "価格(円/時)"
+        features:
+          type: string
+          description: "機能性"
+        location:
+          type: string
+          description: "所在地"
+        image_url:
+          type: string
+          format: uri
+          description: "画像URL"
+    RoomResponse:
+      type: object
+      required:
+        - room_id
+        - room_name
+        - area
+        - price
+        - location
+        - availability
+      properties:
+        room_id:
+          type: string
+          format: uuid
+          description: "会議室ID"
+        room_name:
+          type: string
+          description: "会議室名"
+        area:
+          type: number
+          description: "広さ(平方メートル)"
+        price:
+          type: number
+          description: "価格(円/時)"
+        features:
+          type: string
+          description: "機能性"
+        location:
+          type: string
+          description: "所在地"
+        image_url:
+          type: string
+          format: uri
+          description: "画像URL"
+        availability:
+          type: boolean
+          description: "貸出可否"
+        average_rating:
+          type: number
+          description: "平均評価点"
+        owner_id:
+          type: string
+          format: uuid
+          description: "オーナーID"
+    PaginatedRoomResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - per_page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomResponse"
+        total:
+          type: integer
+          description: "全件数"
+        page:
+          type: integer
+          description: "現在ページ"
+        per_page:
+          type: integer
+          description: "1ページあたり件数"
+    UpdateRoomRulesRequest:
+      type: object
+      required:
+        - cancel_policy
+        - availability
+        - available_hours
+      properties:
+        cancel_policy:
+          type: string
+          description: "キャンセルポリシー"
+        availability:
+          type: boolean
+          description: "貸出可否"
+        available_hours:
+          type: string
+          description: "利用時間帯"
+    RoomRulesResponse:
+      type: object
+      required:
+        - rule_id
+        - cancel_policy
+        - availability
+        - available_hours
+      properties:
+        rule_id:
+          type: string
+          format: uuid
+          description: "ルールID"
+        cancel_policy:
+          type: string
+          description: "キャンセルポリシー"
+        availability:
+          type: boolean
+          description: "貸出可否"
+        available_hours:
+          type: string
+          description: "利用時間帯"
+    CreateReservationRequest:
+      type: object
+      required:
+        - room_id
+        - start_datetime
+        - end_datetime
+        - payment_method
+      properties:
+        room_id:
+          type: string
+          format: uuid
+          description: "会議室ID"
+        start_datetime:
+          type: string
+          format: date-time
+          description: "利用開始日時"
+        end_datetime:
+          type: string
+          format: date-time
+          description: "利用終了日時"
+        payment_method:
+          type: string
+          enum:
+            - "クレジットカード"
+            - "電子マネー"
+          description: "決済方法"
+    UpdateReservationRequest:
+      type: object
+      properties:
+        start_datetime:
+          type: string
+          format: date-time
+          description: "利用開始日時"
+        end_datetime:
+          type: string
+          format: date-time
+          description: "利用終了日時"
+    ReservationResponse:
+      type: object
+      required:
+        - reservation_id
+        - room_id
+        - status
+        - start_datetime
+        - end_datetime
+        - usage_fee
+      properties:
+        reservation_id:
+          type: string
+          format: uuid
+          description: "予約ID"
+        room_id:
+          type: string
+          format: uuid
+          description: "会議室ID"
+        status:
+          type: string
+          enum:
+            - "仮予約"
+            - "確定"
+            - "変更"
+            - "利用中"
+            - "利用完了"
+            - "取消"
+          description: "予約状態"
+        start_datetime:
+          type: string
+          format: date-time
+          description: "利用開始日時"
+        end_datetime:
+          type: string
+          format: date-time
+          description: "利用終了日時"
+        payment_method:
+          type: string
+          description: "決済方法"
+        usage_fee:
+          type: number
+          description: "利用料金(円)"
+    ApproveReservationRequest:
+      type: object
+      required:
+        - approved
+      properties:
+        approved:
+          type: boolean
+          description: "許諾可否"
+        reason:
+          type: string
+          description: "理由"
+    KeyResponse:
+      type: object
+      required:
+        - key_id
+        - status
+      properties:
+        key_id:
+          type: string
+          format: uuid
+          description: "鍵ID"
+        key_type:
+          type: string
+          description: "鍵種別"
+        status:
+          type: string
+          description: "貸出状態"
+    CreateReviewRequest:
+      type: object
+      required:
+        - reservation_id
+        - score
+      properties:
+        reservation_id:
+          type: string
+          format: uuid
+          description: "予約ID"
+        score:
+          type: number
+          minimum: 1
+          maximum: 5
+          description: "評価点(1-5)"
+        comment:
+          type: string
+          description: "コメント"
+    ReviewResponse:
+      type: object
+      required:
+        - review_id
+        - score
+        - review_type
+      properties:
+        review_id:
+          type: string
+          format: uuid
+          description: "評価ID"
+        reviewer_id:
+          type: string
+          format: uuid
+          description: "評価者ID"
+        score:
+          type: number
+          description: "評価点"
+        comment:
+          type: string
+          description: "コメント"
+        review_type:
+          type: string
+          enum:
+            - "会議室評価"
+            - "ホスト評価"
+            - "利用者評価"
+          description: "評価種別"
+        created_at:
+          type: string
+          format: date-time
+          description: "評価日時"
+    PaginatedReviewResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - per_page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewResponse"
+        total:
+          type: integer
+          description: "全件数"
+        page:
+          type: integer
+          description: "現在ページ"
+        per_page:
+          type: integer
+          description: "1ページあたり件数"
+    CreateInquiryRequest:
+      type: object
+      required:
+        - inquiry_type
+        - content
+      properties:
+        inquiry_type:
+          type: string
+          enum:
+            - "会議室問合せ"
+            - "サービス問合せ"
+          description: "問合せ種別"
+        content:
+          type: string
+          description: "問合せ内容"
+        reservation_id:
+          type: string
+          format: uuid
+          description: "関連予約ID(任意)"
+    ReplyInquiryRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: "回答内容"
+    InquiryResponse:
+      type: object
+      required:
+        - inquiry_id
+        - inquiry_type
+        - status
+      properties:
+        inquiry_id:
+          type: string
+          format: uuid
+          description: "問合せID"
+        inquiry_type:
+          type: string
+          description: "問合せ種別"
+        content:
+          type: string
+          description: "問合せ内容"
+        reply_content:
+          type: string
+          description: "回答内容"
+        status:
+          type: string
+          enum:
+            - "受付"
+            - "対応中"
+            - "回答済"
+            - "完了"
+          description: "問合せ状態"
+        created_at:
+          type: string
+          format: date-time
+          description: "問合せ日時"
+    CommissionAnalyticsResponse:
+      type: object
+      properties:
+        total_commission:
+          type: number
+          description: "手数料合計(円)"
+        by_room:
+          type: array
+          items:
+            type: object
+            properties:
+              room_id:
+                type: string
+                description: "会議室ID"
+              room_name:
+                type: string
+                description: "会議室名"
+              commission:
+                type: number
+                description: "手数料額(円)"
+        by_month:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                description: "年月"
+              commission:
+                type: number
+                description: "手数料額(円)"
+    DashboardResponse:
+      type: object
+      properties:
+        active_owners:
+          type: integer
+          description: "アクティブオーナー数"
+        active_rooms:
+          type: integer
+          description: "公開中会議室数"
+        today_reservations:
+          type: integer
+          description: "本日の予約数"
+        pending_inquiries:
+          type: integer
+          description: "未対応問合せ数"
+        monthly_revenue:
+          type: number
+          description: "今月の売上合計(円)"
+    PaginatedUsageHistoryResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - per_page
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              history_id:
+                type: string
+                format: uuid
+                description: "履歴ID"
+              user_id:
+                type: string
+                format: uuid
+                description: "利用者ID"
+              room_id:
+                type: string
+                format: uuid
+                description: "会議室ID"
+              usage_datetime:
+                type: string
+                format: date-time
+                description: "利用日時"
+              usage_hours:
+                type: number
+                description: "利用時間"
+              usage_fee:
+                type: number
+                description: "利用料金(円)"
+        total:
+          type: integer
+          description: "全件数"
+        page:
+          type: integer
+          description: "現在ページ"
+        per_page:
+          type: integer
+          description: "1ページあたり件数"
+    UsageAnalyticsResponse:
+      type: object
+      properties:
+        total_usage_count:
+          type: integer
+          description: "利用総件数"
+        by_room:
+          type: array
+          items:
+            type: object
+            properties:
+              room_id:
+                type: string
+                description: "会議室ID"
+              room_name:
+                type: string
+                description: "会議室名"
+              usage_count:
+                type: integer
+                description: "利用件数"
+              usage_rate:
+                type: number
+                description: "利用率(%)"
+        by_hour:
+          type: array
+          items:
+            type: object
+            properties:
+              hour:
+                type: integer
+                description: "時間帯"
+              count:
+                type: integer
+                description: "利用件数"
+    PaginatedSettlementResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - per_page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SettlementResponse"
+        total:
+          type: integer
+          description: "全件数"
+        page:
+          type: integer
+          description: "現在ページ"
+        per_page:
+          type: integer
+          description: "1ページあたり件数"
+    SettlementResponse:
+      type: object
+      required:
+        - settlement_id
+        - owner_id
+        - period
+        - total_usage_fee
+        - commission
+        - payout_amount
+      properties:
+        settlement_id:
+          type: string
+          format: uuid
+          description: "精算ID"
+        owner_id:
+          type: string
+          format: uuid
+          description: "オーナーID"
+        period:
+          type: string
+          description: "対象期間"
+        total_usage_fee:
+          type: number
+          description: "利用料合計(円)"
+        commission:
+          type: number
+          description: "手数料(円)"
+        payout_amount:
+          type: number
+          description: "支払額(円)"
+        settlement_date:
+          type: string
+          format: date
+          description: "精算日"
+        status:
+          type: string
+          enum:
+            - "pending"
+            - "calculated"
+            - "executed"
+            - "failed"
+          description: "精算状態"
+    CalculateSettlementRequest:
+      type: object
+      required:
+        - period_from
+        - period_to
+      properties:
+        period_from:
+          type: string
+          format: date
+          description: "精算対象期間開始日"
+        period_to:
+          type: string
+          format: date
+          description: "精算対象期間終了日"
+    SettlementCalculationResponse:
+      type: object
+      properties:
+        calculated_count:
+          type: integer
+          description: "計算完了件数"
+        total_payout:
+          type: number
+          description: "支払総額(円)"
+    ExecuteSettlementRequest:
+      type: object
+      required:
+        - settlement_ids
+      properties:
+        settlement_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: "実行対象の精算ID一覧"
+    SettlementExecutionResponse:
+      type: object
+      properties:
+        executed_count:
+          type: integer
+          description: "実行完了件数"
+        failed_count:
+          type: integer
+          description: "失敗件数"

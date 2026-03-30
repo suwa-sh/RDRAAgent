@@ -1,0 +1,17 @@
+uc: "運用ルールを設定する"
+business: "会議室管理業務"
+buc: "会議室登録フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/rooms/{room_id}/rules"
+    summary: "キャンセルポリシーや貸出可否を設定する"
+    request_schema: "運用ルール設定Request"
+    response_schema: "運用ルール設定Response"
+    tags:
+      - "会議室管理業務"
+schemas:
+  - name: "運用ルール設定Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

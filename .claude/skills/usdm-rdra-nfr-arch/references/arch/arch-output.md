@@ -14,6 +14,8 @@
 
 形式: `{YYYYMMDD_HHMMSS}_{変更名}`
 
+**日時部分は `date '+%Y%m%d_%H%M%S'` コマンドで取得する。LLM が日時を推測してはならない。** `created_at` も同じタイミングで `date '+%Y-%m-%dT%H:%M:%S'` コマンドで取得する。
+
 - 初期構築: `{timestamp}_initial_arch`
 - RDRA 差分起因: `{timestamp}_arch_update_for_{rdra_event_id}`
 - NFR 変更起因: `{timestamp}_arch_update_for_nfr_{nfr_event_id}`

@@ -1,0 +1,27 @@
+uc: "手数料売上を分析する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+
+models:
+  - name: "手数料売上を分析するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "手数料情報"
+  - name: "手数料売上を分析するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "手数料情報"
+
+tables:
+  - name: "commissions"
+    rdra_info: "手数料情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id = :id"
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる手数料情報取得"

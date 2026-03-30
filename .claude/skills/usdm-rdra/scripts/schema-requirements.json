@@ -3,7 +3,7 @@
   "title": "USDM Requirements",
   "description": "USDM (Universal Specification Describing Manner) requirements.yaml のスキーマ定義",
   "type": "object",
-  "required": ["version", "event_id", "created_at", "source", "requirements"],
+  "required": ["version", "event_id", "created_at", "source", "system_name", "requirements"],
   "properties": {
     "version": {
       "type": "string",
@@ -21,6 +21,11 @@
     "source": {
       "type": "string",
       "minLength": 1
+    },
+    "system_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "対象システムの名称"
     },
     "requirements": {
       "type": "array",

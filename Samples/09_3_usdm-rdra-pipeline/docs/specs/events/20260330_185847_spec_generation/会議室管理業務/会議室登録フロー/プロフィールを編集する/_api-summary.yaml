@@ -1,0 +1,17 @@
+uc: "プロフィールを編集する"
+business: "会議室管理業務"
+buc: "会議室登録フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/owners/{owner_id}/profile"
+    summary: "オーナーのプロフィール情報を編集する"
+    request_schema: "プロフィール編集Request"
+    response_schema: "プロフィール編集Response"
+    tags:
+      - "会議室管理業務"
+schemas:
+  - name: "プロフィール編集Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

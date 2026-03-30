@@ -1,0 +1,369 @@
+version: "1.0"
+event_id: "20260330_180653_initial_build"
+created_at: "2026-03-30T18:06:54"
+source: "初期要望.txt"
+system_name: "貸し会議室サービス"
+
+requirements:
+  - id: "REQ-001"
+    requirement: "会議室オーナーが自身の情報を管理し、サービスに参加・退会できること"
+    reason: "会議室オーナーがサービスを利用するためには、まず自身の登録・プロフィール管理・申請・退会といったライフサイクル管理が必要である"
+    priority: "must"
+    specifications:
+      - id: "SPEC-001-01"
+        specification: "オーナーを新規登録できる（プロフィール情報の入力を含む）"
+        acceptance_criteria:
+          - "Given 未登録のオーナー When 登録フォームに必要情報を入力して送信する Then オーナーアカウントが作成される"
+        affected_models:
+          - type: "actor"
+            action: "add"
+            target: "会議室オーナー"
+          - type: "information"
+            action: "add"
+            target: "オーナー情報"
+          - type: "buc"
+            action: "add"
+            target: "オーナー管理"
+      - id: "SPEC-001-02"
+        specification: "オーナーが規約を参照・確認できる"
+        acceptance_criteria:
+          - "Given オーナー登録画面 When 規約参照リンクを押す Then サービス規約が表示され確認できる"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "サービス規約"
+      - id: "SPEC-001-03"
+        specification: "オーナー申請を行い、サービス運営担当者の審査を経て承認される"
+        acceptance_criteria:
+          - "Given 登録済みのオーナー When オーナー申請を送信する Then 申請がサービス運営担当者に届き審査対象となる"
+        affected_models:
+          - type: "state"
+            action: "add"
+            target: "オーナー申請状態"
+          - type: "buc"
+            action: "modify"
+            target: "オーナー管理"
+      - id: "SPEC-001-04"
+        specification: "オーナーが退会できる"
+        acceptance_criteria:
+          - "Given 承認済みのオーナー When 退会手続きを行う Then オーナーアカウントが退会状態になる"
+        affected_models:
+          - type: "state"
+            action: "modify"
+            target: "オーナー申請状態"
+      - id: "SPEC-001-05"
+        specification: "オーナーがプロフィールを登録・編集できる"
+        acceptance_criteria:
+          - "Given 登録済みのオーナー When プロフィール編集画面で情報を更新する Then プロフィール情報が反映される"
+        affected_models:
+          - type: "information"
+            action: "modify"
+            target: "オーナー情報"
+
+  - id: "REQ-002"
+    requirement: "会議室オーナーが会議室を登録し運用ルールを設定できること"
+    reason: "貸し会議室サービスの中核機能として、オーナーが物件情報を登録し貸出条件を管理できる必要がある"
+    priority: "must"
+    specifications:
+      - id: "SPEC-002-01"
+        specification: "会議室の物件情報（広さ、価格、機能性）を登録できる"
+        acceptance_criteria:
+          - "Given 承認済みのオーナー When 会議室登録画面で物件情報を入力して登録する Then 会議室が一覧に表示される"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "会議室情報"
+          - type: "buc"
+            action: "add"
+            target: "会議室管理"
+      - id: "SPEC-002-02"
+        specification: "運用ルール（キャンセルポリシー、貸出可否）を設定できる"
+        acceptance_criteria:
+          - "Given 登録済みの会議室 When 運用ルール設定画面でキャンセルポリシーと貸出可否を設定する Then 運用ルールが会議室に紐づいて保存される"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "運用ルール"
+          - type: "business_policy"
+            action: "add"
+            target: "キャンセルポリシー"
+      - id: "SPEC-002-03"
+        specification: "会議室の評価を確認できる"
+        acceptance_criteria:
+          - "Given 貸出実績のある会議室 When オーナーが評価確認画面を開く Then 利用者からの評価一覧が表示される"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "会議室評価"
+
+  - id: "REQ-003"
+    requirement: "会議室オーナーが会議室の貸出を管理できること"
+    reason: "利用者への会議室貸出において、使用許諾・鍵管理・利用者評価・問合せ対応が円滑に行われる必要がある"
+    priority: "must"
+    specifications:
+      - id: "SPEC-003-01"
+        specification: "利用者の使用許諾を行う（過去の利用評価を確認した上で）"
+        acceptance_criteria:
+          - "Given 予約申請があった利用者 When オーナーが利用者の過去評価を確認し許諾する Then 予約が確定状態になる"
+        affected_models:
+          - type: "buc"
+            action: "add"
+            target: "会議室貸出管理"
+          - type: "state"
+            action: "add"
+            target: "予約状態"
+          - type: "information"
+            action: "add"
+            target: "利用者評価"
+      - id: "SPEC-003-02"
+        specification: "会議室の鍵を利用者に貸し出す"
+        acceptance_criteria:
+          - "Given 許諾済みの予約 When 利用者が会議室に到着する Then オーナーが鍵を貸し出し、利用開始状態になる"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "鍵情報"
+          - type: "state"
+            action: "modify"
+            target: "予約状態"
+      - id: "SPEC-003-03"
+        specification: "利用者を評価してオーナー側の記録として登録する"
+        acceptance_criteria:
+          - "Given 利用が終了した予約 When オーナーが利用者評価を入力する Then 利用者評価が記録される"
+        affected_models:
+          - type: "information"
+            action: "modify"
+            target: "利用者評価"
+      - id: "SPEC-003-04"
+        specification: "利用者からの問合せに回答する"
+        acceptance_criteria:
+          - "Given 利用者から問合せがあった場合 When オーナーが問合せ内容を確認して回答する Then 回答が利用者に届く"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "問合せ"
+
+  - id: "REQ-004"
+    requirement: "会議室オーナーが利用実績と売上を管理できること"
+    reason: "オーナーが自身の会議室の稼働状況と収益を把握し、運営改善に活かすため"
+    priority: "must"
+    specifications:
+      - id: "SPEC-004-01"
+        specification: "会議室ごとの利用者評価を確認できる"
+        acceptance_criteria:
+          - "Given 利用実績のある会議室 When 利用実績画面を開く Then 利用者からの評価一覧が表示される"
+        affected_models:
+          - type: "buc"
+            action: "add"
+            target: "利用実績管理"
+      - id: "SPEC-004-02"
+        specification: "売上実績を管理できる"
+        acceptance_criteria:
+          - "Given 貸出実績のある会議室 When 売上管理画面を開く Then 会議室別の売上実績が表示される"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "売上実績"
+
+  - id: "REQ-005"
+    requirement: "サービス運営担当者がサービス全体を運営管理できること"
+    reason: "サービスの健全な運営のため、手数料管理・オーナー審査・利用状況分析・問合せ対応が必要である"
+    priority: "must"
+    specifications:
+      - id: "SPEC-005-01"
+        specification: "手数料売上を会議室別・貸出別に分析できる"
+        acceptance_criteria:
+          - "Given サービス運営担当者がログイン済み When 手数料分析画面を開く Then 会議室別・貸出別の手数料売上が表示される"
+        affected_models:
+          - type: "actor"
+            action: "add"
+            target: "サービス運営担当者"
+          - type: "buc"
+            action: "add"
+            target: "サービス運営管理"
+          - type: "information"
+            action: "add"
+            target: "手数料情報"
+      - id: "SPEC-005-02"
+        specification: "オーナー登録を審査できる"
+        acceptance_criteria:
+          - "Given オーナー申請がある場合 When 運営担当者が審査画面で承認または却下する Then オーナーの申請状態が更新される"
+        affected_models:
+          - type: "buc"
+            action: "modify"
+            target: "サービス運営管理"
+      - id: "SPEC-005-03"
+        specification: "利用履歴を会員別・物件別に管理できる"
+        acceptance_criteria:
+          - "Given サービス運営担当者がログイン済み When 利用履歴管理画面を開く Then 会員別・物件別の利用履歴が表示される"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "利用履歴"
+          - type: "buc"
+            action: "add"
+            target: "利用状況管理"
+      - id: "SPEC-005-04"
+        specification: "会議室利用状況を分析できる"
+        acceptance_criteria:
+          - "Given 利用実績データがある場合 When 利用状況分析画面を開く Then 会議室の利用状況の統計が表示される"
+        affected_models:
+          - type: "buc"
+            action: "modify"
+            target: "利用状況管理"
+      - id: "SPEC-005-05"
+        specification: "利用者からのサービス問合せに対応できる"
+        acceptance_criteria:
+          - "Given 利用者からサービスへの問合せがある場合 When 運営担当者が問合せ一覧で確認・対応する Then 問合せのステータスが更新される"
+        affected_models:
+          - type: "buc"
+            action: "add"
+            target: "問合せ管理"
+          - type: "state"
+            action: "add"
+            target: "問合せ状態"
+
+  - id: "REQ-006"
+    requirement: "サービス運営担当者が会議室オーナーへの精算を行えること"
+    reason: "オーナーへの利用料支払いはサービス運営の根幹であり、会議室別の利用履歴から正確な精算額を算出する必要がある"
+    priority: "must"
+    specifications:
+      - id: "SPEC-006-01"
+        specification: "会議室別の利用履歴からオーナーへの精算額を計算し支払う"
+        acceptance_criteria:
+          - "Given 月末 When 精算処理を実行する Then 会議室別の利用料から手数料を差し引いた金額がオーナーに支払われる"
+        affected_models:
+          - type: "buc"
+            action: "add"
+            target: "オーナー精算"
+          - type: "information"
+            action: "add"
+            target: "精算情報"
+          - type: "external_system"
+            action: "add"
+            target: "決済機関"
+          - type: "business_policy"
+            action: "add"
+            target: "精算ルール"
+
+  - id: "REQ-007"
+    requirement: "利用者が貸会議室を予約し利用できること"
+    reason: "利用者がサービスの価値を享受するための中核機能として、会議室の検索・予約・決済・変更・取消が必要である"
+    priority: "must"
+    specifications:
+      - id: "SPEC-007-01"
+        specification: "会議室を広さ・価格・機能性・評価で照会できる"
+        acceptance_criteria:
+          - "Given 利用者がログイン済み When 会議室検索画面で条件を入力して検索する Then 条件に合う会議室の一覧が表示される"
+        affected_models:
+          - type: "actor"
+            action: "add"
+            target: "利用者"
+          - type: "buc"
+            action: "add"
+            target: "会議室予約"
+      - id: "SPEC-007-02"
+        specification: "会議室を予約できる（決済方法としてクレジットカードまたは電子マネーを設定）"
+        acceptance_criteria:
+          - "Given 利用者が会議室を選択済み When 予約画面で日時と決済方法を入力して予約する Then 予約が作成され確認画面が表示される"
+        affected_models:
+          - type: "information"
+            action: "add"
+            target: "予約情報"
+          - type: "variation"
+            action: "add"
+            target: "決済方法"
+          - type: "state"
+            action: "modify"
+            target: "予約状態"
+      - id: "SPEC-007-03"
+        specification: "予約の変更・取消ができる"
+        acceptance_criteria:
+          - "Given 予約済みの利用者 When 予約変更または取消を行う Then 予約が変更または取消される（キャンセルポリシーに準拠）"
+        affected_models:
+          - type: "state"
+            action: "modify"
+            target: "予約状態"
+          - type: "condition"
+            action: "add"
+            target: "予約変更条件"
+      - id: "SPEC-007-04"
+        specification: "会議室オーナーへ問合せができる"
+        acceptance_criteria:
+          - "Given 利用者が会議室詳細画面を閲覧中 When 問合せフォームから質問を送信する Then オーナーに問合せが届く"
+        affected_models:
+          - type: "information"
+            action: "modify"
+            target: "問合せ"
+
+  - id: "REQ-008"
+    requirement: "利用者が利用した会議室とホストを評価できること"
+    reason: "サービスの品質向上とオーナーの改善のため、利用者からの評価フィードバックの仕組みが必要である"
+    priority: "must"
+    specifications:
+      - id: "SPEC-008-01"
+        specification: "利用した会議室とそのホスト（オーナー）の評価を登録できる"
+        acceptance_criteria:
+          - "Given 利用が完了した予約 When 利用者が評価画面で会議室とホストの評価を入力する Then 評価が登録され会議室評価に反映される"
+        affected_models:
+          - type: "buc"
+            action: "add"
+            target: "評価管理"
+          - type: "information"
+            action: "modify"
+            target: "会議室評価"
+
+  - id: "REQ-009"
+    requirement: "支払いと精算のビジネスプロセスが適切に運用されること"
+    reason: "利用料の引き落としとオーナーへの支払いという金銭フローを確実に管理するため"
+    priority: "must"
+    specifications:
+      - id: "SPEC-009-01"
+        specification: "予約時に決済手段を登録する"
+        acceptance_criteria:
+          - "Given 利用者が予約を行う When 決済手段を選択する Then 決済手段が予約に紐づいて保存される"
+        affected_models:
+          - type: "business_policy"
+            action: "add"
+            target: "支払ルール"
+      - id: "SPEC-009-02"
+        specification: "利用後にサービス運営者が利用料を引き落とす"
+        acceptance_criteria:
+          - "Given 会議室利用が終了した場合 When サービス運営者が利用料を引き落とす Then 利用者の決済手段から利用料が引き落とされる"
+        affected_models:
+          - type: "external_system"
+            action: "modify"
+            target: "決済機関"
+      - id: "SPEC-009-03"
+        specification: "月末に会議室オーナーに利用料が支払われる"
+        acceptance_criteria:
+          - "Given 月末 When 精算処理が実行される Then オーナーに対して利用料（手数料控除後）が支払われる"
+        affected_models:
+          - type: "information"
+            action: "modify"
+            target: "精算情報"
+
+  - id: "REQ-010"
+    requirement: "会議室利用のプロセスが適切に管理されること"
+    reason: "鍵の受け渡しをトリガーとした利用開始・終了の管理がサービスの信頼性を担保する"
+    priority: "must"
+    specifications:
+      - id: "SPEC-010-01"
+        specification: "利用者が会議室に行き、オーナーから鍵を受け取ることで利用開始となる"
+        acceptance_criteria:
+          - "Given 予約確定済みの利用者が会議室に到着 When オーナーから鍵を受け取る Then 会議室利用が開始状態になる"
+        affected_models:
+          - type: "state"
+            action: "modify"
+            target: "予約状態"
+          - type: "business_policy"
+            action: "add"
+            target: "会議室利用ルール"
+      - id: "SPEC-010-02"
+        specification: "会議後に鍵を返却したら利用終了となる"
+        acceptance_criteria:
+          - "Given 利用中の会議室 When 利用者が鍵を返却する Then 会議室利用が終了状態になる"
+        affected_models:
+          - type: "state"
+            action: "modify"
+            target: "予約状態"

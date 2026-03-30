@@ -1,0 +1,33 @@
+uc: "会議室を照会する"
+business: "会議室予約業務"
+buc: "会議室予約フロー"
+
+models:
+  - name: "会議室を照会するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室情報"
+  - name: "会議室を照会するRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室情報"
+
+tables:
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: ""
+    indexes_needed: []
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

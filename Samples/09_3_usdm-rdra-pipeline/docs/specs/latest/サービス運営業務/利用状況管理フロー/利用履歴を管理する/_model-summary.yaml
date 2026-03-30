@@ -1,0 +1,27 @@
+uc: "利用履歴を管理する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+
+models:
+  - name: "利用履歴を管理するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "利用履歴"
+  - name: "利用履歴を管理するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "利用履歴"
+
+tables:
+  - name: "usage_history"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id = :id"
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる利用履歴取得"

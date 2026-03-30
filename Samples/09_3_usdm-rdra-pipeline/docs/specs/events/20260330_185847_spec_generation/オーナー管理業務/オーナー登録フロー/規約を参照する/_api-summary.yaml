@@ -1,0 +1,17 @@
+uc: "規約を参照する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/terms"
+    summary: "サービス規約の内容を確認する"
+    
+    response_schema: "規約参照Response"
+    tags:
+      - "オーナー管理業務"
+schemas:
+  - name: "規約参照Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

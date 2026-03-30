@@ -1,0 +1,2 @@
+初期デザインシステム生成: 貸し会議室マッチングSaaS「RoomConnect」
+RDRA/NFR/Arch モデルからの自動導出。3ポータル（User/Owner/Admin）、14コンポーネント、24画面。

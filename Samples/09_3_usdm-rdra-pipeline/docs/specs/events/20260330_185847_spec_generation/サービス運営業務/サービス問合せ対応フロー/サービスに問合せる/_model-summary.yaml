@@ -1,0 +1,27 @@
+uc: "サービスに問合せる"
+business: "サービス運営業務"
+buc: "サービス問合せ対応フロー"
+
+models:
+  - name: "サービスに問合せるViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "問合せ"
+  - name: "サービスに問合せるCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "問合せ"
+
+tables:
+  - name: "inquiries"
+    rdra_info: "問合せ"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる問合せ取得"

@@ -1,0 +1,2 @@
+Spec 生成: RDRA 初期構築 + アーキテクチャ設計 + デザインシステムからの初期 Spec 生成
+trigger_event: rdra:20260330_180653_initial_build, arch:20260330_182346_initial_arch, design:20260330_184257_design_system

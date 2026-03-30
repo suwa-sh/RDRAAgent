@@ -1,0 +1,17 @@
+uc: "手数料売上を分析する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/admin/commission-stats"
+    summary: "手数料売上分析"
+    request_schema: ""
+    response_schema: "CommissionStatsResponse"
+    tags:
+      - "サービス運営管理フロー"
+schemas:
+  - name: "CommissionStatsResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

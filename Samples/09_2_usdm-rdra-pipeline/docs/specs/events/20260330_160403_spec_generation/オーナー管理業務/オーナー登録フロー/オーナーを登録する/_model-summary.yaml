@@ -1,0 +1,39 @@
+uc: "オーナーを登録する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+
+models:
+  - name: "OwnerRegistrationState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "オーナー情報"
+  - name: "CreateOwnerRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "オーナー情報"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    operations:
+      - type: "INSERT"
+        columns:
+          - name: "owner_id"
+            value: "UUID自動生成"
+          - name: "name"
+            value: "リクエストの氏名"
+          - name: "email"
+            value: "リクエストのメールアドレス"
+          - name: "current_status"
+            value: "申請中"
+        where: ""
+    indexes_needed:
+      - columns:
+          - "email"
+        reason: "メールアドレスの一意性チェック"
+        access_pattern: "登録時の重複チェック"
+
+kvs: []
+object_storage: []

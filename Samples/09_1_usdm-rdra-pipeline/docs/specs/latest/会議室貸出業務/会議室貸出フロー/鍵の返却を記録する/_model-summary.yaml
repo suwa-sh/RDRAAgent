@@ -1,0 +1,21 @@
+uc: "鍵の返却を記録する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+models:
+  - name: "ViewModel"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "鍵"
+tables:
+  - name: "鍵"
+    rdra_info: "鍵"
+    operations:
+      - type: "INSERT"
+        columns:
+          - name: "id"
+            value: "主キー"
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

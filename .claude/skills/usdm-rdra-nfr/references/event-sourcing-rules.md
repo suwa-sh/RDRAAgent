@@ -1,74 +1,143 @@
 # NFR イベントソーシングルール
 
 NFR グレードの変更をイベントとして記録し、スナップショットを逐次更新する方式。
-基本概念は usdm-rdra のイベントソーシングルールと同一。
+差分イベント + latest マージ方式を採用する。
 
 ## 基本概念
 
 ```
-events/        — 変更差分の履歴（追記のみ、不変）
-latest/        — 現在の最新状態（スナップショット）
+events/        — 差分イベント履歴（変更メトリクスのみ。追記のみ、不変）
+latest/        — 最新スナップショット（実ディレクトリ。差分をマージした結果）
 ```
 
 - `events/` 配下のファイルは一度書き込んだら変更・削除しない（イミュータブル）
-- `latest/` は `events/` を順に適用した結果と常に一致する
-- 新しい変更は必ず `events/` にイベントとして記録してから `latest/` を更新する
+- `latest/` は実ディレクトリであり、差分イベントをマージした結果を保持する
+- 新しい変更は `events/` に差分イベントとして記録してから `latest/` にマージする
 
 ## ディレクトリ構成
 
 ```
 docs/nfr/
   events/{event_id}/
-    nfr-grade.yaml       # この変更での NFR グレード（全カテゴリ含む完全版）
-    _inference.md         # 推論根拠サマリ
-    source.txt            # トリガー説明のコピー
+    nfr-grade-diff.yaml    # 変更メトリクスのみ（差分）
+    _changes.md            # 変更サマリ（何を追加/変更/削除したか）
+    _inference.md          # 推論根拠サマリ
+    source.txt             # トリガー説明
   latest/
-    nfr-grade.yaml        # 最新スナップショット
+    nfr-grade.yaml         # 全メトリクスの完全版（マージ結果）
+    nfr-grade.md           # Markdown 表現
 ```
 
 ## イベント ID
 
 - 形式: `{YYYYMMDD_HHMMSS}_{変更名}`
+- **日時部分は `date '+%Y%m%d_%H%M%S'` コマンドで取得する。LLM が日時を推測してはならない**
+- `created_at` 等のタイムスタンプも `date '+%Y-%m-%dT%H:%M:%S'` コマンドで取得する
 - 変更名は変更内容を表す短い snake_case の名前
-- RDRA の差分更新に起因する場合は RDRA のイベント ID を変更名に含める
 - 例:
   - 初期構築: `20260327_100000_initial_nfr`
-  - RDRA 差分起因: `20260327_150000_nfr_update_for_20260327_143000_add_reservation`
+  - RDRA 差分起因: `20260327_150000_nfr_update_for_reservation`
+
+## トリガーイベント
+
+各イベントには前段スキルのイベントIDを記録する:
+
+- `trigger_event`: 前段イベントID（例: `rdra:20260327_143000_add_reservation`）
+- `_changes.md` および `nfr-grade-diff.yaml` のメタデータに記録する
 
 ## イベントの構成
 
-各イベントディレクトリには、その時点の NFR グレード全体を含める（差分ではなく全量）。
-これは NFR グレードが全体の整合性を持つ必要があるため。
+各イベントディレクトリには、**変更があった NFR メトリクスのみ**を含める（差分イベント）。
 
-### NFR イベント
+### nfr-grade-diff.yaml
 
+変更メトリクスのみを含む。メトリクスは `category` + `subcategory` + `metric_id` で照合する。
+
+```yaml
+meta:
+  event_id: "{event_id}"
+  trigger_event: "rdra:{rdra_event_id}"
+  created_at: "2026-03-27T15:00:00"
+categories:
+  - category: "可用性"
+    subcategory: "継続性"
+    metrics:
+      - metric_id: "availability_target"
+        grade: "C"
+        target: "99.9%"
+        rationale: "予約システムは業務時間内の可用性が重要"
 ```
-docs/nfr/events/{event_id}/
-  nfr-grade.yaml       # 全カテゴリの完全な NFR グレード
-  _inference.md         # 推論根拠サマリ（どのRDRA要素からどう推論したか）
-  source.txt            # トリガー説明テキスト
+
+### _changes.md
+
+```markdown
+# 変更サマリ
+
+- event_id: {event_id}
+- trigger_event: rdra:{rdra_event_id}
+
+## 追加
+- 可用性/継続性/availability_target: 予約システム向け可用性目標を追加
+
+## 変更
+- 性能/応答時間/response_time: グレード B → C に変更（予約照会の応答要件緩和）
+
+## 削除
+- なし
 ```
+
+### source.txt
+
+トリガー説明テキスト。
 
 ## スナップショット更新ルール
 
-### NFR スナップショット
+### latest へのマージ
 
-- `latest/nfr-grade.yaml` をイベントの `nfr-grade.yaml` で **丸ごと上書き** する
-- NFR グレードは全カテゴリの整合性が重要なため、部分マージではなく全量置換とする
-- 上書き前に既存の `latest/nfr-grade.yaml` が存在する場合は、内容が実際に変更されたことを確認する
+イベント確定後、`latest/nfr-grade.yaml` に差分をマージする:
+
+- **マージキー**: メトリクスの `category` + `subcategory` + `metric_id`
+- **追加**: latest に存在しないメトリクスを追加
+- **変更**: 同一キーのメトリクスの `grade` / `target` / `rationale` を上書き
+- **削除**: `_changes.md` に削除と記載されたメトリクスを latest から除去
+- **ユーザー確定値の保護**: `confidence: "user"` のメトリクスは差分更新で上書きしない
+
+マージ後、`nfr-grade.md` を再生成する。
+
+### マージ手順
+
+```bash
+# 1. latest/nfr-grade.yaml を読み込み
+# 2. events/{event_id}/nfr-grade-diff.yaml の各メトリクスを照合
+# 3. confidence: "user" でないメトリクスのみ追加/上書き
+# 4. _changes.md の削除セクションに記載されたメトリクスを除去
+# 5. latest/nfr-grade.yaml を書き出し
+# 6. latest/nfr-grade.md を再生成
+```
+
+## 初期構築時の扱い
+
+`docs/nfr/latest/` が空（または存在しない）場合は初期構築モードとなる:
+
+1. RDRA モデルから全メトリクスを推論する
+2. 全量を `nfr-grade.yaml`（差分ファイル名ではなく完全版）として `events/{event_id}/` に記録する
+3. 同じ内容を `latest/nfr-grade.yaml` にコピーする
+4. 初期構築イベントの `_changes.md` には全メトリクスを「追加」として記載する
+5. 以後の更新は差分イベント方式で動作する
 
 ## 差分更新モードの動作
 
 既存の NFR グレードがある状態で RDRA が更新された場合:
 
-1. RDRA の差分（`docs/rdra/events/{rdra_event_id}/_changes.md`）を読み取る
-2. 変更された RDRA 要素に関連する NFR 項目のみを再推論する
-3. 既存の NFR グレード（`docs/nfr/latest/nfr-grade.yaml`）をベースに、再推論結果で該当項目を更新する
-4. 更新結果を新しいイベントとして記録する
-5. スナップショットを更新する
+1. 前段 RDRA イベントの `_changes.md`（`docs/rdra/events/{rdra_event_id}/_changes.md`）を読み取る
+2. 変更された RDRA 要素に関連する NFR メトリクスのみを再推論する
+3. 再推論結果を `nfr-grade-diff.yaml` として新イベントに記録する
+4. `latest/nfr-grade.yaml` に差分をマージする
+5. `confidence: "user"` のメトリクスはスキップする（ユーザー確定値を保護）
 
 ## 注意事項
 
 - NFR グレードは RDRA モデル + ユーザー対話の結果であるため、RDRA が更新されても自動更新しない
 - RDRA 更新後に NFR の再評価が必要かはユーザーが判断する
 - イベントは時系列順に適用すること（event_id のソートで時系列が保証される）
+- latest/ のファイルを直接手動編集した場合、events/ との整合性が崩れる — その場合は手動編集もイベントとして記録する

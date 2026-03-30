@@ -1,0 +1,138 @@
+schema_version: "1.0"
+artifact_type: "vendor_mapping"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-mapping-aws"
+title: "貸し会議室サービス AWS サービスマッピング"
+status: "draft"
+generated_at: "2026-03-30T11:32:05+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-compute-model"
+  - "product-decision-database-selection"
+  - "product-decision-cache-strategy"
+inputs_ref:
+  - "product-kashikaigishitsu-workload-model"
+  - "foundation-context"
+  - "shared-platform-context"
+
+vendor: "aws"
+canonical_ref: "product-kashikaigishitsu-workload-model"
+
+mappings:
+  - canonical_element_id: "compute_frontend"
+    vendor_service: "Amazon EKS (Next.js コンテナ)"
+    vendor_feature: "EKS Managed Node Groups + Karpenter によるオートスケーリング"
+    fidelity: "exact"
+    configuration_notes: "共有プラットフォームの EKS クラスタ上に Next.js コンテナをデプロイ。SSR は Node.js コンテナで処理。静的アセットは CloudFront 経由で配信"
+    gap_description: ""
+    alternatives:
+      - "AWS App Runner（簡易デプロイだがカスタマイズ性が制限される）"
+      - "AWS Lambda + Lambda@Edge（SSR のコールドスタート課題）"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - canonical_element_id: "api_gateway"
+    vendor_service: "Amazon API Gateway (REST API)"
+    vendor_feature: "JWT オーソライザー、WAF 統合、使用量プラン（レート制限）"
+    fidelity: "exact"
+    configuration_notes: "API Gateway REST API で JWT 検証を一元化。AWS WAF を前段に統合し OWASP Top 10 マネージドルールを適用。使用量プランで ロール別レート制限を設定"
+    gap_description: ""
+    alternatives:
+      - "Application Load Balancer + WAF（JWT 検証は自前実装が必要）"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - canonical_element_id: "compute_backend"
+    vendor_service: "Amazon EKS (NestJS コンテナ)"
+    vendor_feature: "EKS Pod Identity、HPA、Readiness/Liveness Probe"
+    fidelity: "exact"
+    configuration_notes: "共有プラットフォームの EKS クラスタ上にデプロイ。HPA で CPU/メモリベースの水平スケーリング。Pod Identity でAWS サービスへの認証。Namespace でテナント分離"
+    gap_description: ""
+    alternatives:
+      - "AWS Fargate（ノード管理不要だが、共有プラットフォームが Managed Node Groups を提供するため不採用）"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - canonical_element_id: "compute_worker"
+    vendor_service: "Amazon EKS CronJob"
+    vendor_feature: "Kubernetes CronJob、concurrencyPolicy: Forbid"
+    fidelity: "exact"
+    configuration_notes: "月末精算バッチを CronJob として実行。concurrencyPolicy: Forbid で同時実行を防止。Job の完了/失敗を監視しアラート"
+    gap_description: ""
+    alternatives:
+      - "AWS Step Functions + Lambda（長時間バッチには Lambda のタイムアウト制約がある）"
+      - "AWS Batch（EKS が既にあるため追加サービスは不要）"
+    source_refs: []
+
+  - canonical_element_id: "database_primary"
+    vendor_service: "Amazon RDS for PostgreSQL"
+    vendor_feature: "マルチ AZ 同期レプリケーション、自動バックアップ（最大 35 日リテンション）、KMS 暗号化"
+    fidelity: "exact"
+    configuration_notes: "PostgreSQL 16 以上。db.r6g.large で開始し、負荷に応じてスケールアップ。マルチ AZ 配置で同期レプリケーション。自動バックアップ 35 日リテンション。KMS CMK で保管時暗号化。接続プール上限 200（pg_bouncer またはアプリケーション側プーリング推奨）"
+    gap_description: ""
+    alternatives:
+      - "Amazon Aurora PostgreSQL（より高い可用性が必要な場合に検討）"
+    source_refs:
+      - "aws-rds-postgresql"
+
+  - canonical_element_id: "cache"
+    vendor_service: "Amazon ElastiCache for Redis"
+    vendor_feature: "マルチ AZ レプリケーション、自動フェイルオーバー、保管時暗号化"
+    fidelity: "exact"
+    configuration_notes: "Redis 7 以上。cache.r6g.large で開始。マルチ AZ 配置でレプリカ 1 台。セッション情報と冪等キーを TTL 付きで管理。TLS 転送中暗号化、KMS 保管時暗号化を有効化"
+    gap_description: ""
+    alternatives:
+      - "Amazon ElastiCache Serverless for Redis（コスト効率が良いが接続数制限あり）"
+    source_refs:
+      - "aws-elasticache-redis"
+
+  - canonical_element_id: "message_queue"
+    vendor_service: "Amazon SQS"
+    vendor_feature: "標準キュー、デッドレターキュー、メッセージ保持期間 14 日"
+    fidelity: "exact"
+    configuration_notes: "標準キューで at-least-once デリバリー。デッドレターキューを設定し 3 回失敗で DLQ に移動。可視性タイムアウト 30 分（精算処理の最大実行時間に合わせる）"
+    gap_description: ""
+    alternatives:
+      - "Amazon EventBridge（イベント駆動が主要な場合）"
+    source_refs: []
+
+  - canonical_element_id: "cdn"
+    vendor_service: "Amazon CloudFront"
+    vendor_feature: "HTTPS 強制、OAC（Origin Access Control）、キャッシュポリシー"
+    fidelity: "exact"
+    configuration_notes: "HTTPS のみ配信を強制。OAC で S3 オリジンを保護。静的アセットにキャッシュポリシーを設定（max-age: 1 年、immutable）。API リクエストはキャッシュ無効化"
+    gap_description: ""
+    alternatives: []
+    source_refs: []
+
+  - canonical_element_id: "idp"
+    vendor_service: "Amazon Cognito"
+    vendor_feature: "ユーザープール、OAuth2/OIDC、MFA、ソーシャルログイン"
+    fidelity: "exact"
+    configuration_notes: "ユーザープールで 3 ロール（利用者・オーナー・運営）をグループで管理。MFA 設定で TOTP/SMS を選択可能。カスタム属性でロール情報を保持。JWT トークンのカスタムクレームにロールを含める"
+    gap_description: ""
+    alternatives:
+      - "Auth0（より高度なカスタマイズが必要な場合）"
+      - "Foundation の Azure Entra ID（社内ユーザー向けのため外部ユーザー向けには不適）"
+    source_refs: []
+
+  - canonical_element_id: "external_payment"
+    vendor_service: "アプリケーション内実装（NestJS アダプタ）"
+    vendor_feature: "サーキットブレーカー（opossum 等）、冪等キー管理、指数バックオフリトライ"
+    fidelity: "exact"
+    configuration_notes: "外部決済 API との連携はアプリケーションコード内で実装。AWS サービスに直接対応するものはないが、VPC 内からのアウトバウンド通信は NAT Gateway 経由。通信は TLS 必須"
+    gap_description: ""
+    alternatives: []
+    source_refs: []
+
+  - canonical_element_id: "observability_stack"
+    vendor_service: "共有プラットフォーム統合オブザーバビリティ（Amazon Managed Prometheus + Amazon Managed Grafana + CloudWatch Logs + AWS X-Ray）"
+    vendor_feature: "ADOT Collector、構造化 JSON ログ、分散トレーシング、Grafana ダッシュボード"
+    fidelity: "exact"
+    configuration_notes: "共有プラットフォームの svc-observability を使用。メトリクスは ADOT Collector（DaemonSet）で収集し Managed Prometheus に送信。ログは CloudWatch Logs に構造化 JSON で出力（90 日保持 + S3 アーカイブ 1 年）。トレースは X-Ray + ADOT Collector。可視化は Managed Grafana"
+    gap_description: ""
+    alternatives: []
+    source_refs: []

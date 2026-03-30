@@ -1,0 +1,46 @@
+uc: "精算を実行する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+models:
+  - name: "SettlementExecutionView"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "精算情報"
+  - name: "ExecuteSettlementCommand"
+    tier: "tier-backend-api"
+    layer: "ユースケース層"
+    type: "command"
+    rdra_info: "精算情報"
+  - name: "Settlement"
+    tier: "tier-backend-api"
+    layer: "ドメイン層"
+    type: "entity"
+    rdra_info: "精算情報"
+  - name: "SettlementExecuteMessage"
+    tier: "tier-worker"
+    layer: "プレゼンテーション層"
+    type: "request"
+    rdra_info: "精算情報"
+tables:
+  - name: "settlements"
+    rdra_info: "精算情報"
+    operations:
+      - type: "UPDATE"
+        columns:
+          - name: "status"
+            value: "処理中→完了/失敗"
+          - name: "executed_at"
+            value: "精算実行日時"
+          - name: "payment_ref"
+            value: "決済機関取引参照番号"
+        where: "WHERE id = ? AND status = 計算済み"
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キーアクセス"
+        access_pattern: "WHERE id = ?"
+      - columns: ["owner_id", "target_month"]
+        reason: "オーナー別月次精算取得"
+        access_pattern: "WHERE owner_id = ? AND target_month = ?"
+kvs: []
+object_storage: []

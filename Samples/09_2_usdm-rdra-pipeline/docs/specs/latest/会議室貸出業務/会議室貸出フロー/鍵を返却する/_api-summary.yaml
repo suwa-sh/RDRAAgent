@@ -1,0 +1,17 @@
+uc: "鍵を返却する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations/:id/key/return"
+    summary: "鍵返却"
+    request_schema: ""
+    response_schema: "KeyResponse"
+    tags:
+      - "会議室貸出フロー"
+schemas:
+  - name: "KeyResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

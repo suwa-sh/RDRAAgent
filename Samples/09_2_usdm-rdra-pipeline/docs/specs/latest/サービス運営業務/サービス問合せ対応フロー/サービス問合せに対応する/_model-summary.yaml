@@ -1,0 +1,26 @@
+uc: "サービス問合せに対応する"
+business: "サービス運営業務"
+buc: "サービス問合せ対応フロー"
+
+models:
+  - name: "サービス問合せに対応するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "問合せ"
+  - name: "CreateReplyRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "問合せ"
+
+tables:
+  - name: "inquiries"
+    rdra_info: "問合せ"
+    operations:
+      - type: "UPDATE"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

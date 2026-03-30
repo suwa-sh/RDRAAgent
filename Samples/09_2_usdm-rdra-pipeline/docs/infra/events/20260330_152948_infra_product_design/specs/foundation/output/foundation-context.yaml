@@ -1,0 +1,14 @@
+schema_version: "1.0"
+artifact_type: "context"
+skill_type: "foundation"
+artifact_id: "foundation-context"
+title: "基盤 コンテキスト（最小構成）"
+status: "draft"
+generated_at: "2026-03-30T15:29:48"
+source_refs: []
+decision_refs: []
+
+organization_structure:
+  target_clouds:
+    - name: "aws"
+      scope: "full_stack"

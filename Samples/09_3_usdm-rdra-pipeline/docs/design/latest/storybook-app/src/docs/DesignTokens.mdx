@@ -1,0 +1,109 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Docs/DesignTokens" />
+
+# Design Tokens
+
+RoomConnect のデザイントークンは 3 層構造: **Primitive** → **Semantic** → **Component**
+
+## カラーパレット (Primitive)
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>HEX</th><th>Preview</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>var(--color-blue-600)</code></td><td>#2563EB</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#2563EB', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-teal-600)</code></td><td>#0D9488</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#0D9488', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-slate-700)</code></td><td>#334155</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#334155', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-green-600)</code></td><td>#16A34A</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#16A34A', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-amber-600)</code></td><td>#D97706</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#D97706', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-red-600)</code></td><td>#DC2626</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#DC2626', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-violet-600)</code></td><td>#7C3AED</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#7C3AED', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-gray-50)</code></td><td>#F8FAFC</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#F8FAFC', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-gray-100)</code></td><td>#F1F5F9</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#F1F5F9', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-gray-200)</code></td><td>#E2E8F0</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#E2E8F0', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-gray-500)</code></td><td>#64748B</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#64748B', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-gray-900)</code></td><td>#0F172A</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#0F172A', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--color-gray-950)</code></td><td>#020617</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#020617', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+  </tbody>
+</table>
+
+## Semantic Tokens
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Light</th><th>Dark</th><th>Preview (Light)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>var(--background)</code></td><td>#FFFFFF</td><td>#020617</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--background)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--foreground)</code></td><td>#0F172A</td><td>#F1F5F9</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--foreground)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--border)</code></td><td>#E2E8F0</td><td>#1E293B</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--border)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--primary)</code></td><td>Portal dependent</td><td>Portal dependent</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--primary)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--success)</code></td><td>#16A34A</td><td>#22C55E</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--success)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--warning)</code></td><td>#D97706</td><td>#F59E0B</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--warning)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--destructive)</code></td><td>#DC2626</td><td>#EF4444</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--destructive)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td><code>var(--info)</code></td><td>#2563EB</td><td>#3B82F6</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--info)', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+  </tbody>
+</table>
+
+## ポータル別カラー
+
+<table>
+  <thead>
+    <tr><th>ポータル</th><th>Token</th><th>Light</th><th>Dark</th><th>Preview</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>User</td><td><code>var(--primary)</code></td><td>#2563EB</td><td>#3B82F6</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#2563EB', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td>Owner</td><td><code>var(--primary)</code></td><td>#0D9488</td><td>#14B8A6</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#0D9488', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+    <tr><td>Admin</td><td><code>var(--primary)</code></td><td>#334155</td><td>#64748B</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: '#334155', border: '1px solid #ccc', borderRadius: 2 }} /></td></tr>
+  </tbody>
+</table>
+
+## Spacing
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Value</th><th>Preview</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>var(--spacing-1)</code></td><td>4px</td><td><span style={{ display: 'inline-block', width: 4, height: 16, backgroundColor: 'var(--primary)', borderRadius: 1 }} /></td></tr>
+    <tr><td><code>var(--spacing-2)</code></td><td>8px</td><td><span style={{ display: 'inline-block', width: 8, height: 16, backgroundColor: 'var(--primary)', borderRadius: 1 }} /></td></tr>
+    <tr><td><code>var(--spacing-3)</code></td><td>12px</td><td><span style={{ display: 'inline-block', width: 12, height: 16, backgroundColor: 'var(--primary)', borderRadius: 1 }} /></td></tr>
+    <tr><td><code>var(--spacing-4)</code></td><td>16px</td><td><span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--primary)', borderRadius: 1 }} /></td></tr>
+    <tr><td><code>var(--spacing-6)</code></td><td>24px</td><td><span style={{ display: 'inline-block', width: 24, height: 16, backgroundColor: 'var(--primary)', borderRadius: 1 }} /></td></tr>
+    <tr><td><code>var(--spacing-8)</code></td><td>32px</td><td><span style={{ display: 'inline-block', width: 32, height: 16, backgroundColor: 'var(--primary)', borderRadius: 1 }} /></td></tr>
+    <tr><td><code>var(--spacing-12)</code></td><td>48px</td><td><span style={{ display: 'inline-block', width: 48, height: 16, backgroundColor: 'var(--primary)', borderRadius: 1 }} /></td></tr>
+  </tbody>
+</table>
+
+## Typography
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Size</th><th>Preview</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>var(--font-size-xs)</code></td><td>0.75rem</td><td><span style={{ fontSize: '0.75rem' }}>ABCあいう123</span></td></tr>
+    <tr><td><code>var(--font-size-sm)</code></td><td>0.875rem</td><td><span style={{ fontSize: '0.875rem' }}>ABCあいう123</span></td></tr>
+    <tr><td><code>var(--font-size-base)</code></td><td>1rem</td><td><span style={{ fontSize: '1rem' }}>ABCあいう123</span></td></tr>
+    <tr><td><code>var(--font-size-lg)</code></td><td>1.125rem</td><td><span style={{ fontSize: '1.125rem' }}>ABCあいう123</span></td></tr>
+    <tr><td><code>var(--font-size-xl)</code></td><td>1.25rem</td><td><span style={{ fontSize: '1.25rem' }}>ABCあいう123</span></td></tr>
+    <tr><td><code>var(--font-size-2xl)</code></td><td>1.5rem</td><td><span style={{ fontSize: '1.5rem' }}>ABCあいう123</span></td></tr>
+  </tbody>
+</table>
+
+## Border Radius
+
+<table>
+  <thead>
+    <tr><th>Token</th><th>Value</th><th>Preview</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>var(--radius-sm)</code></td><td>4px</td><td><span style={{ display: 'inline-block', width: 32, height: 32, backgroundColor: 'var(--primary)', borderRadius: 4 }} /></td></tr>
+    <tr><td><code>var(--radius-md)</code></td><td>8px</td><td><span style={{ display: 'inline-block', width: 32, height: 32, backgroundColor: 'var(--primary)', borderRadius: 8 }} /></td></tr>
+    <tr><td><code>var(--radius-lg)</code></td><td>12px</td><td><span style={{ display: 'inline-block', width: 32, height: 32, backgroundColor: 'var(--primary)', borderRadius: 12 }} /></td></tr>
+    <tr><td><code>var(--radius-xl)</code></td><td>16px</td><td><span style={{ display: 'inline-block', width: 32, height: 32, backgroundColor: 'var(--primary)', borderRadius: 16 }} /></td></tr>
+    <tr><td><code>var(--radius-full)</code></td><td>9999px</td><td><span style={{ display: 'inline-block', width: 32, height: 32, backgroundColor: 'var(--primary)', borderRadius: 9999 }} /></td></tr>
+  </tbody>
+</table>

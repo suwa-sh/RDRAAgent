@@ -1,0 +1,27 @@
+uc: "運用ルールを設定する"
+business: "会議室管理業務"
+buc: "会議室登録フロー"
+
+models:
+  - name: "運用ルールを設定するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "運用ルール"
+  - name: "運用ルールを設定するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "運用ルール"
+
+tables:
+  - name: "operation_rules"
+    rdra_info: "運用ルール"
+    operations:
+      - type: "UPDATE"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる運用ルール取得"

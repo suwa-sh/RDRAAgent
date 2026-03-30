@@ -1,0 +1,355 @@
+schema_version: "1.0"
+artifact_type: "canonical_model"
+skill_type: "product"
+artifact_id: "product-kashi-kaigishitsu-workload-model"
+title: "貸し会議室サービス ワークロードモデル"
+status: "draft"
+generated_at: "2026-03-30T18:34:00"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-001"
+  - "product-decision-002"
+  - "product-decision-003"
+inputs_ref:
+  - "foundation-context"
+  - "shared-platform-context"
+  - "product-kashi-kaigishitsu-service-input"
+
+workload_characteristics:
+  workload_type: "web_app"
+  description: "C2C 会議室シェアリングサービス。利用者・オーナー・運営担当者の3アクターが利用する Web アプリケーション。月末精算バッチ処理を含む。"
+
+  availability_target:
+    sla: "99%"
+    failover: "warm_standby"
+    rationale: "NFR A.1.1.1 (Lv3: 23h運用) + A.2.1.1 (Lv3: N+1冗長) から 99% SLA。A.1.2.1 (Lv3: 60分未満切替) から warm_standby。"
+
+  latency_sensitivity:
+    category: "interactive"
+    target_p99: "500ms"
+    rationale: "NFR B.2.1.1 (Lv3: 5秒以内) から p99=500ms。会議室検索・予約はインタラクティブ操作。"
+
+  data_sensitivity:
+    classification: "restricted"
+    pii: true
+    encryption: "in_transit_only"
+    compliance: []
+    data_residency: "none"
+    rationale: "オーナー情報・利用者情報に氏名・メール・電話番号の PII を含む。決済はカード情報を自システムで保持しない外部委託のため PCI DSS 対象外。"
+
+  traffic_pattern:
+    type: "steady"
+    baseline_rps: 50
+    spike_multiplier: 2
+    rationale: "NFR B.2.1.2 (Lv3: ~100 TPS) から baseline_rps=50。NFR B.1.2.1 (Lv2: 通常2倍) から spike_multiplier=2。定常的なトラフィックパターン。"
+
+  consistency_needs:
+    type: "strong"
+    rationale: "予約・決済・精算に関わるエンティティ群が event_snapshot モデルを採用しており、金銭取引のトランザクション整合性が必須。"
+
+  recovery_target:
+    rpo: "24h"
+    rto: "4h"
+    backup: "daily"
+    rationale: "NFR A.4.1.1 RPO (Lv2: 数時間前) -> 24h、NFR A.4.1.2 RTO (Lv3: 2時間以内) -> 4h、NFR C.1.2.1 バックアップ (Lv2: 日次) -> daily。"
+
+  observability_needs:
+    metrics:
+      - "cpu"
+      - "memory"
+      - "disk"
+      - "network"
+      - "latency"
+      - "error_rate"
+      - "throughput"
+    logs:
+      - "access"
+      - "audit"
+      - "diagnostic"
+      - "dependency"
+    sli:
+      - "availability"
+      - "latency"
+      - "error_rate"
+      - "throughput"
+    alerting:
+      - "health_check"
+      - "error_rate"
+      - "latency_p99"
+    rationale: "NFR C.1.3.1 (Lv3: アプリケーション監視) + C.6.1.2 (Lv3: 全ログ種別) から包括的なオブザーバビリティ。"
+
+  cost_posture:
+    strategy: "balanced"
+    rationale: "可用性平均グレード ~2.3、性能平均グレード ~2.6。両方 3 未満のため balanced を採用。"
+
+elements:
+  - id: "product.compute.web_frontend"
+    name: "Web フロントエンド"
+    category: "compute"
+    description: "利用者・オーナー・運営担当者向けの SSR/SPA ハイブリッド Web UI。レスポンシブデザインでモバイル・デスクトップ両対応。"
+    requirements:
+      - id: "REQ-FE-001"
+        description: "SSR による初回表示高速化（5秒以内）"
+        priority: "must"
+        rationale: "NFR B.2.1.1 レスポンスタイム Lv3"
+      - id: "REQ-FE-002"
+        description: "主要ブラウザおよびモバイルブラウザ対応"
+        priority: "must"
+        rationale: "NFR F.1.1.2 対応ブラウザ"
+      - id: "REQ-FE-003"
+        description: "CDN によるスタティックアセット配信"
+        priority: "should"
+        rationale: "レスポンスタイム最適化"
+    constraints:
+      - "Next.js フレームワーク使用"
+      - "TypeScript のみ"
+    dependencies:
+      - "product.compute.api_gateway"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.compute.api_gateway"
+    name: "API Gateway"
+    category: "compute"
+    description: "認証トークン検証、粗粒度 RBAC、レート制限、WAF 統合を行うリクエストルーティング層。"
+    requirements:
+      - id: "REQ-GW-001"
+        description: "JWT/OAuth2 トークン検証の一元化"
+        priority: "must"
+        rationale: "外部アクター3種の認証を集約"
+      - id: "REQ-GW-002"
+        description: "API レート制限（ティア別）"
+        priority: "must"
+        rationale: "過負荷防止"
+      - id: "REQ-GW-003"
+        description: "WAF 統合（OWASP Top10 防御）"
+        priority: "must"
+        rationale: "NFR E.10.1.1 WAF Lv2"
+    constraints:
+      - "IP アドレス制限（管理画面 API）"
+    dependencies:
+      - "product.identity.idp"
+      - "product.compute.backend_api"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.identity.idp"
+    name: "マネージド IdP"
+    category: "identity"
+    description: "OAuth2/OIDC ベースの認証基盤。トークン発行・ユーザー登録・パスワードリセット・MFA 管理。"
+    requirements:
+      - id: "REQ-IDP-001"
+        description: "OAuth2/OIDC プロトコル対応"
+        priority: "must"
+        rationale: "NFR E.5.1.1 認証方式"
+      - id: "REQ-IDP-002"
+        description: "パスワードポリシー（複雑性・有効期限）"
+        priority: "must"
+        rationale: "NFR E.5.1.1 Lv2"
+      - id: "REQ-IDP-003"
+        description: "不正ログイン検知・通知"
+        priority: "should"
+        rationale: "NFR E.7.2.1 不正監視 Lv2"
+    constraints: []
+    dependencies: []
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.compute.backend_api"
+    name: "バックエンド API"
+    category: "compute"
+    description: "ビジネスロジック実行 API サーバー。7業務・約30UC のビジネスフローを処理。CaaS(k8s) 上で動作。"
+    requirements:
+      - id: "REQ-API-001"
+        description: "水平スケーリング対応（~100 TPS、ピーク時2倍）"
+        priority: "must"
+        rationale: "NFR B.1.1.1 + B.1.2.1 + B.2.1.2"
+      - id: "REQ-API-002"
+        description: "Readiness/Liveness ヘルスチェック"
+        priority: "must"
+        rationale: "NFR A.1.1.1 + A.2.1.1"
+      - id: "REQ-API-003"
+        description: "冪等キーによる重複リクエスト防止"
+        priority: "must"
+        rationale: "金銭取引の二重処理防止"
+      - id: "REQ-API-004"
+        description: "構造化ログ（JSON 形式、trace_id/span_id 必須）"
+        priority: "must"
+        rationale: "NFR C.1.3.1 + C.6.1.2"
+    constraints:
+      - "Hono フレームワーク使用"
+      - "TypeScript のみ"
+    dependencies:
+      - "product.database.rdb"
+      - "product.cache.kvs"
+      - "product.external.payment"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.compute.batch_worker"
+    name: "バッチワーカー"
+    category: "compute"
+    description: "月末精算バッチ処理。CronJob(k8s) または FaaS で実行。"
+    requirements:
+      - id: "REQ-WK-001"
+        description: "8時間以内のバッチ処理完了"
+        priority: "must"
+        rationale: "NFR B.2.2.1 バッチ処理時間 Lv2"
+      - id: "REQ-WK-002"
+        description: "ジョブ実行 ID による冪等性確保"
+        priority: "must"
+        rationale: "二重精算防止"
+      - id: "REQ-WK-003"
+        description: "個別オーナー精算のトランザクション分離"
+        priority: "must"
+        rationale: "個別エラーがバッチ全体を停止させない"
+    constraints: []
+    dependencies:
+      - "product.database.rdb"
+      - "product.external.payment"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.database.rdb"
+    name: "リレーショナルデータベース"
+    category: "database"
+    description: "メインデータストア。14エンティティの永続化、トランザクション整合性保証、ACID 準拠。"
+    requirements:
+      - id: "REQ-DB-001"
+        description: "PostgreSQL 互換"
+        priority: "must"
+        rationale: "技術制約"
+      - id: "REQ-DB-002"
+        description: "日次フル+差分バックアップ、7世代保持"
+        priority: "must"
+        rationale: "NFR C.1.2.1 + C.1.2.3"
+      - id: "REQ-DB-003"
+        description: "個人情報カラムの保管時暗号化"
+        priority: "must"
+        rationale: "NFR E.6.1.1"
+      - id: "REQ-DB-004"
+        description: "ストレージ冗長化（RAID5 相当）"
+        priority: "must"
+        rationale: "NFR A.2.5.1 Lv2"
+      - id: "REQ-DB-005"
+        description: "RPO 24時間、RTO 4時間"
+        priority: "must"
+        rationale: "NFR A.4.1.1 + A.4.1.2"
+      - id: "REQ-DB-006"
+        description: "冪等キーカラム UNIQUE 制約"
+        priority: "must"
+        rationale: "データ層での重複処理防止"
+    constraints:
+      - "~1TB データ量想定"
+      - "接続プール管理が必要"
+    dependencies: []
+    source_refs:
+      - "aws-rds-postgresql"
+
+  - id: "product.cache.kvs"
+    name: "キャッシュ / セッションストア"
+    category: "cache"
+    description: "セッション情報の保管、冪等キー管理、API レスポンスキャッシュ。"
+    requirements:
+      - id: "REQ-CACHE-001"
+        description: "Redis 互換"
+        priority: "must"
+        rationale: "セッション管理・冪等キー管理の標準ストア"
+      - id: "REQ-CACHE-002"
+        description: "高可用性（レプリカ構成）"
+        priority: "should"
+        rationale: "セッション喪失防止"
+      - id: "REQ-CACHE-003"
+        description: "TTL ベースの自動期限切れ"
+        priority: "must"
+        rationale: "冪等キー・セッションの自動クリーンアップ"
+    constraints: []
+    dependencies: []
+    source_refs:
+      - "aws-elasticache-redis"
+
+  - id: "product.storage.object"
+    name: "オブジェクトストレージ"
+    category: "storage"
+    description: "会議室画像の保管。CDN 配信元として利用。"
+    requirements:
+      - id: "REQ-OBJ-001"
+        description: "画像ファイルの永続保管"
+        priority: "must"
+        rationale: "会議室情報の画像 URL"
+      - id: "REQ-OBJ-002"
+        description: "CDN 連携による高速配信"
+        priority: "should"
+        rationale: "レスポンスタイム最適化"
+    constraints: []
+    dependencies: []
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.cdn.distribution"
+    name: "CDN"
+    category: "network"
+    description: "静的アセット・画像のエッジ配信。"
+    requirements:
+      - id: "REQ-CDN-001"
+        description: "グローバルエッジでの静的コンテンツ配信"
+        priority: "should"
+        rationale: "レスポンスタイム最適化"
+      - id: "REQ-CDN-002"
+        description: "HTTPS 終端"
+        priority: "must"
+        rationale: "NFR E.6.1.2 全通信暗号化"
+    constraints: []
+    dependencies:
+      - "product.storage.object"
+      - "product.compute.web_frontend"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.external.payment"
+    name: "外部決済連携"
+    category: "integration"
+    description: "決済機関との連携アダプタ。冪等性・Circuit Breaker・指数バックオフリトライを実装。"
+    requirements:
+      - id: "REQ-EXT-001"
+        description: "冪等性確保（二重支払い防止）"
+        priority: "must"
+        rationale: "精算処理の安全性"
+      - id: "REQ-EXT-002"
+        description: "Circuit Breaker パターン"
+        priority: "must"
+        rationale: "連鎖障害防止"
+      - id: "REQ-EXT-003"
+        description: "指数バックオフリトライ（最大3回）"
+        priority: "must"
+        rationale: "一時的障害への耐性"
+    constraints:
+      - "カード情報は自システムを通過しない"
+    dependencies: []
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "product.security.network"
+    name: "ネットワークセキュリティ"
+    category: "security"
+    description: "DMZ/内部セグメント分離、ファイアウォール、IDS/IPS。"
+    requirements:
+      - id: "REQ-SEC-001"
+        description: "DMZ と内部セグメントの分離"
+        priority: "must"
+        rationale: "NFR E.8.3.1"
+      - id: "REQ-SEC-002"
+        description: "ステートフルインスペクション FW"
+        priority: "must"
+        rationale: "NFR E.8.1.1"
+      - id: "REQ-SEC-003"
+        description: "IPS インライン構成"
+        priority: "should"
+        rationale: "NFR E.8.2.1"
+    constraints: []
+    dependencies: []
+    source_refs:
+      - "aws-well-architected-framework"

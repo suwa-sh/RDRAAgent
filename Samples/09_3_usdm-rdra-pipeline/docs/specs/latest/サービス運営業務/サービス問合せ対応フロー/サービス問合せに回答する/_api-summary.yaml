@@ -1,0 +1,17 @@
+uc: "サービス問合せに回答する"
+business: "サービス運営業務"
+buc: "サービス問合せ対応フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/service-inquiries/{inquiry_id}/actions/reply"
+    summary: "利用者からのサービス問合せに対応する"
+    request_schema: "サービス問合せ回答Request"
+    response_schema: "サービス問合せ回答Response"
+    tags:
+      - "サービス運営業務"
+schemas:
+  - name: "サービス問合せ回答Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

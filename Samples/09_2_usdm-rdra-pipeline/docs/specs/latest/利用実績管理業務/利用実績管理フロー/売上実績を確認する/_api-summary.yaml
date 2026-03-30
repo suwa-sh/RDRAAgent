@@ -1,0 +1,17 @@
+uc: "売上実績を確認する"
+business: "利用実績管理業務"
+buc: "利用実績管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owners/me/revenue-stats"
+    summary: "売上実績取得"
+    request_schema: ""
+    response_schema: "RevenueStatsResponse"
+    tags:
+      - "利用実績管理フロー"
+schemas:
+  - name: "RevenueStatsResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

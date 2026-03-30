@@ -1,0 +1,89 @@
+asyncapi: "3.0.0"
+info:
+  title: "RoomConnect Async Events"
+  version: "1.0.0"
+  description: "貸し会議室サービス RoomConnect の非同期イベント仕様"
+servers:
+  production:
+    host: "sqs.ap-northeast-1.amazonaws.com"
+    protocol: "sqs"
+    description: "本番環境 SQS"
+channels:
+  settlement-request-queue:
+    address: "settlement-request-queue"
+    messages:
+      SettlementRequestMessage:
+        $ref: "#/components/messages/SettlementRequestMessage"
+    description: "決済機関への精算依頼キュー"
+  settlement-result-queue:
+    address: "settlement-result-queue"
+    messages:
+      SettlementResultMessage:
+        $ref: "#/components/messages/SettlementResultMessage"
+    description: "精算結果通知キュー"
+operations:
+  publishSettlementRequest:
+    action: send
+    channel:
+      $ref: "#/channels/settlement-request-queue"
+    summary: "精算依頼を送信する"
+    messages:
+      - $ref: "#/channels/settlement-request-queue/messages/SettlementRequestMessage"
+  receiveSettlementResult:
+    action: receive
+    channel:
+      $ref: "#/channels/settlement-result-queue"
+    summary: "精算結果を受信する"
+    messages:
+      - $ref: "#/channels/settlement-result-queue/messages/SettlementResultMessage"
+components:
+  messages:
+    SettlementRequestMessage:
+      name: "SettlementRequest"
+      title: "精算依頼メッセージ"
+      contentType: "application/json"
+      payload:
+        type: object
+        required:
+          - settlement_id
+          - owner_id
+          - amount
+          - month
+        properties:
+          settlement_id:
+            type: string
+            description: "精算ID"
+          owner_id:
+            type: string
+            description: "オーナーID"
+          amount:
+            type: number
+            description: "精算金額"
+          month:
+            type: string
+            description: "精算月"
+          trace_id:
+            type: string
+            description: "トレースID"
+    SettlementResultMessage:
+      name: "SettlementResult"
+      title: "精算結果メッセージ"
+      contentType: "application/json"
+      payload:
+        type: object
+        required:
+          - settlement_id
+          - status
+        properties:
+          settlement_id:
+            type: string
+            description: "精算ID"
+          status:
+            type: string
+            enum:
+              - "success"
+              - "failure"
+            description: "精算結果"
+          error_message:
+            type: string
+            description: "エラーメッセージ(失敗時)"

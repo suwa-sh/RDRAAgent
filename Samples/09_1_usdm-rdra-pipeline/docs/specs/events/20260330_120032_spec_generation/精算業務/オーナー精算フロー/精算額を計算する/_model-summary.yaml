@@ -1,0 +1,21 @@
+uc: "精算額を計算する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+models:
+  - name: "ViewModel"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "精算情報"
+tables:
+  - name: "精算情報"
+    rdra_info: "精算情報"
+    operations:
+      - type: "INSERT"
+        columns:
+          - name: "id"
+            value: "主キー"
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

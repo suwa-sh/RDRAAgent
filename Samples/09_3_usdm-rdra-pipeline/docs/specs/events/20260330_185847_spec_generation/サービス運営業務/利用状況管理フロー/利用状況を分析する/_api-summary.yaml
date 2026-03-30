@@ -1,0 +1,17 @@
+uc: "利用状況を分析する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/analytics/usage"
+    summary: "会議室の利用状況を統計的に分析する"
+    
+    response_schema: "利用状況分析Response"
+    tags:
+      - "サービス運営業務"
+schemas:
+  - name: "利用状況分析Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

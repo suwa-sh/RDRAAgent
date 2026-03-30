@@ -1,0 +1,72 @@
+schema_version: "1.0"
+artifact_type: "conformance_report"
+skill_type: "product"
+artifact_id: "product-conformance-aws"
+title: "貸し会議室サービス AWS 準拠レポート"
+status: "draft"
+generated_at: "2026-03-30T18:34:00"
+vendor: "aws"
+inputs_ref:
+  - "product-kashi-kaigishitsu-workload-model"
+  - "product-mapping-aws"
+  - "foundation-context"
+  - "shared-platform-context"
+
+overall_status: "conformant"
+
+foundation_conformance:
+  - requirement: "target_clouds: aws"
+    status: "conformant"
+    evidence: "全サービスが AWS ap-northeast-1 にデプロイ"
+
+workload_model_conformance:
+  - requirement: "availability_target.sla: 99%"
+    status: "conformant"
+    evidence: "ECS Fargate Multi-AZ + RDS Multi-AZ で 99% SLA を達成可能"
+
+  - requirement: "availability_target.failover: warm_standby"
+    status: "conformant"
+    evidence: "RDS Multi-AZ による warm_standby フェイルオーバー（~1-2分）"
+
+  - requirement: "latency_sensitivity.target_p99: 500ms"
+    status: "conformant"
+    evidence: "ALB + ECS Fargate の構成で p99 500ms 以内を達成可能。CloudFront による静的アセットキャッシュで更に改善"
+
+  - requirement: "data_sensitivity.pii: true"
+    status: "conformant"
+    evidence: "RDS ストレージ暗号化 (KMS)、TLS 通信、Cognito による認証"
+
+  - requirement: "data_sensitivity.encryption: in_transit_only"
+    status: "exceeds"
+    evidence: "RDS ストレージ暗号化により at-rest 暗号化も実装済み。要件を超過"
+
+  - requirement: "traffic_pattern.baseline_rps: 50"
+    status: "conformant"
+    evidence: "ECS Auto Scaling (2-8 タスク) で 50-100 RPS に対応"
+
+  - requirement: "consistency_needs.type: strong"
+    status: "conformant"
+    evidence: "RDS PostgreSQL の ACID トランザクションで強整合性を保証"
+
+  - requirement: "recovery_target.rpo: 24h"
+    status: "conformant"
+    evidence: "RDS 日次自動バックアップ（7日保持）で RPO 24h を達成"
+
+  - requirement: "recovery_target.rto: 4h"
+    status: "conformant"
+    evidence: "RDS Multi-AZ 自動フェイルオーバー + ECS タスク自動復旧で RTO 4h 以内"
+
+  - requirement: "observability_needs"
+    status: "conformant"
+    evidence: "CloudWatch メトリクス + ログ + X-Ray トレーシング + カスタムダッシュボード"
+
+  - requirement: "cost_posture.strategy: balanced"
+    status: "conformant"
+    evidence: "ARM64 採用 + Serverless キャッシュ + HTTP API で balanced を実現。月額 $800-1,500 見込み"
+
+deviations: []
+
+recommendations:
+  - "トラフィック増加時は ECS タスクの max_capacity を調整すること"
+  - "本番安定後に RDS リザーブドインスタンスと Savings Plans を適用すること"
+  - "監査ログの保持期間（365日）のコストを定期的にレビューすること"

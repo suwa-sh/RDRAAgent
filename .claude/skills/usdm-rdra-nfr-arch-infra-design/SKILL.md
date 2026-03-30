@@ -208,6 +208,18 @@ Logo SVG (3バリアント) と Icon SVG (ドメイン必要セット) を生成
 6. ドメイン特化コンポーネントを実装する
 7. 各コンポーネントの Stories を CSF3 形式で作成する
 8. MDX ドキュメントページを作成する（Introduction にロゴ表示）
+   - **Design Tokens MDX（必須）**: `src/docs/DesignTokens.mdx` を生成する。実装時に必ず参照されるため省略不可
+     - Primitive トークン一覧（カラーパレット: 色名 + HEX + プレビュー）
+     - Semantic トークン一覧（用途 + 参照先 primitive + light/dark 値）
+     - Component トークン一覧（コンポーネント名 + トークン名 + 値）
+     - Spacing スケール（値 + ビジュアルプレビュー）
+     - Typography スケール（フォント名 + サイズ + ウェイト + 行間）
+     - Border Radius（値 + ビジュアルプレビュー）
+     - ポータル別カラー（各ポータルの primary/accent + プレビュー）
+     - Dark Mode 対応トークン（light/dark 対比表）
+     - **CSS 変数名をそのまま表示する**（`var(--color-primary)` 等）ことで、実装者がコピー&ペーストで使える
+     - MDX では markdown テーブルが機能しないため `<table>` タグで直接記述する
+     - 色プレビューは `<span style={{ display: 'inline-block', width: 16, height: 16, backgroundColor: 'var(--token-name)', border: '1px solid #ccc', borderRadius: 2 }} />` で表示
 9. Logo/Icon SVG を `public/assets/` に配置し、コンポーネントから参照する:
    - Icon コンポーネントを作成 (`<Icon name="search" />` → `/assets/icons/search.svg`)
    - Logo/Icon カタログ Story を作成 (Brand/Logo, Brand/Icons)
@@ -255,13 +267,35 @@ Logo SVG (3バリアント) と Icon SVG (ドメイン必要セット) を生成
 
 **読み込み:** `references/event-sourcing-rules.md`
 
-1. イベント ID を生成する: `{YYYYMMDD_HHMMSS}_design_system`
-2. **latest/ → events/ にコピー** (latest/ で開発・検証済みのファイルが正):
-   - `docs/design/latest/` の全成果物を `docs/design/events/{event_id}/` にコピーする
-   - `source.txt` と `_inference.md` を `events/{event_id}/` に書き込む
-3. latest/ が events/{event_id}/ と一致することを確認する
+> **⚠ ハイブリッド方式**: design スキルは成果物ごとに扱いが異なる。
+> - `design-event.yaml` / `assets/` → **差分マージ**（events/ に差分を記録、latest/ にマージ）
+> - `storybook-app/` → **全量再ビルド**（events/ には含めない。latest/ でのみ管理）
 
-**注意**: 開発・修正は常に `latest/` で行い、完了後に `events/` にコピーする。逆方向（events/ を編集して latest/ にコピー）はしない。events/ は不変。
+#### 初期構築時
+
+1. イベント ID を生成する: `date '+%Y%m%d_%H%M%S'` コマンドでタイムスタンプを取得し `{YYYYMMDD_HHMMSS}_design_system` 形式で生成
+2. `events/{event_id}/` に記録する（storybook-app/ は含めない）:
+   - `design-event.yaml`（全量の完全版）
+   - `assets/`（Logo SVG + Icon SVG）
+   - `_changes.md`（全要素を「追加」として記載）
+   - `_inference.md`、`source.txt`
+3. `latest/` に以下を配置する:
+   - `design-event.yaml`、`design-event.md`、`assets/` → events/ からコピー
+   - `storybook-app/` → latest/ で開発・ビルド済みのものをそのまま維持
+
+#### 差分更新時
+
+1. イベント ID を生成する
+2. `events/{event_id}/` に差分を記録する:
+   - `design-event-diff.yaml`（変更要素のみ）
+   - `assets/`（追加/変更 SVG のみ。変更なければ省略）
+   - `_changes.md`、`_inference.md`、`source.txt`
+3. `latest/` を更新する:
+   - `design-event.yaml` ← 差分マージ（マージキーで照合）
+   - `assets/` ← 差分マージ（SVG 追加/上書き/削除）
+   - `storybook-app/` ← **全量再ビルド**（latest/design-event.yaml を入力として再生成 → `storybook build` で検証）
+
+**注意**: events/ は不変。storybook-app/ は events/ に含めない（全量再ビルドのため latest/ design-event.yaml から再現可能）。
 
 ### タスク完了時
 
@@ -280,8 +314,16 @@ Ctrl+C
 
 `references/event-sourcing-rules.md` に従う。要約:
 
+> **⚠ ハイブリッド方式**: 成果物ごとに扱いが異なる。SKILL.md を読む際はこの区別を意識すること。
+
+| 成果物 | 方式 | events/ に含む | latest/ の更新 |
+|--------|------|:-------------:|--------------|
+| `design-event.yaml` | **差分マージ** | `design-event-diff.yaml` | マージキーで照合・追加・上書き |
+| `assets/` (SVG) | **差分マージ** | 追加/変更 SVG のみ | SVG 追加/上書き/削除 |
+| `storybook-app/` | **★ 全量再ビルド** | 含めない | `design-event.yaml` を入力に全量再生成 |
+
 - events/ ディレクトリは **不変**（書き込み後の変更・削除禁止）
-- latest/ は **完全上書き**（マージではなく全置換）
+- latest/ は差分マージ結果 + 全量再ビルド結果を保持する
 - イベント ID フォーマット: `{YYYYMMDD_HHMMSS}_design_system`
 - 同一秒のイベントはサフィックス `_2`, `_3` で区別
 

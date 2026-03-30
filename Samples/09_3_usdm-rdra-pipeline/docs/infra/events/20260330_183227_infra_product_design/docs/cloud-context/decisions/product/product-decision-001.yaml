@@ -1,0 +1,35 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-001"
+title: "コンピュートプラットフォーム選定: ECS Fargate"
+status: "approved"
+generated_at: "2026-03-30T18:34:00"
+
+context: |
+  バックエンド API は CaaS(k8s) が候補として挙がっているが、
+  99% SLA で warm_standby の要件であれば EKS はオーバースペック。
+  ECS Fargate はサーバーレスコンテナで運用負荷が低く、
+  50 RPS + スパイク2倍のトラフィックに対してコスト効率が良い。
+
+decision: |
+  バックエンド API には Amazon ECS on Fargate を採用する。
+  EKS ではなく ECS を選択する理由:
+  1. 運用チーム規模が不明のため、マネージドサービスで運用負荷を最小化
+  2. 50 RPS の定常トラフィックでは k8s のオーケストレーション機能は過剰
+  3. Fargate はタスクレベルの自動スケーリングで十分な柔軟性を提供
+
+consequences:
+  positive:
+    - "サーバー管理不要で運用負荷が低い"
+    - "タスクレベルの課金でコスト効率が良い"
+    - "ALB との統合がシンプル"
+  negative:
+    - "k8s エコシステム（Helm, Istio 等）を直接利用できない"
+    - "将来的にマイクロサービス化する場合は EKS への移行が必要になる可能性"
+
+alternatives_considered:
+  - name: "Amazon EKS"
+    reason_rejected: "50 RPS のワークロードには運用オーバーヘッドが大きい"
+  - name: "AWS App Runner"
+    reason_rejected: "バックエンド API には VPC 内配置や詳細なネットワーク制御が必要"

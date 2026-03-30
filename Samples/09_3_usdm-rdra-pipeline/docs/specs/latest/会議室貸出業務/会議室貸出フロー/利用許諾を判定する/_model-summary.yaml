@@ -1,0 +1,27 @@
+uc: "利用許諾を判定する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+
+models:
+  - name: "利用許諾を判定するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "利用者評価"
+  - name: "利用許諾を判定するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "利用者評価"
+
+tables:
+  - name: "user_reviews"
+    rdra_info: "利用者評価"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる利用者評価取得"

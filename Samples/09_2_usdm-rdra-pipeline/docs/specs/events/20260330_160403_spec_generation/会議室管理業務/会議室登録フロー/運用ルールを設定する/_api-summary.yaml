@@ -1,0 +1,17 @@
+uc: "運用ルールを設定する"
+business: "会議室管理業務"
+buc: "会議室登録フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/rooms/:id/rules"
+    summary: "運用ルール設定"
+    request_schema: "UpdateRulesRequest"
+    response_schema: "RulesResponse"
+    tags:
+      - "会議室登録フロー"
+schemas:
+  - name: "RulesResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

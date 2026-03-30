@@ -1,0 +1,17 @@
+uc: "手数料売上を分析する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/analytics/commissions"
+    summary: "会議室別・貸出別の手数料売上を分析する"
+    
+    response_schema: "手数料売上分析Response"
+    tags:
+      - "サービス運営業務"
+schemas:
+  - name: "手数料売上分析Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

@@ -165,6 +165,7 @@ function generateMarkdown(data) {
   lines.push('# USDM 要求仕様書');
   lines.push('');
 
+  lines.push(`- システム名: ${data.system_name || ''}`);
   lines.push(`- イベントID: ${data.event_id || ''}`);
   lines.push(`- 作成日時: ${data.created_at || ''}`);
   lines.push(`- ソース: ${data.source || ''}`);

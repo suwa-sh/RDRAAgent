@@ -1,0 +1,17 @@
+uc: "会議室を照会する"
+business: "会議室予約業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/rooms"
+    summary: "会議室検索"
+    request_schema: ""
+    response_schema: "RoomListResponse"
+    tags:
+      - "会議室予約フロー"
+schemas:
+  - name: "RoomListResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

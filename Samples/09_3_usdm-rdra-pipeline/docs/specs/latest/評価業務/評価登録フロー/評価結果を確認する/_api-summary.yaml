@@ -1,0 +1,17 @@
+uc: "評価結果を確認する"
+business: "評価業務"
+buc: "評価登録フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owners/{owner_id}/reviews"
+    summary: "自身への評価を確認する"
+    
+    response_schema: "評価結果確認Response"
+    tags:
+      - "評価業務"
+schemas:
+  - name: "評価結果確認Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

@@ -1,0 +1,17 @@
+uc: "精算額を計算する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/settlements/actions/calculate"
+    summary: "会議室別の利用履歴から精算額を算出する"
+    request_schema: "精算額計算Request"
+    response_schema: "精算額計算Response"
+    tags:
+      - "精算業務"
+schemas:
+  - name: "精算額計算Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

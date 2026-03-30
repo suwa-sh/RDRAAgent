@@ -1,0 +1,27 @@
+uc: "鍵を受け取る"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+
+models:
+  - name: "鍵を受け取るViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "鍵情報"
+  - name: "鍵を受け取るCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "鍵情報"
+
+tables:
+  - name: "keys"
+    rdra_info: "鍵情報"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる鍵情報取得"

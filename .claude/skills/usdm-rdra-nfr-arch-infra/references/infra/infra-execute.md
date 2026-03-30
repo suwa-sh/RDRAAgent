@@ -48,7 +48,7 @@ MCL 完了後、infra イベントを記録する。
 
 形式: `{YYYYMMDD_HHMMSS}_infra_product_design`
 
-現在日時から生成する。
+`date '+%Y%m%d_%H%M%S'` コマンドで日時を取得する。LLM が日時を推測してはならない。`created_at` も `date '+%Y-%m-%dT%H:%M:%S'` コマンドで取得する。
 
 #### イベントファイルの生成
 

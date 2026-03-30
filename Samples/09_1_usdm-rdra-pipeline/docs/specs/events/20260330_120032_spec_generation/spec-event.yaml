@@ -1,0 +1,238 @@
+version: "1.0"
+event_id: "20260330_120032_spec_generation"
+created_at: "2026-03-30T12:00:32"
+source: "Spec 生成: 貸し会議室サービス RoomConnect の初期 Spec 生成"
+
+use_cases:
+  - business: "オーナー管理業務"
+    buc: "オーナー登録フロー"
+    uc: "プロフィールを登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "オーナー管理業務"
+    buc: "オーナー登録フロー"
+    uc: "オーナー申請を登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "オーナー管理業務"
+    buc: "オーナー登録フロー"
+    uc: "オーナー申請を審査する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "オーナー管理業務"
+    buc: "オーナー退会フロー"
+    uc: "退会を申請する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "オーナー管理業務"
+    buc: "オーナー退会フロー"
+    uc: "退会を処理する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室管理業務"
+    buc: "会議室登録フロー"
+    uc: "会議室を登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室管理業務"
+    buc: "会議室登録フロー"
+    uc: "運用ルールを設定する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室管理業務"
+    buc: "会議室登録フロー"
+    uc: "会議室評価を照会する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室貸出業務"
+    buc: "会議室貸出フロー"
+    uc: "利用者評価を照会する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室貸出業務"
+    buc: "会議室貸出フロー"
+    uc: "鍵の貸出を記録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室貸出業務"
+    buc: "会議室貸出フロー"
+    uc: "鍵の返却を記録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室貸出業務"
+    buc: "会議室貸出フロー"
+    uc: "利用者評価を登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室貸出業務"
+    buc: "会議室貸出フロー"
+    uc: "問合せ回答を登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室予約業務"
+    buc: "会議室予約フロー"
+    uc: "会議室を検索する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室予約業務"
+    buc: "会議室予約フロー"
+    uc: "予約を登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室予約業務"
+    buc: "予約変更取消フロー"
+    uc: "予約を変更する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "会議室予約業務"
+    buc: "予約変更取消フロー"
+    uc: "予約を取消する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "評価業務"
+    buc: "利用者評価登録フロー"
+    uc: "会議室評価を登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "サービス運営業務"
+    buc: "売上分析フロー"
+    uc: "手数料売上を照会する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "サービス運営業務"
+    buc: "利用状況管理フロー"
+    uc: "利用状況を照会する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "サービス運営業務"
+    buc: "問合せ対応フロー"
+    uc: "問合せ対応を登録する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "精算業務"
+    buc: "オーナー精算フロー"
+    uc: "精算額を計算する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+    api_count: 1
+    async_event_count: 0
+  - business: "精算業務"
+    buc: "オーナー精算フロー"
+    uc: "精算を実行する"
+    files:
+      - "spec.md"
+      - "tier-frontend.md"
+      - "tier-backend-api.md"
+      - "tier-worker.md"
+    api_count: 1
+    async_event_count: 2
+
+cross_cutting:
+  ux_design:
+    user_flows: 5
+    ia_pages: 24
+    psychology_principles: 8
+  ui_design:
+    layout_patterns: 3
+    responsive_breakpoints: 3
+    component_guidelines: 8
+  data_visualization:
+    target_screens: 3
+    chart_types: 4
+  openapi:
+    api_count: 23
+  asyncapi:
+    async_event_count: 2
+
+stats:
+  total_ucs: 23
+  total_apis: 23
+  total_async_events: 2
+  businesses: 6
+  bucs: 8

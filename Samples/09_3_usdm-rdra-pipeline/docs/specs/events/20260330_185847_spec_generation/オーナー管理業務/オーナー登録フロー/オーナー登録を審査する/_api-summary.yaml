@@ -1,0 +1,17 @@
+uc: "オーナー登録を審査する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners/{owner_id}/actions/review"
+    summary: "オーナー申請を審査し承認または却下する"
+    request_schema: "オーナー登録審査Request"
+    response_schema: "オーナー登録審査Response"
+    tags:
+      - "オーナー管理業務"
+schemas:
+  - name: "オーナー登録審査Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

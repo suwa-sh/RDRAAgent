@@ -1,0 +1,47 @@
+uc: "予約を登録する"
+business: "会議室予約業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations"
+    summary: "会議室を予約する（冪等キー付き）"
+    request_schema: "CreateReservationRequest"
+    response_schema: "ReservationResponse"
+    tags:
+      - "会議室予約"
+async_events: []
+schemas:
+  - name: "CreateReservationRequest"
+    properties:
+      - name: "roomId"
+        type: "string"
+        required: true
+      - name: "startAt"
+        type: "string"
+        required: true
+      - name: "endAt"
+        type: "string"
+        required: true
+      - name: "paymentMethod"
+        type: "string"
+        required: true
+      - name: "cardNumber"
+        type: "string"
+        required: false
+  - name: "ReservationResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true
+      - name: "roomId"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+        required: true
+      - name: "totalPrice"
+        type: "integer"
+        required: true
+      - name: "paymentMethod"
+        type: "string"
+        required: true

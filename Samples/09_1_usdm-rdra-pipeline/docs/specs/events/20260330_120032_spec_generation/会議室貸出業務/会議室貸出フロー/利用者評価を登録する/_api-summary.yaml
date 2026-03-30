@@ -1,0 +1,18 @@
+uc: "利用者評価を登録する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners/reservations/{id}/user-reviews"
+    summary: "オーナーが利用者の評価を登録する"
+    request_schema: "利用者評価を登録するRequest"
+    response_schema: "利用者評価を登録するResponse"
+    tags:
+      - "会議室貸出業務"
+async_events: []
+schemas:
+  - name: "利用者評価を登録するResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

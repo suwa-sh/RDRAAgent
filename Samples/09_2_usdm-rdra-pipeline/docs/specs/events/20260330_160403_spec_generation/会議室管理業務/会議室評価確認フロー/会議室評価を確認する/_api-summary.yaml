@@ -1,0 +1,17 @@
+uc: "会議室評価を確認する"
+business: "会議室管理業務"
+buc: "会議室評価確認フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/rooms/:id/reviews"
+    summary: "会議室評価一覧取得"
+    request_schema: ""
+    response_schema: "ReviewListResponse"
+    tags:
+      - "会議室評価確認フロー"
+schemas:
+  - name: "ReviewListResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

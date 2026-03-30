@@ -1,0 +1,17 @@
+uc: "精算内容を確認する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/owners/me/settlements"
+    summary: "精算情報一覧取得"
+    request_schema: ""
+    response_schema: "SettlementListResponse"
+    tags:
+      - "オーナー精算フロー"
+schemas:
+  - name: "SettlementListResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

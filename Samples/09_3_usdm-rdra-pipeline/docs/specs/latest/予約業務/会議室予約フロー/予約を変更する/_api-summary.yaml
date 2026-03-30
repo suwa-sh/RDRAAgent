@@ -1,0 +1,17 @@
+uc: "予約を変更する"
+business: "予約業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "PUT"
+    path: "/api/v1/reservations/{reservation_id}"
+    summary: "予約内容の変更を行う"
+    request_schema: "予約変更Request"
+    response_schema: "予約変更Response"
+    tags:
+      - "予約業務"
+schemas:
+  - name: "予約変更Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

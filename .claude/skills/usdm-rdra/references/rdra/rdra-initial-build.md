@@ -18,7 +18,7 @@
   - `docs/usdm/events/{event_id}/requirements.yaml`
   - `docs/usdm/events/{event_id}/source.txt`
 
-`{event_id}` は `{YYYYMMDD_HHMMSS}_initial_build` 形式。
+`{event_id}` は `{YYYYMMDD_HHMMSS}_initial_build` 形式。日時部分は `date '+%Y%m%d_%H%M%S'` コマンドで取得する。LLM が日時を推測してはならない。
 
 バリデーション:
 

@@ -1,0 +1,83 @@
+version: "1.0"
+event_id: "20260330_192423_spec_stories"
+created_at: "2026-03-30T19:24:23"
+trigger_event: "spec:20260330_191000_initial_spec"
+source: "Spec Step9: Storybook Story generation for all UC pages and common components"
+
+components:
+  common:
+    - name: "ProcessingState"
+      description: "Async processing spinner with optional progress bar"
+      props:
+        - "message: string"
+        - "progress: number (optional)"
+    - name: "SearchFilterPanel"
+      description: "Reusable search/filter input panel"
+      props:
+        - "filters: FilterConfig[]"
+        - "onFilter: function"
+        - "onReset: function"
+    - name: "PaginatedList"
+      description: "Paginated list wrapper with prev/next navigation"
+      props:
+        - "items: ReactNode[]"
+        - "page: number"
+        - "totalPages: number"
+        - "onPageChange: function"
+    - name: "EntityEditForm"
+      description: "Generic entity edit form with field configuration"
+      props:
+        - "fields: FieldConfig[]"
+        - "onSubmit: function"
+        - "initialValues: object"
+        - "submitLabel: string"
+
+storybook:
+  categories:
+    Common:
+      - "EmptyState"
+      - "LoadingSkeleton"
+      - "ErrorBanner"
+      - "ConfirmActionModal"
+      - "ProcessingState"
+      - "SearchFilterPanel"
+      - "PaginatedList"
+      - "EntityEditForm"
+    Layout:
+      - "PortalShell"
+    Pages_User:
+      - "会議室検索"
+      - "予約申込"
+      - "予約変更"
+      - "予約取消"
+      - "鍵受取確認"
+      - "問合せ送信"
+      - "会議室評価"
+      - "ホスト評価"
+      - "サービス問合せ"
+    Pages_Owner:
+      - "規約参照"
+      - "オーナー登録"
+      - "オーナー申請"
+      - "会議室登録"
+      - "運用ルール設定"
+      - "会議室評価確認"
+      - "プロフィール編集"
+      - "利用許諾"
+      - "鍵貸出"
+      - "鍵返却"
+      - "利用者評価"
+      - "問合せ回答"
+      - "退会申請"
+      - "精算結果確認"
+      - "評価結果一覧"
+    Pages_Admin:
+      - "オーナー審査"
+      - "退会処理"
+      - "手数料分析"
+      - "運用管理ダッシュボード"
+      - "利用履歴管理"
+      - "利用状況分析"
+      - "サービス問合せ回答"
+      - "精算処理"
+      - "精算実行"

@@ -1,0 +1,17 @@
+uc: "予約を取消する"
+business: "会議室予約業務"
+buc: "予約変更取消フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations/:id/cancel"
+    summary: "予約取消"
+    request_schema: "CancelReservationRequest"
+    response_schema: "ReservationResponse"
+    tags:
+      - "予約変更取消フロー"
+schemas:
+  - name: "ReservationResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

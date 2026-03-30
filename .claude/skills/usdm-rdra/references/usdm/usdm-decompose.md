@@ -15,7 +15,7 @@
 - `docs/usdm/events/{event_id}/requirements.yaml`
 - `docs/usdm/events/{event_id}/source.txt`
 
-`{event_id}` は `{YYYYMMDD_HHMMSS}_{変更名}` 形式。現在の日時と変更内容から生成する。
+`{event_id}` は `{YYYYMMDD_HHMMSS}_{変更名}` 形式。日時部分は `date '+%Y%m%d_%H%M%S'` コマンドで取得した値を使用する。`created_at` も同じタイミングで `date '+%Y-%m-%dT%H:%M:%S'` コマンドで取得する。LLM が日時を推測してはならない。
 
 ## 手順
 
@@ -26,6 +26,7 @@
 - 何を変更・追加・削除したいのか
 - なぜその変更が必要なのか（ビジネス背景）
 - どの程度の優先度か
+- 対象システムの名称（システム名）
 
 ### 2. 既存 RDRA モデルの確認
 
@@ -74,7 +75,15 @@
   - 既存要素の場合: `docs/rdra/latest/*.tsv` に存在する名称を使用
   - 新規要素の場合: 新しい名称を付ける
 
-### 7. 優先度の判定
+### 7. システム名の決定
+
+対象システムの名称を決定する:
+
+- 変更要望テキストからシステム名を抽出する
+- `docs/usdm/latest/requirements.yaml` に既存の `system_name` がある場合は、変更要望でシステム名の変更が明示されない限りそれを引き継ぐ
+- 初回の場合は、変更要望テキストの内容から自然な日本語のシステム名を1つ決定する
+
+### 8. 優先度の判定
 
 各要求の優先度を判定する:
 
@@ -82,11 +91,11 @@
 - `should` — 重要だが、最悪なくても変更の目的は最低限達成できる
 - `could` — あると良いが、なくても問題ない
 
-### 8. YAML 出力
+### 9. YAML 出力
 
-`references/usdm-schema.md` のフォーマットに従い、`requirements.yaml` を出力する。
+`references/usdm-schema.md` のフォーマットに従い、`requirements.yaml` を出力する。`system_name` フィールドに手順7で決定したシステム名を設定する。
 
-### 9. ソーステキストの保存
+### 10. ソーステキストの保存
 
 変更要望テキストの内容を `source.txt` としてコピーする。
 

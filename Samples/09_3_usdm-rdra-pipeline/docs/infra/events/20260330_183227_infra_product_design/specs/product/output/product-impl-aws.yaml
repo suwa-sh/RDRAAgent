@@ -1,0 +1,344 @@
+schema_version: "1.0"
+artifact_type: "implementation_spec"
+skill_type: "product"
+artifact_id: "product-impl-aws"
+title: "貸し会議室サービス AWS 実装仕様"
+status: "draft"
+generated_at: "2026-03-30T18:34:00"
+vendor: "aws"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-001"
+  - "product-decision-002"
+  - "product-decision-003"
+inputs_ref:
+  - "product-mapping-aws"
+
+region: "ap-northeast-1"
+availability_zones:
+  - "ap-northeast-1a"
+  - "ap-northeast-1c"
+  - "ap-northeast-1d"
+
+services:
+  - id: "impl-frontend"
+    canonical_ref: "product.compute.web_frontend"
+    service: "AWS App Runner"
+    configuration:
+      runtime: "nodejs18"
+      cpu: "0.25 vCPU"
+      memory: "0.5 GB"
+      auto_scaling:
+        min_instances: 1
+        max_instances: 4
+        max_concurrency: 100
+      health_check:
+        path: "/health"
+        interval_seconds: 10
+      custom_domain: true
+      vpc_connector: false
+    network:
+      ingress: "CloudFront"
+      egress: "Internet (API Gateway)"
+
+  - id: "impl-api-gateway"
+    canonical_ref: "product.compute.api_gateway"
+    service: "Amazon API Gateway (HTTP API)"
+    configuration:
+      api_type: "HTTP"
+      authorizer:
+        type: "JWT"
+        issuer: "Cognito User Pool"
+      throttling:
+        rate_limit: 200
+        burst_limit: 400
+      cors:
+        allow_origins: ["https://example.com"]
+        allow_methods: ["GET", "POST", "PUT", "DELETE"]
+      waf:
+        enabled: true
+        rules:
+          - "AWSManagedRulesCommonRuleSet"
+          - "AWSManagedRulesKnownBadInputsRuleSet"
+          - "AWSManagedRulesSQLiRuleSet"
+      stages:
+        - name: "prod"
+          auto_deploy: false
+    network:
+      ingress: "CloudFront / Internet"
+      egress: "VPC Link -> ECS"
+
+  - id: "impl-idp"
+    canonical_ref: "product.identity.idp"
+    service: "Amazon Cognito"
+    configuration:
+      user_pool:
+        password_policy:
+          minimum_length: 8
+          require_uppercase: true
+          require_lowercase: true
+          require_numbers: true
+          require_symbols: true
+          temporary_password_validity_days: 7
+        mfa: "OPTIONAL"
+        account_recovery: "verified_email"
+        auto_verified_attributes: ["email"]
+        username_attributes: ["email"]
+      app_client:
+        access_token_validity_minutes: 60
+        refresh_token_validity_days: 30
+        token_revocation: true
+        auth_flows:
+          - "ALLOW_USER_SRP_AUTH"
+          - "ALLOW_REFRESH_TOKEN_AUTH"
+      advanced_security:
+        mode: "ENFORCED"
+        risk_configuration:
+          compromised_credentials: "BLOCK"
+    groups:
+      - name: "user"
+        description: "利用者"
+      - name: "owner"
+        description: "会議室オーナー"
+      - name: "admin"
+        description: "サービス運営担当者"
+
+  - id: "impl-backend-api"
+    canonical_ref: "product.compute.backend_api"
+    service: "Amazon ECS on Fargate"
+    configuration:
+      cluster: "kashi-kaigishitsu-cluster"
+      service:
+        desired_count: 2
+        deployment:
+          minimum_healthy_percent: 50
+          maximum_percent: 200
+          circuit_breaker:
+            enable: true
+            rollback: true
+      task_definition:
+        cpu: 512
+        memory: 1024
+        runtime_platform:
+          operating_system_family: "LINUX"
+          cpu_architecture: "ARM64"
+        container:
+          port: 3000
+          health_check:
+            command: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+            interval: 30
+            timeout: 5
+            retries: 3
+          environment:
+            NODE_ENV: "production"
+            LOG_LEVEL: "info"
+            LOG_FORMAT: "json"
+          secrets:
+            DATABASE_URL: "arn:aws:secretsmanager:..."
+            REDIS_URL: "arn:aws:secretsmanager:..."
+      auto_scaling:
+        target_tracking:
+          metric: "ECSServiceAverageCPUUtilization"
+          target_value: 70
+        min_capacity: 2
+        max_capacity: 8
+      load_balancer:
+        type: "ALB"
+        scheme: "internal"
+        health_check:
+          path: "/health"
+          healthy_threshold: 2
+          unhealthy_threshold: 3
+          interval: 30
+    network:
+      subnets: "private"
+      security_groups:
+        ingress:
+          - source: "api-gateway-vpc-link"
+            port: 3000
+        egress:
+          - destination: "rds"
+            port: 5432
+          - destination: "elasticache"
+            port: 6379
+          - destination: "internet"
+            port: 443
+
+  - id: "impl-batch-worker"
+    canonical_ref: "product.compute.batch_worker"
+    service: "AWS Lambda + EventBridge Scheduler"
+    configuration:
+      lambda:
+        runtime: "nodejs20.x"
+        architecture: "arm64"
+        memory: 1024
+        timeout: 900
+        vpc: true
+        reserved_concurrency: 10
+        environment:
+          BATCH_TYPE: "settlement"
+      scheduler:
+        schedule_expression: "cron(0 22 L * ? *)"
+        description: "月末精算バッチ（毎月最終日 22:00 JST）"
+      fallback:
+        type: "ECS Task"
+        condition: "処理時間 15分超過時"
+    network:
+      subnets: "private"
+
+  - id: "impl-rdb"
+    canonical_ref: "product.database.rdb"
+    service: "Amazon RDS for PostgreSQL"
+    configuration:
+      engine: "postgres"
+      engine_version: "16"
+      instance_class: "db.r6g.large"
+      multi_az: true
+      storage:
+        type: "gp3"
+        allocated: 100
+        max_allocated: 500
+        iops: 3000
+        throughput: 125
+        encrypted: true
+        kms_key: "aws/rds"
+      backup:
+        retention_period: 7
+        preferred_window: "17:00-18:00"
+        copy_tags_to_snapshot: true
+      maintenance:
+        preferred_window: "Sun:18:00-Sun:19:00"
+      monitoring:
+        enhanced_monitoring_interval: 60
+        performance_insights:
+          enabled: true
+          retention_period: 7
+      proxy:
+        enabled: true
+        engine_family: "POSTGRESQL"
+        max_connections_percent: 80
+        idle_client_timeout: 1800
+      parameter_group:
+        log_statement: "ddl"
+        log_min_duration_statement: 1000
+        shared_preload_libraries: "pg_stat_statements"
+    network:
+      subnets: "database"
+      security_groups:
+        ingress:
+          - source: "backend-api"
+            port: 5432
+          - source: "batch-worker"
+            port: 5432
+
+  - id: "impl-cache"
+    canonical_ref: "product.cache.kvs"
+    service: "Amazon ElastiCache for Redis (Serverless)"
+    configuration:
+      engine: "redis"
+      serverless: true
+      cache_usage_limits:
+        data_storage:
+          maximum: 5
+          unit: "GB"
+        ecpu_per_second:
+          maximum: 15000
+      snapshot:
+        retention_limit: 1
+      transit_encryption: true
+      at_rest_encryption: true
+    network:
+      subnets: "private"
+      security_groups:
+        ingress:
+          - source: "backend-api"
+            port: 6379
+
+  - id: "impl-object-storage"
+    canonical_ref: "product.storage.object"
+    service: "Amazon S3"
+    configuration:
+      bucket_name: "kashi-kaigishitsu-assets-{account_id}"
+      versioning: true
+      encryption:
+        type: "SSE-S3"
+      lifecycle_rules:
+        - id: "transition-to-ia"
+          transition:
+            days: 90
+            storage_class: "STANDARD_IA"
+      public_access_block: true
+      cors:
+        - allowed_origins: ["https://example.com"]
+          allowed_methods: ["GET"]
+          max_age_seconds: 3600
+
+  - id: "impl-cdn"
+    canonical_ref: "product.cdn.distribution"
+    service: "Amazon CloudFront"
+    configuration:
+      origins:
+        - id: "s3-assets"
+          domain: "kashi-kaigishitsu-assets-{account_id}.s3.amazonaws.com"
+          access: "OAC"
+        - id: "app-runner"
+          domain: "{app-runner-url}.awsapprunner.com"
+          protocol_policy: "https-only"
+      default_cache_behavior:
+        origin: "app-runner"
+        viewer_protocol_policy: "redirect-to-https"
+        cache_policy: "CachingDisabled"
+      ordered_cache_behaviors:
+        - path_pattern: "/assets/*"
+          origin: "s3-assets"
+          cache_policy: "CachingOptimized"
+          ttl_default: 86400
+        - path_pattern: "/images/*"
+          origin: "s3-assets"
+          cache_policy: "CachingOptimized"
+          ttl_default: 86400
+      web_acl: "waf-cloudfront"
+      price_class: "PriceClass_200"
+      certificate: "ACM (us-east-1)"
+
+  - id: "impl-network"
+    canonical_ref: "product.security.network"
+    service: "Amazon VPC"
+    configuration:
+      cidr: "10.0.0.0/16"
+      subnets:
+        public:
+          - cidr: "10.0.1.0/24"
+            az: "ap-northeast-1a"
+          - cidr: "10.0.2.0/24"
+            az: "ap-northeast-1c"
+        private:
+          - cidr: "10.0.11.0/24"
+            az: "ap-northeast-1a"
+          - cidr: "10.0.12.0/24"
+            az: "ap-northeast-1c"
+        database:
+          - cidr: "10.0.21.0/24"
+            az: "ap-northeast-1a"
+          - cidr: "10.0.22.0/24"
+            az: "ap-northeast-1c"
+      nat_gateway:
+        type: "single"
+        az: "ap-northeast-1a"
+      flow_logs:
+        destination: "s3"
+        traffic_type: "ALL"
+      endpoints:
+        - service: "s3"
+          type: "Gateway"
+        - service: "ecr.api"
+          type: "Interface"
+        - service: "ecr.dkr"
+          type: "Interface"
+        - service: "logs"
+          type: "Interface"
+        - service: "secretsmanager"
+          type: "Interface"

@@ -1,0 +1,18 @@
+uc: "鍵の返却を記録する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations/{id}/keys/actions/return"
+    summary: "利用者が鍵を返却し利用終了を記録する"
+    request_schema: "鍵の返却を記録するRequest"
+    response_schema: "鍵の返却を記録するResponse"
+    tags:
+      - "会議室貸出業務"
+async_events: []
+schemas:
+  - name: "鍵の返却を記録するResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

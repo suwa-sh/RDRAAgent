@@ -31,6 +31,8 @@ docs/
 ## イベント ID
 
 - 形式: `{YYYYMMDD_HHMMSS}_{変更名}`
+- **日時部分は `date '+%Y%m%d_%H%M%S'` コマンドで取得する。LLM が日時を推測してはならない**
+- `created_at` 等のタイムスタンプも `date '+%Y-%m-%dT%H:%M:%S'` コマンドで取得する
 - 変更名は変更内容を表す短い snake_case の名前
 - 同一タイムスタンプが衝突する場合は秒を +1 する
 - 例: `20260326_143000_add_reservation_feature`

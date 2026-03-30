@@ -1,0 +1,33 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-003"
+title: "バッチ処理方式: Lambda + EventBridge Scheduler"
+status: "approved"
+generated_at: "2026-03-30T18:34:00"
+
+context: |
+  月末精算バッチは ~10,000件/回で8時間以内の完了が必要。
+  CronJob(k8s) が候補だが ECS 採用のため k8s は使用しない。
+  Lambda + Step Functions で分割並列処理が可能。
+
+decision: |
+  月末精算バッチには Lambda + EventBridge Scheduler を採用する。
+  精算処理をオーナー単位で分割し、Lambda で並列実行する。
+  処理が複雑な場合は Step Functions でオーケストレーション。
+  15分超のタスクが発生する場合は ECS タスクにフォールバック。
+
+consequences:
+  positive:
+    - "サーバーレスで運用負荷ゼロ"
+    - "オーナー単位の並列実行で処理時間を短縮"
+    - "実行時間に対する従量課金でコスト効率が良い"
+  negative:
+    - "Lambda の15分制限がある"
+    - "長時間処理にはフォールバック機構が必要"
+
+alternatives_considered:
+  - name: "ECS Scheduled Task"
+    reason_rejected: "タスク定義の管理が煩雑。Lambda の方がシンプル"
+  - name: "AWS Batch"
+    reason_rejected: "~10,000件の精算には過剰。Lambda で十分"

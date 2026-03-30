@@ -1,0 +1,17 @@
+uc: "オーナーを登録する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/owners"
+    summary: "オーナーのプロフィール情報を入力し登録する"
+    request_schema: "オーナー登録Request"
+    response_schema: "オーナー登録Response"
+    tags:
+      - "オーナー管理業務"
+schemas:
+  - name: "オーナー登録Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

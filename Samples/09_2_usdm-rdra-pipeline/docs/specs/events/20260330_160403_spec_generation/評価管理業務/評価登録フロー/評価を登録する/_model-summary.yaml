@@ -1,0 +1,26 @@
+uc: "評価を登録する"
+business: "評価管理業務"
+buc: "評価登録フロー"
+
+models:
+  - name: "評価を登録するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室評価"
+  - name: "CreateRoomReviewRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室評価"
+
+tables:
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

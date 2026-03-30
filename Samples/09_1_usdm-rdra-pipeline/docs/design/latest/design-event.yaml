@@ -1,0 +1,538 @@
+version: "1.0"
+event_id: "20260330_114529_design_system"
+created_at: "2026-03-30T11:45:29"
+source: "初期デザインシステム生成: 貸し会議室マッチングSaaS"
+
+brand:
+  name: "RoomConnect"
+  colors:
+    primary:
+      hex: "#2563EB"
+      name: "Blue 600"
+    secondary:
+      hex: "#0D9488"
+      name: "Teal 600"
+  typography:
+    sans: "'Noto Sans JP', 'Inter', system-ui, sans-serif"
+    mono: "'JetBrains Mono', 'Fira Code', monospace"
+    scale:
+      xs: "0.75rem"
+      sm: "0.875rem"
+      base: "1rem"
+      lg: "1.125rem"
+      xl: "1.25rem"
+      2xl: "1.5rem"
+      3xl: "1.875rem"
+  voice:
+    tone: "信頼感のある親しみやすさ"
+    principles:
+      - "明確で簡潔な表現"
+      - "専門用語を避けたわかりやすさ"
+      - "安心感を与える丁寧さ"
+  logo:
+    variants:
+      - name: "full"
+        path: "assets/logo-full.svg"
+      - name: "icon"
+        path: "assets/logo-icon.svg"
+      - name: "stacked"
+        path: "assets/logo-stacked.svg"
+  icons:
+    style: "outlined"
+    source_dir: "assets/icons/"
+
+portals:
+  - id: "user"
+    name: "User (利用者)"
+    actor: "利用者"
+    primary_color: "#2563EB"
+    screen_count: 7
+  - id: "owner"
+    name: "Owner (提供者)"
+    actor: "会議室オーナー"
+    primary_color: "#0D9488"
+    screen_count: 10
+  - id: "admin"
+    name: "Admin (管理者)"
+    actor: "サービス運営担当者"
+    primary_color: "#334155"
+    screen_count: 7
+
+tokens:
+  primitive:
+    colors:
+      white: "#FFFFFF"
+      black: "#000000"
+      gray-50: "#F8FAFC"
+      gray-100: "#F1F5F9"
+      gray-200: "#E2E8F0"
+      gray-300: "#CBD5E1"
+      gray-400: "#94A3B8"
+      gray-500: "#64748B"
+      gray-600: "#475569"
+      gray-700: "#334155"
+      gray-800: "#1E293B"
+      gray-900: "#0F172A"
+      gray-950: "#020617"
+      blue-50: "#EFF6FF"
+      blue-100: "#DBEAFE"
+      blue-500: "#3B82F6"
+      blue-600: "#2563EB"
+      blue-700: "#1D4ED8"
+      teal-50: "#F0FDFA"
+      teal-500: "#14B8A6"
+      teal-600: "#0D9488"
+      teal-700: "#0F766E"
+      slate-500: "#64748B"
+      slate-600: "#475569"
+      slate-700: "#334155"
+      green-500: "#22C55E"
+      green-600: "#16A34A"
+      orange-500: "#F97316"
+      orange-600: "#EA580C"
+      red-500: "#EF4444"
+      red-600: "#DC2626"
+      amber-400: "#FBBF24"
+      amber-500: "#F59E0B"
+      violet-500: "#8B5CF6"
+      violet-600: "#7C3AED"
+    spacing:
+      0: "0"
+      1: "0.25rem"
+      2: "0.5rem"
+      3: "0.75rem"
+      4: "1rem"
+      5: "1.25rem"
+      6: "1.5rem"
+      8: "2rem"
+      10: "2.5rem"
+      12: "3rem"
+      16: "4rem"
+    radius:
+      sm: "0.25rem"
+      md: "0.375rem"
+      lg: "0.5rem"
+      xl: "0.75rem"
+      full: "9999px"
+    shadow:
+      sm: "0 1px 2px rgba(0,0,0,0.05)"
+      md: "0 4px 6px -1px rgba(0,0,0,0.1)"
+      lg: "0 10px 15px -3px rgba(0,0,0,0.1)"
+    font_size:
+      xs: "0.75rem"
+      sm: "0.875rem"
+      base: "1rem"
+      lg: "1.125rem"
+      xl: "1.25rem"
+    font_family:
+      sans: "'Noto Sans JP', 'Inter', system-ui, sans-serif"
+      mono: "'JetBrains Mono', 'Fira Code', monospace"
+    font_weight:
+      normal: "400"
+      medium: "500"
+      semibold: "600"
+      bold: "700"
+    duration:
+      fast: "150ms"
+      normal: "200ms"
+      slow: "300ms"
+  semantic:
+    background: "var(--color-white)"
+    foreground: "var(--color-gray-900)"
+    border: "var(--color-gray-200)"
+    muted: "var(--color-gray-100)"
+    success: "var(--color-green-600)"
+    warning: "var(--color-orange-500)"
+    destructive: "var(--color-red-600)"
+    info: "var(--color-blue-600)"
+    rating: "var(--color-amber-400)"
+    virtual_accent: "var(--color-violet-500)"
+  component:
+    button:
+      height-sm: "2rem"
+      height-md: "2.5rem"
+      height-lg: "3rem"
+      padding-x: "1rem"
+      radius: "var(--radius-md)"
+    input:
+      height: "2.5rem"
+      padding-x: "0.75rem"
+      radius: "var(--radius-md)"
+      border: "var(--border)"
+    card:
+      padding: "1.5rem"
+      radius: "var(--radius-lg)"
+      shadow: "var(--shadow-sm)"
+    badge:
+      height: "1.5rem"
+      padding-x: "0.625rem"
+      radius: "var(--radius-full)"
+      font-size: "0.75rem"
+    sidebar:
+      width: "16rem"
+      item-height: "2.5rem"
+    table:
+      header-bg: "var(--color-gray-50)"
+      row-height: "3rem"
+      cell-padding: "0.75rem"
+  dark_overrides:
+    semantic:
+      background: "var(--color-gray-950)"
+      foreground: "var(--color-gray-100)"
+      border: "var(--color-gray-800)"
+      muted: "var(--color-gray-900)"
+      success-light: "rgba(22, 163, 74, 0.15)"
+      warning-light: "rgba(249, 115, 22, 0.15)"
+      destructive-light: "rgba(220, 38, 38, 0.15)"
+      info-light: "rgba(59, 130, 246, 0.15)"
+      virtual-light: "rgba(139, 92, 246, 0.15)"
+    component:
+      card-bg: "var(--color-gray-900)"
+      card-border: "var(--color-gray-800)"
+      card-shadow: "0 4px 6px -1px rgba(0,0,0,0.3)"
+      table-header-bg: "var(--color-gray-900)"
+      hover-muted: "var(--color-gray-800)"
+      rating-empty: "var(--color-gray-700)"
+
+components:
+  ui:
+    - name: "Button"
+      variants:
+        - "default"
+        - "secondary"
+        - "outline"
+        - "ghost"
+        - "destructive"
+      sizes:
+        - "sm"
+        - "md"
+        - "lg"
+    - name: "Badge"
+      variants:
+        - "default"
+        - "success"
+        - "warning"
+        - "destructive"
+        - "info"
+        - "outline"
+    - name: "Card"
+      variants:
+        - "default"
+        - "hoverable"
+    - name: "Input"
+      variants:
+        - "default"
+        - "error"
+    - name: "Icon"
+      variants:
+        - "default"
+  domain:
+    - name: "RoomCard"
+      description: "会議室情報カード (画像・名称・価格・評価・機能)"
+      screens:
+        - "会議室検索画面"
+      props:
+        - "roomName"
+        - "price"
+        - "rating"
+        - "features"
+        - "address"
+        - "capacity"
+      variants:
+        - "grid"
+        - "list"
+    - name: "SearchFilter"
+      description: "会議室検索フィルター (機能性・価格帯・評価)"
+      screens:
+        - "会議室検索画面"
+      props:
+        - "features"
+        - "priceRange"
+        - "minRating"
+    - name: "StarRating"
+      description: "評価表示・入力コンポーネント (SVG星)"
+      screens:
+        - "会議室評価登録画面"
+        - "会議室評価一覧画面"
+        - "会議室検索画面"
+      props:
+        - "value"
+        - "max"
+        - "readonly"
+        - "size"
+    - name: "BookingCalendar"
+      description: "予約日時選択カレンダー"
+      screens:
+        - "予約登録画面"
+        - "予約変更画面"
+      props:
+        - "selectedDate"
+        - "availableDates"
+        - "onSelect"
+    - name: "ReservationStatusBadge"
+      description: "予約状態バッジ (仮予約/予約確定/変更中/取消済/完了)"
+      screens:
+        - "予約登録画面"
+        - "予約変更画面"
+        - "予約取消画面"
+      props:
+        - "status"
+      states:
+        - "仮予約"
+        - "予約確定"
+        - "変更中"
+        - "取消済"
+        - "完了"
+    - name: "KeyStatusBadge"
+      description: "鍵状態バッジ (貸出中/返却済)"
+      screens:
+        - "鍵管理画面"
+        - "鍵返却画面"
+      props:
+        - "status"
+      states:
+        - "貸出中"
+        - "返却済"
+    - name: "PriceDisplay"
+      description: "金額表示コンポーネント (JPY フォーマット)"
+      screens:
+        - "会議室検索画面"
+        - "精算処理画面"
+        - "売上分析画面"
+      props:
+        - "amount"
+        - "currency"
+        - "size"
+    - name: "InquiryThread"
+      description: "問合せスレッド表示 (メッセージ + 回答)"
+      screens:
+        - "問合せ回答画面"
+        - "問合せ対応画面"
+      props:
+        - "messages"
+        - "onReply"
+    - name: "SummaryCard"
+      description: "サマリーカード (KPI表示: 売上・利用状況等)"
+      screens:
+        - "売上分析画面"
+        - "利用状況分析画面"
+      props:
+        - "title"
+        - "value"
+        - "change"
+        - "icon"
+
+screens:
+  - name: "会議室検索画面"
+    portal: "user"
+    route: "/rooms"
+    components:
+      - "SearchFilter"
+      - "RoomCard"
+      - "StarRating"
+      - "PriceDisplay"
+  - name: "予約登録画面"
+    portal: "user"
+    route: "/rooms/:id/reserve"
+    components:
+      - "BookingCalendar"
+      - "ReservationStatusBadge"
+      - "PriceDisplay"
+  - name: "予約変更画面"
+    portal: "user"
+    route: "/reservations/:id/edit"
+    components:
+      - "BookingCalendar"
+      - "ReservationStatusBadge"
+  - name: "予約取消画面"
+    portal: "user"
+    route: "/reservations/:id/cancel"
+    components:
+      - "ReservationStatusBadge"
+  - name: "鍵返却画面"
+    portal: "user"
+    route: "/reservations/:id/key-return"
+    components:
+      - "KeyStatusBadge"
+  - name: "会議室評価登録画面"
+    portal: "user"
+    route: "/reservations/:id/review"
+    components:
+      - "StarRating"
+  - name: "問合せ画面"
+    portal: "user"
+    route: "/inquiries"
+    components:
+      - "InquiryThread"
+  - name: "プロフィール登録画面"
+    portal: "owner"
+    route: "/profile"
+    components:
+      - "Input"
+      - "Button"
+  - name: "オーナー申請画面"
+    portal: "owner"
+    route: "/apply"
+    components:
+      - "Input"
+      - "Button"
+  - name: "会議室登録画面"
+    portal: "owner"
+    route: "/rooms/new"
+    components:
+      - "Input"
+      - "Button"
+  - name: "運用ルール設定画面"
+    portal: "owner"
+    route: "/rooms/:id/rules"
+    components:
+      - "Input"
+      - "Button"
+  - name: "会議室評価一覧画面"
+    portal: "owner"
+    route: "/rooms/:id/reviews"
+    components:
+      - "StarRating"
+      - "Card"
+  - name: "利用者評価確認画面"
+    portal: "owner"
+    route: "/reservations/:id/user-review"
+    components:
+      - "StarRating"
+  - name: "鍵管理画面"
+    portal: "owner"
+    route: "/rooms/:id/keys"
+    components:
+      - "KeyStatusBadge"
+  - name: "利用者評価登録画面"
+    portal: "owner"
+    route: "/reservations/:id/rate-user"
+    components:
+      - "StarRating"
+  - name: "問合せ回答画面"
+    portal: "owner"
+    route: "/inquiries/:id"
+    components:
+      - "InquiryThread"
+  - name: "退会申請画面"
+    portal: "owner"
+    route: "/withdraw"
+    components:
+      - "Button"
+  - name: "オーナー審査画面"
+    portal: "admin"
+    route: "/admin/owners/:id/review"
+    components:
+      - "Badge"
+      - "Button"
+  - name: "退会処理画面"
+    portal: "admin"
+    route: "/admin/owners/:id/withdraw"
+    components:
+      - "Button"
+  - name: "売上分析画面"
+    portal: "admin"
+    route: "/admin/analytics/revenue"
+    components:
+      - "SummaryCard"
+      - "PriceDisplay"
+  - name: "利用状況分析画面"
+    portal: "admin"
+    route: "/admin/analytics/usage"
+    components:
+      - "SummaryCard"
+  - name: "問合せ対応画面"
+    portal: "admin"
+    route: "/admin/inquiries/:id"
+    components:
+      - "InquiryThread"
+  - name: "精算処理画面"
+    portal: "admin"
+    route: "/admin/settlements"
+    components:
+      - "SummaryCard"
+      - "PriceDisplay"
+  - name: "精算実行画面"
+    portal: "admin"
+    route: "/admin/settlements/:id/execute"
+    components:
+      - "PriceDisplay"
+      - "Button"
+
+states:
+  - model: "オーナー申請状態"
+    entries:
+      - state: "申請中"
+        label: "申請中"
+        color: "blue"
+      - state: "審査中"
+        label: "審査中"
+        color: "orange"
+      - state: "承認"
+        label: "承認"
+        color: "green"
+      - state: "却下"
+        label: "却下"
+        color: "red"
+      - state: "退会"
+        label: "退会"
+        color: "gray"
+  - model: "予約状態"
+    entries:
+      - state: "仮予約"
+        label: "仮予約"
+        color: "amber"
+      - state: "予約確定"
+        label: "予約確定"
+        color: "green"
+      - state: "変更中"
+        label: "変更中"
+        color: "orange"
+      - state: "取消済"
+        label: "取消済"
+        color: "gray"
+      - state: "完了"
+        label: "完了"
+        color: "blue"
+  - model: "会議室利用状態"
+    entries:
+      - state: "利用前"
+        label: "利用前"
+        color: "blue"
+      - state: "利用中"
+        label: "利用中"
+        color: "green"
+      - state: "利用終了"
+        label: "利用終了"
+        color: "gray"
+  - model: "鍵状態"
+    entries:
+      - state: "貸出中"
+        label: "貸出中"
+        color: "orange"
+      - state: "返却済"
+        label: "返却済"
+        color: "green"
+
+nfr_decisions:
+  - nfr: "可用性 (24h近い運用)"
+    decision: "エラー状態・ローディング状態を全画面に実装。Skeleton UIで体感速度改善"
+  - nfr: "性能 (同時100ユーザー)"
+    decision: "ページネーション実装。仮想スクロールは不要"
+  - nfr: "セキュリティ (RBAC)"
+    decision: "ポータル別ナビゲーション。data-portal属性でテーマ切替"
+  - nfr: "セキュリティ (MFA)"
+    decision: "IdPマネージドUIを活用。カスタムログイン画面"
+  - nfr: "モバイル対応 (NFR F.1.1.3)"
+    decision: "Userポータルをモバイルファースト設計。レスポンシブ対応"
+
+storybook:
+  framework: "Next.js + TypeScript + Tailwind CSS v4"
+  addons:
+    - "@storybook/addon-docs"
+    - "@storybook/addon-a11y"
+  categories:
+    UI: "Button, Badge, Card, Input, Icon"
+    Domain: "RoomCard, SearchFilter, StarRating, BookingCalendar, ReservationStatusBadge, KeyStatusBadge, PriceDisplay, InquiryThread, SummaryCard"
+    Brand: "Logo, Icons"
+    Docs: "Introduction, DesignTokens, ScreenMapping"

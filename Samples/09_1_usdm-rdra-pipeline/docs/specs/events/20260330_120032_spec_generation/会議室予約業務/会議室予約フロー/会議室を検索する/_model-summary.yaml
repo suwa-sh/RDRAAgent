@@ -1,0 +1,73 @@
+uc: "会議室を検索する"
+business: "会議室予約業務"
+buc: "会議室予約フロー"
+
+models:
+  - name: "SearchFilters"
+    tier: "tier-frontend"
+    layer: "状態管理層"
+    type: "state"
+    rdra_info: "会議室"
+  - name: "RoomListItem"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "会議室"
+  - name: "SearchRoomsQuery"
+    tier: "tier-backend-api"
+    layer: "プレゼンテーション層"
+    type: "query"
+    rdra_info: "会議室"
+  - name: "Room"
+    tier: "tier-backend-api"
+    layer: "ドメイン層"
+    type: "entity"
+    rdra_info: "会議室"
+  - name: "ReviewSummary"
+    tier: "tier-backend-api"
+    layer: "ドメイン層"
+    type: "value-object"
+    rdra_info: "会議室評価"
+
+tables:
+  - name: "rooms"
+    rdra_info: "会議室"
+    operations:
+      - type: "SELECT"
+        columns:
+          - name: "id"
+            value: "会議室ID"
+          - name: "name"
+            value: "会議室名"
+          - name: "price"
+            value: "価格"
+          - name: "features"
+            value: "機能性配列"
+        where: "features, price, owner.status = 承認"
+    indexes_needed:
+      - columns:
+          - "price"
+        reason: "価格帯フィルターのレンジスキャン"
+        access_pattern: "WHERE price BETWEEN minPrice AND maxPrice"
+      - columns:
+          - "features"
+        reason: "機能性フィルター"
+        access_pattern: "WHERE features @> ARRAY[...]"
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "SELECT"
+        columns:
+          - name: "room_id"
+            value: "会議室ID"
+          - name: "rating"
+            value: "評価点"
+        where: "GROUP BY room_id HAVING AVG(rating) >= minRating"
+    indexes_needed:
+      - columns:
+          - "room_id"
+        reason: "会議室別の評価集約"
+        access_pattern: "GROUP BY room_id"
+
+kvs: []
+object_storage: []

@@ -1,0 +1,61 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Docs/Introduction" />
+
+<img src="/assets/logo-full.svg" alt="RoomConnect" style={{ height: 48, marginBottom: 24 }} />
+
+# RoomConnect Design System
+
+貸し会議室マッチングプラットフォーム「RoomConnect」のデザインシステムです。
+
+## Portals
+
+<table>
+  <thead>
+    <tr>
+      <th>Portal</th>
+      <th>Actor</th>
+      <th>Primary Color</th>
+      <th>Screens</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>User (利用者)</td>
+      <td>利用者</td>
+      <td><span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: 4, backgroundColor: '#2563EB', verticalAlign: 'middle', marginRight: 8 }} />Blue #2563EB</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>Owner (提供者)</td>
+      <td>会議室オーナー</td>
+      <td><span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: 4, backgroundColor: '#0D9488', verticalAlign: 'middle', marginRight: 8 }} />Teal #0D9488</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <td>Admin (管理者)</td>
+      <td>サービス運営担当者</td>
+      <td><span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: 4, backgroundColor: '#334155', verticalAlign: 'middle', marginRight: 8 }} />Slate #334155</td>
+      <td>7</td>
+    </tr>
+  </tbody>
+</table>
+
+## Tech Stack
+
+- **Framework**: Next.js + TypeScript + Tailwind CSS v4
+- **Design Tokens**: 3-layer (Primitive / Semantic / Component)
+- **Dark Mode**: CSS class (`.dark`) + `prefers-color-scheme`
+- **Portal Switching**: `data-portal` attribute on `<html>`
+
+## Theme Switching
+
+ツールバーの **Portal** と **Theme** セレクターで切り替えできます。
+
+## Components
+
+### UI (汎用)
+Button, Badge, Card, Input, Icon
+
+### Domain (ドメイン特化)
+RoomCard, SearchFilter, StarRating, BookingCalendar, ReservationStatusBadge, KeyStatusBadge, PriceDisplay, InquiryThread, SummaryCard

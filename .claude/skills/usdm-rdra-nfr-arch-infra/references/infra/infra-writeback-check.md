@@ -85,7 +85,7 @@ Step4: Infra 書き戻しチェック → 要再実行
 
 ユーザーが「1. 再実行」を選択した場合:
 
-1. **新規 event_id を採番する**: `{YYYYMMDD_HHMMSS}_infra_product_design_r{N}`（r2, r3...で再実行回数を示す）
+1. **新規 event_id を採番する**: `{YYYYMMDD_HHMMSS}_infra_product_design_r{N}`（r2, r3...で再実行回数を示す。日時は `date '+%Y%m%d_%H%M%S'` コマンドで取得）
 2. **Step1 に戻り product-input.yaml を再生成する**:
    - フィードバック反映後の `docs/arch/latest/arch-design.yaml` を入力とする
    - 新規 event ディレクトリ `docs/infra/events/{new_event_id}/` に生成

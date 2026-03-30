@@ -1,0 +1,27 @@
+uc: "精算結果を確認する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+
+models:
+  - name: "精算結果を確認するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "精算情報"
+  - name: "精算結果を確認するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "精算情報"
+
+tables:
+  - name: "settlements"
+    rdra_info: "精算情報"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id = :id"
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる精算情報取得"

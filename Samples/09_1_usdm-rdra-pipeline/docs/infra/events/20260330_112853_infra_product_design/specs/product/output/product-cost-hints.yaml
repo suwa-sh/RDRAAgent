@@ -1,0 +1,134 @@
+schema_version: "1.0"
+artifact_type: "cost_optimization_hints"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-cost-hints"
+title: "貸し会議室サービス コスト最適化ヒント"
+status: "draft"
+generated_at: "2026-03-30T11:32:05+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+decision_refs: []
+inputs_ref:
+  - "product-kashikaigishitsu-workload-model"
+  - "product-kashikaigishitsu-impl-aws"
+
+cost_posture: "balanced"
+
+monthly_estimate:
+  currency: "USD"
+  environment: "production"
+  assumptions:
+    baseline_rps: 50
+    peak_rps: 100
+    data_storage_gb: 100
+    log_retention_days: 365
+  breakdown:
+    - service: "Amazon EKS（共有クラスタ利用分）"
+      category: "compute"
+      estimated_monthly_usd: 350
+      notes: "フロントエンド 2 Pod + バックエンド 2 Pod + ワーカー CronJob。Namespace リソースクォータベースの按分"
+    - service: "Amazon RDS for PostgreSQL"
+      category: "database"
+      estimated_monthly_usd: 450
+      notes: "db.r6g.large マルチ AZ。gp3 100GB"
+    - service: "Amazon ElastiCache for Redis"
+      category: "cache"
+      estimated_monthly_usd: 280
+      notes: "cache.r6g.large レプリカ 1 台マルチ AZ"
+    - service: "Amazon API Gateway"
+      category: "network"
+      estimated_monthly_usd: 50
+      notes: "約 150 万リクエスト/月（50 rps × 30 日 × 推定）"
+    - service: "Amazon CloudFront"
+      category: "network"
+      estimated_monthly_usd: 30
+      notes: "静的アセット配信。PriceClass_200"
+    - service: "Amazon SQS"
+      category: "messaging"
+      estimated_monthly_usd: 5
+      notes: "月末精算バッチのメッセージング。低頻度"
+    - service: "Amazon Cognito"
+      category: "security"
+      estimated_monthly_usd: 50
+      notes: "月間アクティブユーザー 1,000 人想定"
+    - service: "AWS WAF"
+      category: "security"
+      estimated_monthly_usd: 20
+      notes: "3 マネージドルール + レート制限ルール"
+    - service: "CloudWatch Logs + S3 アーカイブ"
+      category: "observability"
+      estimated_monthly_usd: 80
+      notes: "ログ取込 50GB/月想定 + S3 アーカイブ"
+    - service: "その他（KMS, Secrets Manager 等）"
+      category: "other"
+      estimated_monthly_usd: 30
+      notes: "KMS キー管理 + シークレット管理"
+  total_estimated_monthly_usd: 1345
+
+rightsizing_recommendations:
+  - resource: "RDS for PostgreSQL"
+    current: "db.r6g.large（2 vCPU, 16 GiB）"
+    recommendation: "初期はdb.r6g.large で開始。Performance Insights で CPU 使用率を監視し、3 ヶ月後に見直し"
+    potential_savings: "スケールダウン可能な場合、月額 150 USD 削減"
+  - resource: "ElastiCache for Redis"
+    current: "cache.r6g.large（2 vCPU, 13.07 GiB）"
+    recommendation: "セッション数とキャッシュヒット率を監視。メモリ使用率が 50% 以下なら cache.r6g.medium へスケールダウン"
+    potential_savings: "月額 140 USD 削減"
+  - resource: "EKS Pod リソース"
+    current: "Backend: 500m-1000m CPU, 1-2 GiB メモリ"
+    recommendation: "VPA（Vertical Pod Autoscaler）を推奨モードで導入し、実際のリソース使用量を 2 週間計測後に調整"
+    potential_savings: "リクエスト値の適正化で 10-30% の Node コスト削減"
+
+reserved_commitment_candidates:
+  - resource: "RDS for PostgreSQL"
+    commitment_type: "リザーブドインスタンス（1 年、全前払い）"
+    discount_rate: "約 40%"
+    recommendation: "本番環境は 24/7 稼働のため RI 購入を推奨。3 ヶ月の使用実績確認後に購入"
+  - resource: "ElastiCache for Redis"
+    commitment_type: "リザーブドノード（1 年、全前払い）"
+    discount_rate: "約 35%"
+    recommendation: "本番環境は 24/7 稼働のため RI 購入を推奨"
+
+spot_preemptible_candidates:
+  - resource: "EKS ワーカーノード（非本番環境）"
+    suitability: "高"
+    recommendation: "開発・ステージング環境のワーカーノードにスポットインスタンスを使用。Karpenter の Spot 優先設定"
+    risk: "ノード回収時に Pod が再スケジュールされる。ステートレスなコンテナのため影響は軽微"
+  - resource: "精算バッチワーカー（非本番環境）"
+    suitability: "中"
+    recommendation: "非本番環境のバッチワーカーは Spot を許容。本番はオンデマンドを維持"
+    risk: "バッチ処理中のノード回収で再実行が必要になる可能性。冪等性があるため安全"
+
+storage_tiering:
+  - resource: "CloudWatch Logs"
+    current_tier: "Standard（90 日保持）"
+    recommendation: "90 日超のログは S3 Infrequent Access に移行。365 日超は S3 Glacier Deep Archive"
+    potential_savings: "年間ログストレージコスト 60% 削減"
+  - resource: "RDS バックアップ"
+    current_tier: "自動バックアップ（35 日）"
+    recommendation: "35 日超の長期バックアップが必要な場合は手動スナップショット + S3 エクスポート"
+    potential_savings: "長期保存のストレージコスト 70% 削減"
+
+data_transfer_optimization:
+  - type: "VPC 内通信"
+    recommendation: "EKS → RDS/ElastiCache は同一 AZ 配置を優先。クロス AZ 通信コストの削減"
+    potential_savings: "月額 10-20 USD"
+  - type: "CloudFront ⇔ S3"
+    recommendation: "OAC 使用で S3 直接アクセスを排除。CloudFront → S3 のデータ転送は無料"
+    potential_savings: "S3 アウトバウンド転送コスト削減"
+
+autoscaling_parameters:
+  - resource: "EKS Frontend HPA"
+    target_metric: "CPU 使用率"
+    target_value: 70
+    min_replicas: 2
+    max_replicas: 6
+    scale_down_stabilization: "300s"
+    notes: "ピーク時 2 倍の想定。2→4 Pod でカバー"
+  - resource: "EKS Backend HPA"
+    target_metric: "CPU 使用率"
+    target_value: 70
+    min_replicas: 2
+    max_replicas: 10
+    scale_down_stabilization: "300s"
+    notes: "バックエンドはフロントエンドより高負荷。最大 10 Pod"

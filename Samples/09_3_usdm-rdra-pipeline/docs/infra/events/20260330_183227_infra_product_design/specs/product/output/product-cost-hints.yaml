@@ -1,0 +1,138 @@
+schema_version: "1.0"
+artifact_type: "cost_hints"
+skill_type: "product"
+artifact_id: "product-cost-hints"
+title: "貸し会議室サービス コスト最適化ヒント"
+status: "draft"
+generated_at: "2026-03-30T18:34:00"
+vendor: "aws"
+source_refs:
+  - "aws-well-architected-framework"
+inputs_ref:
+  - "product-kashi-kaigishitsu-workload-model"
+  - "product-impl-aws"
+
+cost_strategy: "balanced"
+
+monthly_estimate:
+  currency: "USD"
+  total_range: "$800 - $1,500"
+  breakdown:
+    - service: "ECS Fargate (Backend API)"
+      estimate: "$150 - $300"
+      notes: "2-8 タスク (0.5 vCPU, 1GB)、ARM64 で約20%コスト削減"
+    - service: "App Runner (Frontend)"
+      estimate: "$30 - $60"
+      notes: "1-4 インスタンス、自動スケーリング"
+    - service: "RDS PostgreSQL (Multi-AZ)"
+      estimate: "$250 - $350"
+      notes: "db.r6g.large Multi-AZ、gp3 100GB"
+    - service: "ElastiCache Redis (Serverless)"
+      estimate: "$50 - $100"
+      notes: "Serverless、使用量に応じた課金"
+    - service: "API Gateway (HTTP API)"
+      estimate: "$10 - $30"
+      notes: "HTTP API はリクエスト単価が低い"
+    - service: "CloudFront"
+      estimate: "$20 - $50"
+      notes: "PriceClass_200、日本リージョン中心"
+    - service: "S3"
+      estimate: "$5 - $10"
+      notes: "画像保管、IA 移行あり"
+    - service: "Lambda"
+      estimate: "$1 - $5"
+      notes: "月末精算のみ実行"
+    - service: "Cognito"
+      estimate: "$50 - $100"
+      notes: "MAU ベース課金"
+    - service: "その他 (VPC, NAT, Logs, X-Ray)"
+      estimate: "$100 - $200"
+      notes: "NAT Gateway が主要コスト要因"
+
+optimization_strategies:
+  - id: "OPT-001"
+    name: "ARM64 アーキテクチャ採用"
+    category: "rightsizing"
+    description: "ECS Fargate と Lambda で ARM64 (Graviton) を採用し、約20%のコスト削減を実現"
+    impact: "high"
+    effort: "low"
+    savings_estimate: "月額 $30-60"
+
+  - id: "OPT-002"
+    name: "Savings Plans 適用"
+    category: "commitment"
+    description: "Fargate と Lambda の Compute Savings Plans (1年) を適用。定常利用分の最大30%削減"
+    impact: "medium"
+    effort: "low"
+    savings_estimate: "月額 $50-100"
+    prerequisite: "3ヶ月以上の利用実績が必要"
+
+  - id: "OPT-003"
+    name: "RDS リザーブドインスタンス"
+    category: "commitment"
+    description: "RDS の 1年リザーブド（部分前払い）で約30%削減"
+    impact: "high"
+    effort: "low"
+    savings_estimate: "月額 $75-100"
+    prerequisite: "本番環境が安定してから適用"
+
+  - id: "OPT-004"
+    name: "NAT Gateway コスト削減"
+    category: "network"
+    description: "VPC エンドポイント（S3, ECR, CloudWatch Logs, Secrets Manager）を活用し、NAT Gateway のデータ処理量を削減"
+    impact: "medium"
+    effort: "low"
+    savings_estimate: "月額 $20-50"
+
+  - id: "OPT-005"
+    name: "ログ保持期間の最適化"
+    category: "storage"
+    description: "診断ログ・依存関係ログの保持期間を30日に設定。監査ログのみ365日。S3 への長期保管でコスト削減"
+    impact: "low"
+    effort: "low"
+    savings_estimate: "月額 $10-20"
+
+  - id: "OPT-006"
+    name: "CloudFront キャッシュ最適化"
+    category: "network"
+    description: "静的アセットのキャッシュ TTL を最適化し、オリジンへのリクエスト数を削減"
+    impact: "low"
+    effort: "low"
+    savings_estimate: "月額 $5-10"
+
+  - id: "OPT-007"
+    name: "S3 ライフサイクルポリシー"
+    category: "storage"
+    description: "90日経過した画像を Standard-IA に移行。365日経過分は Glacier に移行も検討"
+    impact: "low"
+    effort: "low"
+    savings_estimate: "月額 $2-5"
+
+  - id: "OPT-008"
+    name: "ElastiCache Serverless 利用"
+    category: "rightsizing"
+    description: "ノードベースではなく Serverless を採用し、使用量に応じた課金で無駄を排除"
+    impact: "medium"
+    effort: "low"
+    savings_estimate: "月額 $20-50"
+
+auto_scaling_parameters:
+  - service: "ECS Fargate"
+    metric: "CPU 使用率"
+    target: 70
+    scale_in_cooldown: 300
+    scale_out_cooldown: 60
+    min_capacity: 2
+    max_capacity: 8
+
+  - service: "App Runner"
+    metric: "同時リクエスト数"
+    target: 100
+    min_instances: 1
+    max_instances: 4
+
+cost_anomaly_detection:
+  enabled: true
+  threshold: "20%"
+  notification: "email + slack"
+  review_frequency: "weekly"

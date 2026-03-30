@@ -1,0 +1,21 @@
+uc: "利用者評価を登録する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+models:
+  - name: "ViewModel"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "利用者評価"
+tables:
+  - name: "利用者評価"
+    rdra_info: "利用者評価"
+    operations:
+      - type: "INSERT"
+        columns:
+          - name: "id"
+            value: "主キー"
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

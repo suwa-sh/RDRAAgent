@@ -1,0 +1,27 @@
+uc: "プロフィールを編集する"
+business: "会議室管理業務"
+buc: "会議室登録フロー"
+
+models:
+  - name: "プロフィールを編集するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "オーナー情報"
+  - name: "プロフィールを編集するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "オーナー情報"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    operations:
+      - type: "UPDATE"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによるオーナー情報取得"

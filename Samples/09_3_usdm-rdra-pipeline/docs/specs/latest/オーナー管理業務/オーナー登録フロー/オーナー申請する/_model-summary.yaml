@@ -1,0 +1,27 @@
+uc: "オーナー申請する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+
+models:
+  - name: "オーナー申請するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "オーナー情報"
+  - name: "オーナー申請するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "オーナー情報"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによるオーナー情報取得"

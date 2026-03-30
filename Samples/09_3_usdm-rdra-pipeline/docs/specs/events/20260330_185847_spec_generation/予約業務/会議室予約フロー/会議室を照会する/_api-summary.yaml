@@ -1,0 +1,17 @@
+uc: "会議室を照会する"
+business: "予約業務"
+buc: "会議室予約フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/rooms"
+    summary: "広さ・価格・機能性・評価で会議室を検索する"
+    
+    response_schema: "会議室照会Response"
+    tags:
+      - "予約業務"
+schemas:
+  - name: "会議室照会Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

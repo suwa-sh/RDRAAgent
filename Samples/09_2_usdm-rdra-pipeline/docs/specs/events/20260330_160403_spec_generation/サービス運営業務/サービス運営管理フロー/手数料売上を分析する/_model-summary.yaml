@@ -1,0 +1,26 @@
+uc: "手数料売上を分析する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+
+models:
+  - name: "手数料売上を分析するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "手数料売上"
+  - name: "手数料売上を分析するRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "手数料売上"
+
+tables:
+  - name: "commission_records"
+    rdra_info: "手数料売上"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

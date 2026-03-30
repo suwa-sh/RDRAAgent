@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" fill="none">
+  <!-- Icon centered -->
+  <rect x="36" y="4" width="24" height="36" rx="2" stroke="#2563EB" stroke-width="2.5"/>
+  <circle cx="55" cy="22" r="2" fill="#2563EB"/>
+  <path d="M42 4 L42 40" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <circle cx="66" cy="14" r="2.5" fill="#0D9488"/>
+  <circle cx="66" cy="22" r="2.5" fill="#0D9488"/>
+  <circle cx="66" cy="30" r="2.5" fill="#0D9488"/>
+  <path d="M66 14 L66 30" stroke="#0D9488" stroke-width="1.5"/>
+  <!-- Text below -->
+  <text x="60" y="62" text-anchor="middle" font-family="'Inter','Noto Sans JP',system-ui,sans-serif" font-size="14" font-weight="600">
+    <tspan fill="#2563EB">Room</tspan><tspan fill="#0F172A">Connect</tspan>
+  </text>
+</svg>

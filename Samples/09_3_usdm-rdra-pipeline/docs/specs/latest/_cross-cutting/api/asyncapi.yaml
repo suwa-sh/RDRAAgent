@@ -1,0 +1,62 @@
+asyncapi: "3.0.0"
+info:
+  title: "RoomConnect AsyncAPI"
+  version: "1.0.0"
+  description: "貸し会議室サービス RoomConnect の非同期イベント仕様"
+servers:
+  production:
+    host: "mq.roomconnect.example.com"
+    protocol: "amqp"
+    description: "Production Message Queue"
+channels:
+  settlement-payment-notifications:
+    address: "settlement-payment-notifications"
+    messages:
+      SettlementPaymentNotification:
+        $ref: "#/components/messages/SettlementPaymentNotification"
+    description: "精算支払通知チャネル。精算実行時に決済機関への支払リクエストをパブリッシュする"
+operations:
+  publishSettlementPayment:
+    action: "send"
+    channel:
+      $ref: "#/channels/settlement-payment-notifications"
+    summary: "精算支払通知を送信する"
+    messages:
+      - $ref: "#/channels/settlement-payment-notifications/messages/SettlementPaymentNotification"
+components:
+  messages:
+    SettlementPaymentNotification:
+      name: "SettlementPaymentNotification"
+      title: "精算支払通知"
+      summary: "オーナーへの精算支払リクエスト"
+      contentType: "application/json"
+      payload:
+        type: object
+        required:
+          - settlement_id
+          - owner_id
+          - payout_amount
+          - idempotency_key
+        properties:
+          settlement_id:
+            type: string
+            format: uuid
+            description: "精算ID"
+          owner_id:
+            type: string
+            format: uuid
+            description: "オーナーID"
+          payout_amount:
+            type: number
+            description: "支払額(円)"
+          period:
+            type: string
+            description: "対象期間"
+          idempotency_key:
+            type: string
+            format: uuid
+            description: "冪等キー(二重支払防止)"
+          requested_at:
+            type: string
+            format: date-time
+            description: "リクエスト日時"

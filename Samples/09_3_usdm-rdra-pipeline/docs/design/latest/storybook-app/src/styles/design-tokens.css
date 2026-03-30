@@ -1,0 +1,235 @@
+/* ===========================================
+   RoomConnect Design Tokens
+   3-layer: Primitive → Semantic → Component
+   =========================================== */
+
+/* --- Primitive --- */
+:root {
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --color-gray-50: #F8FAFC;
+  --color-gray-100: #F1F5F9;
+  --color-gray-200: #E2E8F0;
+  --color-gray-300: #CBD5E1;
+  --color-gray-400: #94A3B8;
+  --color-gray-500: #64748B;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1E293B;
+  --color-gray-900: #0F172A;
+  --color-gray-950: #020617;
+
+  --color-blue-50: #EFF6FF;
+  --color-blue-100: #DBEAFE;
+  --color-blue-200: #BFDBFE;
+  --color-blue-500: #3B82F6;
+  --color-blue-600: #2563EB;
+  --color-blue-700: #1D4ED8;
+
+  --color-teal-50: #F0FDFA;
+  --color-teal-100: #CCFBF1;
+  --color-teal-500: #14B8A6;
+  --color-teal-600: #0D9488;
+  --color-teal-700: #0F766E;
+
+  --color-slate-500: #64748B;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+
+  --color-green-50: #F0FDF4;
+  --color-green-500: #22C55E;
+  --color-green-600: #16A34A;
+
+  --color-amber-50: #FFFBEB;
+  --color-amber-500: #F59E0B;
+  --color-amber-600: #D97706;
+
+  --color-red-50: #FEF2F2;
+  --color-red-500: #EF4444;
+  --color-red-600: #DC2626;
+
+  --color-orange-50: #FFF7ED;
+  --color-orange-500: #F97316;
+  --color-orange-600: #EA580C;
+
+  --color-violet-50: #F5F3FF;
+  --color-violet-500: #8B5CF6;
+  --color-violet-600: #7C3AED;
+
+  /* Spacing */
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* Radius */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+
+  /* Font */
+  --font-sans: 'Noto Sans JP', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Duration */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+}
+
+/* --- Semantic (Light) --- */
+:root {
+  --background: var(--color-white);
+  --foreground: var(--color-gray-900);
+  --border: var(--color-gray-200);
+  --muted: var(--color-gray-100);
+  --muted-foreground: var(--color-gray-500);
+  --ring: var(--color-blue-500);
+
+  --success: var(--color-green-600);
+  --success-light: var(--color-green-50);
+  --warning: var(--color-amber-600);
+  --warning-light: var(--color-amber-50);
+  --destructive: var(--color-red-600);
+  --destructive-light: var(--color-red-50);
+  --info: var(--color-blue-600);
+  --info-light: var(--color-blue-50);
+  --rating: var(--color-amber-500);
+  --virtual-accent: var(--color-violet-600);
+  --virtual-light: var(--color-violet-50);
+
+  --hover-muted: var(--color-gray-200);
+
+  /* Card */
+  --card-bg: var(--color-white);
+  --card-border: var(--color-gray-200);
+  --card-shadow: var(--shadow-sm);
+
+  /* Table */
+  --table-header-bg: var(--color-gray-50);
+
+  /* Rating */
+  --rating-empty-color: var(--color-gray-300);
+}
+
+/* --- Portal: User (default) --- */
+:root, [data-portal="user"] {
+  --primary: var(--color-blue-600);
+  --primary-hover: var(--color-blue-700);
+  --primary-foreground: var(--color-white);
+  --primary-light: var(--color-blue-50);
+}
+
+/* --- Portal: Owner --- */
+[data-portal="owner"] {
+  --primary: var(--color-teal-600);
+  --primary-hover: var(--color-teal-700);
+  --primary-foreground: var(--color-white);
+  --primary-light: var(--color-teal-50);
+}
+
+/* --- Portal: Admin --- */
+[data-portal="admin"] {
+  --primary: var(--color-slate-700);
+  --primary-hover: var(--color-gray-800);
+  --primary-foreground: var(--color-white);
+  --primary-light: var(--color-gray-100);
+}
+
+/* --- Semantic (Dark) --- */
+.dark {
+  --background: var(--color-gray-950);
+  --foreground: var(--color-gray-100);
+  --border: var(--color-gray-800);
+  --muted: var(--color-gray-900);
+  --muted-foreground: var(--color-gray-400);
+  --ring: var(--color-blue-500);
+
+  --success: var(--color-green-500);
+  --success-light: rgba(22, 163, 74, 0.15);
+  --warning: var(--color-amber-500);
+  --warning-light: rgba(249, 115, 22, 0.15);
+  --destructive: var(--color-red-500);
+  --destructive-light: rgba(220, 38, 38, 0.15);
+  --info: var(--color-blue-500);
+  --info-light: rgba(59, 130, 246, 0.15);
+  --virtual-light: rgba(139, 92, 246, 0.15);
+
+  --hover-muted: var(--color-gray-700);
+
+  --card-bg: var(--color-gray-900);
+  --card-border: var(--color-gray-800);
+  --card-shadow: 0 4px 6px rgba(0,0,0,0.3);
+
+  --table-header-bg: var(--color-gray-900);
+
+  --rating-empty-color: var(--color-gray-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: var(--color-gray-950);
+    --foreground: var(--color-gray-100);
+    --border: var(--color-gray-800);
+    --muted: var(--color-gray-900);
+    --muted-foreground: var(--color-gray-400);
+
+    --success-light: rgba(22, 163, 74, 0.15);
+    --warning-light: rgba(249, 115, 22, 0.15);
+    --destructive-light: rgba(220, 38, 38, 0.15);
+    --info-light: rgba(59, 130, 246, 0.15);
+    --virtual-light: rgba(139, 92, 246, 0.15);
+
+    --hover-muted: var(--color-gray-700);
+
+    --card-bg: var(--color-gray-900);
+    --card-border: var(--color-gray-800);
+    --card-shadow: 0 4px 6px rgba(0,0,0,0.3);
+
+    --table-header-bg: var(--color-gray-900);
+    --rating-empty-color: var(--color-gray-600);
+  }
+}
+
+/* --- Dark Portal overrides --- */
+.dark [data-portal="user"], :root:not(.light) [data-portal="user"] {
+  --primary: var(--color-blue-500);
+  --primary-hover: var(--color-blue-600);
+  --primary-light: rgba(59, 130, 246, 0.15);
+}
+.dark [data-portal="owner"], :root:not(.light) [data-portal="owner"] {
+  --primary: var(--color-teal-500);
+  --primary-hover: var(--color-teal-600);
+  --primary-light: rgba(20, 184, 166, 0.15);
+}
+.dark [data-portal="admin"], :root:not(.light) [data-portal="admin"] {
+  --primary: var(--color-slate-500);
+  --primary-hover: var(--color-slate-600);
+  --primary-light: rgba(100, 116, 139, 0.15);
+}

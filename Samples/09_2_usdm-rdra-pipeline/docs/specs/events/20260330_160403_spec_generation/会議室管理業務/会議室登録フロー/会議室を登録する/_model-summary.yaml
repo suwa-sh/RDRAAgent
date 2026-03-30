@@ -1,0 +1,26 @@
+uc: "会議室を登録する"
+business: "会議室管理業務"
+buc: "会議室登録フロー"
+
+models:
+  - name: "会議室を登録するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "会議室情報"
+  - name: "CreateRoomRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "会議室情報"
+
+tables:
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

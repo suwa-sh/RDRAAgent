@@ -1,0 +1,17 @@
+uc: "オーナーに問合せる"
+business: "会議室貸出業務"
+buc: "問合せ対応フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/inquiries"
+    summary: "会議室オーナーに質問を送信する"
+    request_schema: "オーナー問合せRequest"
+    response_schema: "オーナー問合せResponse"
+    tags:
+      - "会議室貸出業務"
+schemas:
+  - name: "オーナー問合せResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

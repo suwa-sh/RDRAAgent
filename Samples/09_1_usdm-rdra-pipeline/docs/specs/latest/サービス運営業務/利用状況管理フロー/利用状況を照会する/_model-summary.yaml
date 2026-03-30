@@ -1,0 +1,21 @@
+uc: "利用状況を照会する"
+business: "サービス運営業務"
+buc: "利用状況管理フロー"
+models:
+  - name: "ViewModel"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "利用履歴"
+tables:
+  - name: "利用履歴"
+    rdra_info: "利用履歴"
+    operations:
+      - type: "SELECT"
+        columns:
+          - name: "id"
+            value: "主キー"
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

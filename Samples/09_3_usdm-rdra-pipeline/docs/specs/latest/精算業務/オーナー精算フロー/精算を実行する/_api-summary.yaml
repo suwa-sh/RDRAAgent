@@ -1,0 +1,22 @@
+uc: "精算を実行する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/settlements/actions/execute"
+    summary: "算出した精算額を決済機関経由でオーナーに支払う"
+    request_schema: "精算実行Request"
+    response_schema: "精算実行Response"
+    tags:
+      - "精算業務"
+async_events:
+  - channel: "settlement-payment-notifications"
+    direction: "publish"
+    message_schema: "SettlementPaymentNotification"
+    summary: "精算支払通知を決済機関に送信"
+schemas:
+  - name: "精算実行Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

@@ -1,0 +1,829 @@
+version: "1.0"
+datastore: "rdb"
+
+tables:
+  - name: "owners"
+    rdra_info: "オーナー情報"
+    description: "会議室オーナーのプロフィール情報を管理する"
+    columns:
+      - name: "owner_id"
+        type: "uuid"
+        nullable: false
+        description: "オーナーID。主キー"
+      - name: "name"
+        type: "string"
+        nullable: false
+        description: "氏名。個人情報暗号化対象"
+      - name: "email"
+        type: "string"
+        nullable: false
+        description: "メールアドレス。個人情報暗号化対象。ユニーク制約"
+      - name: "phone"
+        type: "string"
+        nullable: false
+        description: "電話番号。個人情報暗号化対象"
+      - name: "profile"
+        type: "text"
+        nullable: true
+        description: "プロフィール自由記述"
+      - name: "current_status"
+        type: "string"
+        nullable: false
+        default: "未申請"
+        description: "オーナー申請状態。値: 未申請, 申請中, 審査中, 承認, 却下, 退会"
+      - name: "registered_at"
+        type: "datetime"
+        nullable: false
+        description: "登録日時"
+      - name: "updated_at"
+        type: "datetime"
+        nullable: false
+        description: "最終更新日時"
+    primary_key:
+      - "owner_id"
+    foreign_keys: []
+    indexes:
+      - name: "uq_owners_email"
+        columns: ["email"]
+        unique: true
+        reason: "ユニーク制約: メールアドレスの一意性を保証"
+        used_by: ["オーナーを登録する"]
+      - name: "idx_owners_status"
+        columns: ["current_status"]
+        unique: false
+        reason: "申請状態でのフィルター検索"
+        used_by: ["オーナー登録を審査する"]
+    used_by:
+      - uc: "オーナーを登録する"
+        operations: ["INSERT"]
+      - uc: "オーナー申請する"
+        operations: ["UPDATE"]
+      - uc: "オーナー登録を審査する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "プロフィールを編集する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "オーナー退会する"
+        operations: ["UPDATE"]
+      - uc: "退会を処理する"
+        operations: ["SELECT", "UPDATE"]
+
+  - name: "service_terms"
+    rdra_info: "サービス規約"
+    description: "サービス利用規約。SCD2方式で世代管理する"
+    columns:
+      - name: "terms_id"
+        type: "uuid"
+        nullable: false
+        description: "規約ID。主キー"
+      - name: "terms_name"
+        type: "string"
+        nullable: false
+        description: "規約名"
+      - name: "content"
+        type: "text"
+        nullable: false
+        description: "規約本文"
+      - name: "effective_date"
+        type: "date"
+        nullable: false
+        description: "適用開始日"
+      - name: "valid_from"
+        type: "datetime"
+        nullable: false
+        description: "SCD2 世代開始日時"
+      - name: "valid_to"
+        type: "datetime"
+        nullable: true
+        description: "SCD2 世代終了日時。NULLは現行世代"
+    primary_key:
+      - "terms_id"
+    foreign_keys: []
+    indexes:
+      - name: "idx_service_terms_valid"
+        columns: ["valid_from", "valid_to"]
+        unique: false
+        reason: "有効期間による現行規約の取得"
+        used_by: ["規約を参照する"]
+    used_by:
+      - uc: "規約を参照する"
+        operations: ["SELECT"]
+
+  - name: "rooms"
+    rdra_info: "会議室情報"
+    description: "会議室の物件情報を管理する"
+    columns:
+      - name: "room_id"
+        type: "uuid"
+        nullable: false
+        description: "会議室ID。主キー"
+      - name: "room_name"
+        type: "string"
+        nullable: false
+        description: "会議室名"
+      - name: "area"
+        type: "decimal"
+        nullable: false
+        description: "広さ(平方メートル)"
+      - name: "price"
+        type: "decimal"
+        nullable: false
+        description: "価格(円/時)"
+      - name: "features"
+        type: "text"
+        nullable: true
+        description: "機能性の説明"
+      - name: "location"
+        type: "string"
+        nullable: false
+        description: "所在地"
+      - name: "image_url"
+        type: "string"
+        nullable: true
+        description: "会議室画像URL"
+      - name: "availability"
+        type: "boolean"
+        nullable: false
+        default: "true"
+        description: "貸出可否。true=貸出可"
+      - name: "owner_id"
+        type: "uuid"
+        nullable: false
+        description: "所有オーナーID。外部キー"
+      - name: "created_at"
+        type: "datetime"
+        nullable: false
+        description: "登録日時"
+      - name: "updated_at"
+        type: "datetime"
+        nullable: false
+        description: "最終更新日時"
+    primary_key:
+      - "room_id"
+    foreign_keys:
+      - columns: ["owner_id"]
+        references:
+          table: "owners"
+          columns: ["owner_id"]
+        on_delete: "CASCADE"
+    indexes:
+      - name: "fk_rooms_owners"
+        columns: ["owner_id"]
+        unique: false
+        reason: "オーナーIDによる会議室一覧取得"
+        used_by: ["会議室を登録する", "会議室評価を確認する"]
+      - name: "idx_rooms_availability_price"
+        columns: ["availability", "price"]
+        unique: false
+        reason: "貸出可能な会議室の価格順検索"
+        used_by: ["会議室を照会する"]
+      - name: "idx_rooms_area"
+        columns: ["area"]
+        unique: false
+        reason: "広さによるフィルター検索"
+        used_by: ["会議室を照会する"]
+    used_by:
+      - uc: "会議室を登録する"
+        operations: ["INSERT"]
+      - uc: "会議室を照会する"
+        operations: ["SELECT"]
+      - uc: "会議室を予約する"
+        operations: ["SELECT"]
+      - uc: "利用状況を分析する"
+        operations: ["SELECT"]
+
+  - name: "operation_rules"
+    rdra_info: "運用ルール"
+    description: "会議室ごとの運用ルールを管理する"
+    columns:
+      - name: "rule_id"
+        type: "uuid"
+        nullable: false
+        description: "ルールID。主キー"
+      - name: "cancel_policy"
+        type: "text"
+        nullable: false
+        description: "キャンセルポリシー"
+      - name: "availability"
+        type: "boolean"
+        nullable: false
+        description: "貸出可否"
+      - name: "available_hours"
+        type: "string"
+        nullable: false
+        description: "利用時間帯"
+      - name: "room_id"
+        type: "uuid"
+        nullable: false
+        description: "対象会議室ID。外部キー"
+    primary_key:
+      - "rule_id"
+    foreign_keys:
+      - columns: ["room_id"]
+        references:
+          table: "rooms"
+          columns: ["room_id"]
+        on_delete: "CASCADE"
+    indexes:
+      - name: "uq_operation_rules_room_id"
+        columns: ["room_id"]
+        unique: true
+        reason: "ユニーク制約: 1会議室につき1運用ルール"
+        used_by: ["運用ルールを設定する"]
+    used_by:
+      - uc: "運用ルールを設定する"
+        operations: ["INSERT", "UPDATE"]
+
+  - name: "keys"
+    rdra_info: "鍵情報"
+    description: "会議室の鍵の貸出・返却状態を管理する"
+    columns:
+      - name: "key_id"
+        type: "uuid"
+        nullable: false
+        description: "鍵ID。主キー"
+      - name: "key_type"
+        type: "string"
+        nullable: false
+        description: "鍵種別"
+      - name: "current_status"
+        type: "string"
+        nullable: false
+        description: "貸出状態。値: 利用可, 貸出中, 返却済"
+      - name: "room_id"
+        type: "uuid"
+        nullable: false
+        description: "対象会議室ID。外部キー"
+    primary_key:
+      - "key_id"
+    foreign_keys:
+      - columns: ["room_id"]
+        references:
+          table: "rooms"
+          columns: ["room_id"]
+        on_delete: "CASCADE"
+    indexes:
+      - name: "fk_keys_rooms"
+        columns: ["room_id"]
+        unique: false
+        reason: "会議室IDによる鍵一覧取得"
+        used_by: ["鍵を受け取る", "鍵を貸出する", "鍵を返却する"]
+    used_by:
+      - uc: "鍵を受け取る"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "鍵を貸出する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "鍵を返却する"
+        operations: ["SELECT", "UPDATE"]
+
+  - name: "reservations"
+    rdra_info: "予約情報"
+    description: "会議室の予約情報を管理する。event_snapshot型"
+    columns:
+      - name: "reservation_id"
+        type: "uuid"
+        nullable: false
+        description: "予約ID。主キー"
+      - name: "start_datetime"
+        type: "datetime"
+        nullable: false
+        description: "利用開始日時"
+      - name: "end_datetime"
+        type: "datetime"
+        nullable: false
+        description: "利用終了日時"
+      - name: "payment_method"
+        type: "string"
+        nullable: false
+        description: "決済方法。値: クレジットカード, 電子マネー"
+      - name: "usage_fee"
+        type: "decimal"
+        nullable: false
+        description: "利用料金(円)"
+      - name: "current_status"
+        type: "string"
+        nullable: false
+        default: "仮予約"
+        description: "予約状態。値: 仮予約, 確定, 変更, 利用中, 利用完了, 取消"
+      - name: "room_id"
+        type: "uuid"
+        nullable: false
+        description: "対象会議室ID。外部キー"
+      - name: "user_id"
+        type: "uuid"
+        nullable: false
+        description: "利用者ID。外部キー"
+      - name: "idempotency_key"
+        type: "uuid"
+        nullable: false
+        description: "冪等キー。重複予約防止"
+      - name: "created_at"
+        type: "datetime"
+        nullable: false
+        description: "作成日時"
+      - name: "updated_at"
+        type: "datetime"
+        nullable: false
+        description: "最終更新日時"
+    primary_key:
+      - "reservation_id"
+    foreign_keys:
+      - columns: ["room_id"]
+        references:
+          table: "rooms"
+          columns: ["room_id"]
+        on_delete: "RESTRICT"
+      - columns: ["user_id"]
+        references:
+          table: "users"
+          columns: ["user_id"]
+        on_delete: "RESTRICT"
+    indexes:
+      - name: "uq_reservations_idempotency_key"
+        columns: ["idempotency_key"]
+        unique: true
+        reason: "ユニーク制約: 冪等キーによる重複予約防止"
+        used_by: ["会議室を予約する"]
+      - name: "idx_reservations_room_start"
+        columns: ["room_id", "start_datetime"]
+        unique: false
+        reason: "会議室の予約一覧取得(日時順)"
+        used_by: ["会議室を予約する", "予約を変更する"]
+      - name: "idx_reservations_user_status"
+        columns: ["user_id", "current_status"]
+        unique: false
+        reason: "利用者の予約状態別一覧取得"
+        used_by: ["予約を変更する", "予約を取消する"]
+    used_by:
+      - uc: "会議室を予約する"
+        operations: ["INSERT"]
+      - uc: "予約を変更する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "予約を取消する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "利用許諾を判定する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "鍵を貸出する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "鍵を返却する"
+        operations: ["SELECT", "UPDATE"]
+
+  - name: "users"
+    rdra_info: "利用者情報"
+    description: "利用者のアカウント情報を管理する"
+    columns:
+      - name: "user_id"
+        type: "uuid"
+        nullable: false
+        description: "利用者ID。主キー"
+      - name: "name"
+        type: "string"
+        nullable: false
+        description: "氏名。個人情報暗号化対象"
+      - name: "email"
+        type: "string"
+        nullable: false
+        description: "メールアドレス。個人情報暗号化対象。ユニーク制約"
+      - name: "phone"
+        type: "string"
+        nullable: false
+        description: "電話番号。個人情報暗号化対象"
+      - name: "registered_at"
+        type: "datetime"
+        nullable: false
+        description: "登録日時"
+    primary_key:
+      - "user_id"
+    foreign_keys: []
+    indexes:
+      - name: "uq_users_email"
+        columns: ["email"]
+        unique: true
+        reason: "ユニーク制約: メールアドレスの一意性を保証"
+        used_by: ["会議室を照会する"]
+    used_by:
+      - uc: "会議室を照会する"
+        operations: ["SELECT"]
+      - uc: "会議室を予約する"
+        operations: ["SELECT"]
+
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    description: "利用者からの会議室・ホスト評価を管理する。event型(追記のみ)"
+    columns:
+      - name: "review_id"
+        type: "uuid"
+        nullable: false
+        description: "評価ID。主キー"
+      - name: "reviewer_id"
+        type: "uuid"
+        nullable: false
+        description: "評価者ID(利用者ID)"
+      - name: "target_id"
+        type: "uuid"
+        nullable: false
+        description: "評価対象ID(会議室IDまたはオーナーID)"
+      - name: "review_type"
+        type: "string"
+        nullable: false
+        description: "評価種別。値: 会議室評価, ホスト評価"
+      - name: "reservation_id"
+        type: "uuid"
+        nullable: false
+        description: "関連予約ID"
+      - name: "score"
+        type: "decimal"
+        nullable: false
+        description: "評価点(1.0-5.0)"
+      - name: "comment"
+        type: "text"
+        nullable: true
+        description: "評価コメント"
+      - name: "created_at"
+        type: "datetime"
+        nullable: false
+        description: "評価日時"
+    primary_key:
+      - "review_id"
+    foreign_keys:
+      - columns: ["reservation_id"]
+        references:
+          table: "reservations"
+          columns: ["reservation_id"]
+        on_delete: "RESTRICT"
+    indexes:
+      - name: "uq_room_reviews_reservation_type"
+        columns: ["reservation_id", "review_type"]
+        unique: true
+        reason: "ユニーク制約: 1予約につき評価種別ごとに1件のみ"
+        used_by: ["会議室を評価する", "ホストを評価する"]
+      - name: "idx_room_reviews_target"
+        columns: ["target_id", "review_type"]
+        unique: false
+        reason: "評価対象別の評価一覧取得"
+        used_by: ["会議室評価を確認する", "評価結果を確認する"]
+    used_by:
+      - uc: "会議室を評価する"
+        operations: ["INSERT"]
+      - uc: "ホストを評価する"
+        operations: ["INSERT"]
+      - uc: "会議室評価を確認する"
+        operations: ["SELECT"]
+      - uc: "評価結果を確認する"
+        operations: ["SELECT"]
+      - uc: "会議室を照会する"
+        operations: ["SELECT"]
+
+  - name: "user_reviews"
+    rdra_info: "利用者評価"
+    description: "オーナーが利用者に付けた評価を管理する"
+    columns:
+      - name: "review_id"
+        type: "uuid"
+        nullable: false
+        description: "評価ID。主キー"
+      - name: "reviewer_id"
+        type: "uuid"
+        nullable: false
+        description: "評価者ID(オーナーID)"
+      - name: "target_user_id"
+        type: "uuid"
+        nullable: false
+        description: "評価対象利用者ID"
+      - name: "reservation_id"
+        type: "uuid"
+        nullable: false
+        description: "関連予約ID"
+      - name: "score"
+        type: "decimal"
+        nullable: false
+        description: "評価点(1.0-5.0)"
+      - name: "comment"
+        type: "text"
+        nullable: true
+        description: "評価コメント"
+      - name: "created_at"
+        type: "datetime"
+        nullable: false
+        description: "評価日時"
+    primary_key:
+      - "review_id"
+    foreign_keys:
+      - columns: ["reservation_id"]
+        references:
+          table: "reservations"
+          columns: ["reservation_id"]
+        on_delete: "RESTRICT"
+    indexes:
+      - name: "uq_user_reviews_reservation"
+        columns: ["reservation_id"]
+        unique: true
+        reason: "ユニーク制約: 1予約につき利用者評価は1件のみ"
+        used_by: ["利用者を評価する"]
+      - name: "idx_user_reviews_target"
+        columns: ["target_user_id"]
+        unique: false
+        reason: "利用者IDによる評価一覧取得(利用許諾判定用)"
+        used_by: ["利用許諾を判定する"]
+    used_by:
+      - uc: "利用者を評価する"
+        operations: ["INSERT"]
+      - uc: "利用許諾を判定する"
+        operations: ["SELECT"]
+
+  - name: "inquiries"
+    rdra_info: "問合せ"
+    description: "利用者からの問合せと回答を管理する"
+    columns:
+      - name: "inquiry_id"
+        type: "uuid"
+        nullable: false
+        description: "問合せID。主キー"
+      - name: "inquiry_type"
+        type: "string"
+        nullable: false
+        description: "問合せ種別。値: 会議室問合せ, サービス問合せ"
+      - name: "content"
+        type: "text"
+        nullable: false
+        description: "問合せ内容"
+      - name: "reply_content"
+        type: "text"
+        nullable: true
+        description: "回答内容"
+      - name: "current_status"
+        type: "string"
+        nullable: false
+        default: "受付"
+        description: "問合せ状態。値: 受付, 対応中, 回答済, 完了"
+      - name: "sender_id"
+        type: "uuid"
+        nullable: false
+        description: "送信者ID(利用者ID)"
+      - name: "receiver_id"
+        type: "uuid"
+        nullable: false
+        description: "受信者ID(オーナーIDまたは運営担当者ID)"
+      - name: "reservation_id"
+        type: "uuid"
+        nullable: true
+        description: "関連予約ID(任意)"
+      - name: "created_at"
+        type: "datetime"
+        nullable: false
+        description: "問合せ日時"
+      - name: "replied_at"
+        type: "datetime"
+        nullable: true
+        description: "回答日時"
+    primary_key:
+      - "inquiry_id"
+    foreign_keys: []
+    indexes:
+      - name: "idx_inquiries_receiver_status"
+        columns: ["receiver_id", "current_status"]
+        unique: false
+        reason: "受信者別・状態別の問合せ一覧取得"
+        used_by: ["問合せに回答する", "サービス問合せに回答する"]
+      - name: "idx_inquiries_sender"
+        columns: ["sender_id"]
+        unique: false
+        reason: "送信者の問合せ一覧取得"
+        used_by: ["オーナーに問合せる", "サービスに問合せる"]
+    used_by:
+      - uc: "オーナーに問合せる"
+        operations: ["INSERT"]
+      - uc: "問合せに回答する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "サービスに問合せる"
+        operations: ["INSERT"]
+      - uc: "サービス問合せに回答する"
+        operations: ["SELECT", "UPDATE"]
+
+  - name: "commissions"
+    rdra_info: "手数料情報"
+    description: "サービス運営の手数料情報を管理する"
+    columns:
+      - name: "commission_id"
+        type: "uuid"
+        nullable: false
+        description: "手数料ID。主キー"
+      - name: "period"
+        type: "string"
+        nullable: false
+        description: "対象期間"
+      - name: "room_id"
+        type: "uuid"
+        nullable: false
+        description: "会議室ID"
+      - name: "commission_rate"
+        type: "decimal"
+        nullable: false
+        description: "手数料率"
+      - name: "commission_amount"
+        type: "decimal"
+        nullable: false
+        description: "手数料額(円)"
+    primary_key:
+      - "commission_id"
+    foreign_keys:
+      - columns: ["room_id"]
+        references:
+          table: "rooms"
+          columns: ["room_id"]
+        on_delete: "RESTRICT"
+    indexes:
+      - name: "idx_commissions_room_period"
+        columns: ["room_id", "period"]
+        unique: false
+        reason: "会議室別・期間別の手数料集計"
+        used_by: ["手数料売上を分析する", "精算額を計算する"]
+    used_by:
+      - uc: "手数料売上を分析する"
+        operations: ["SELECT"]
+      - uc: "精算額を計算する"
+        operations: ["SELECT"]
+
+  - name: "usage_history"
+    rdra_info: "利用履歴"
+    description: "会議室の利用履歴を管理する"
+    columns:
+      - name: "history_id"
+        type: "uuid"
+        nullable: false
+        description: "履歴ID。主キー"
+      - name: "user_id"
+        type: "uuid"
+        nullable: false
+        description: "利用者ID"
+      - name: "room_id"
+        type: "uuid"
+        nullable: false
+        description: "会議室ID"
+      - name: "usage_datetime"
+        type: "datetime"
+        nullable: false
+        description: "利用日時"
+      - name: "usage_hours"
+        type: "decimal"
+        nullable: false
+        description: "利用時間"
+      - name: "usage_fee"
+        type: "decimal"
+        nullable: false
+        description: "利用料金(円)"
+      - name: "reservation_id"
+        type: "uuid"
+        nullable: false
+        description: "関連予約ID"
+    primary_key:
+      - "history_id"
+    foreign_keys:
+      - columns: ["reservation_id"]
+        references:
+          table: "reservations"
+          columns: ["reservation_id"]
+        on_delete: "RESTRICT"
+    indexes:
+      - name: "idx_usage_history_room"
+        columns: ["room_id", "usage_datetime"]
+        unique: false
+        reason: "会議室別の利用履歴取得(日時順)"
+        used_by: ["利用状況を分析する", "精算額を計算する"]
+      - name: "idx_usage_history_user"
+        columns: ["user_id"]
+        unique: false
+        reason: "利用者別の利用履歴取得"
+        used_by: ["利用履歴を管理する"]
+    used_by:
+      - uc: "利用履歴を管理する"
+        operations: ["SELECT"]
+      - uc: "利用状況を分析する"
+        operations: ["SELECT"]
+      - uc: "手数料売上を分析する"
+        operations: ["SELECT"]
+      - uc: "精算額を計算する"
+        operations: ["SELECT"]
+
+  - name: "sales_records"
+    rdra_info: "売上実績"
+    description: "オーナーの会議室別売上実績を管理する"
+    columns:
+      - name: "sales_id"
+        type: "uuid"
+        nullable: false
+        description: "売上ID。主キー"
+      - name: "owner_id"
+        type: "uuid"
+        nullable: false
+        description: "オーナーID"
+      - name: "room_id"
+        type: "uuid"
+        nullable: false
+        description: "会議室ID"
+      - name: "period"
+        type: "string"
+        nullable: false
+        description: "対象期間"
+      - name: "sales_amount"
+        type: "decimal"
+        nullable: false
+        description: "売上金額(円)"
+    primary_key:
+      - "sales_id"
+    foreign_keys:
+      - columns: ["owner_id"]
+        references:
+          table: "owners"
+          columns: ["owner_id"]
+        on_delete: "RESTRICT"
+    indexes:
+      - name: "idx_sales_records_owner_period"
+        columns: ["owner_id", "period"]
+        unique: false
+        reason: "オーナー別・期間別の売上集計"
+        used_by: ["精算結果を確認する"]
+    used_by:
+      - uc: "精算結果を確認する"
+        operations: ["SELECT"]
+
+  - name: "settlements"
+    rdra_info: "精算情報"
+    description: "オーナーへの精算情報を管理する"
+    columns:
+      - name: "settlement_id"
+        type: "uuid"
+        nullable: false
+        description: "精算ID。主キー"
+      - name: "owner_id"
+        type: "uuid"
+        nullable: false
+        description: "オーナーID"
+      - name: "period"
+        type: "string"
+        nullable: false
+        description: "対象期間"
+      - name: "total_usage_fee"
+        type: "decimal"
+        nullable: false
+        description: "利用料合計(円)"
+      - name: "commission"
+        type: "decimal"
+        nullable: false
+        description: "手数料(円)"
+      - name: "payout_amount"
+        type: "decimal"
+        nullable: false
+        description: "支払額(円)"
+      - name: "settlement_date"
+        type: "date"
+        nullable: true
+        description: "精算日"
+      - name: "status"
+        type: "string"
+        nullable: false
+        default: "pending"
+        description: "精算状態。値: pending, calculated, executed, failed"
+      - name: "idempotency_key"
+        type: "uuid"
+        nullable: false
+        description: "冪等キー。二重精算防止"
+    primary_key:
+      - "settlement_id"
+    foreign_keys:
+      - columns: ["owner_id"]
+        references:
+          table: "owners"
+          columns: ["owner_id"]
+        on_delete: "RESTRICT"
+    indexes:
+      - name: "uq_settlements_idempotency_key"
+        columns: ["idempotency_key"]
+        unique: true
+        reason: "ユニーク制約: 冪等キーによる二重精算防止"
+        used_by: ["精算を実行する"]
+      - name: "idx_settlements_owner_period"
+        columns: ["owner_id", "period"]
+        unique: false
+        reason: "オーナー別・期間別の精算取得"
+        used_by: ["精算結果を確認する"]
+    used_by:
+      - uc: "精算額を計算する"
+        operations: ["INSERT", "UPDATE"]
+      - uc: "精算を実行する"
+        operations: ["SELECT", "UPDATE"]
+      - uc: "精算結果を確認する"
+        operations: ["SELECT"]
+
+er_diagram: |
+  erDiagram
+    owners ||--o{ rooms : "所有"
+    owners ||--o{ settlements : "精算"
+    owners ||--o{ sales_records : "売上"
+    rooms ||--|| operation_rules : "運用ルール"
+    rooms ||--o{ keys : "鍵"
+    rooms ||--o{ reservations : "予約"
+    rooms ||--o{ commissions : "手数料"
+    users ||--o{ reservations : "予約"
+    reservations ||--o{ room_reviews : "評価"
+    reservations ||--o{ user_reviews : "利用者評価"
+    reservations ||--o{ usage_history : "利用履歴"

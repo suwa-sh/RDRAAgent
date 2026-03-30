@@ -1,0 +1,26 @@
+uc: "オーナー申請する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+
+models:
+  - name: "オーナー申請するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "オーナー申請"
+  - name: "CreateApplicationRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "オーナー申請"
+
+tables:
+  - name: "owner_applications"
+    rdra_info: "オーナー申請"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

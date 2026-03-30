@@ -1,0 +1,296 @@
+schema_version: "1.0"
+artifact_type: "canonical_model"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-workload-model"
+title: "貸し会議室サービス ワークロードモデル"
+status: "draft"
+generated_at: "2026-03-30T15:32:40"
+source_refs:
+  - "aws-well-architected-framework"
+  - "aws-rds-postgresql"
+  - "aws-elasticache-redis"
+decision_refs:
+  - "product-decision-001"
+  - "product-decision-002"
+  - "product-decision-003"
+inputs_ref:
+  - "product-kashikaigishitsu-service-input"
+  - "foundation-context"
+  - "shared-platform-context"
+
+elements:
+  - id: "compute_frontend"
+    name: "フロントエンド コンピュート"
+    category: "compute"
+    description: "利用者・会議室オーナー・サービス運営担当者向け Web UI を SSR/SPA で提供するコンピュート。レスポンシブデザイン対応"
+    requirements:
+      - id: "REQ-COMP-FE-001"
+        description: "Next.js SSR アプリケーションをホスティングし、p99 500ms 以内のレスポンスを達成する"
+        priority: "must"
+        rationale: "workload_type: web_app, latency_sensitivity.target_p99: 500ms"
+      - id: "REQ-COMP-FE-002"
+        description: "静的アセット（JS/CSS/画像）を CDN 経由で配信する"
+        priority: "should"
+        rationale: "レスポンス改善とオリジンサーバ負荷軽減"
+      - id: "REQ-COMP-FE-003"
+        description: "アクター別 UI（利用者/オーナー/運営）を同一アプリケーションでルーティングする"
+        priority: "must"
+        rationale: "arch-design SP-002: アクター別 UI 分離"
+    constraints:
+      - "TypeScript / Next.js スタック"
+      - "モノレポ構成"
+    dependencies:
+      - "cdn"
+      - "api_gateway"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "compute_api"
+    name: "バックエンド API コンピュート"
+    category: "compute"
+    description: "ビジネスロジック処理を集約するモノリシック API サーバ。CaaS(k8s) 上で稼働"
+    requirements:
+      - id: "REQ-COMP-API-001"
+        description: "Hono フレームワークによる REST API を CaaS 上でホスティングする"
+        priority: "must"
+        rationale: "arch-design SP-010: モノリシック API, technology_context: Hono"
+      - id: "REQ-COMP-API-002"
+        description: "baseline 50 RPS、ピーク時 100 RPS を処理できるオートスケーリングを構成する"
+        priority: "must"
+        rationale: "traffic_pattern.baseline_rps: 50, spike_multiplier: 2"
+      - id: "REQ-COMP-API-003"
+        description: "冪等キーを KVS で管理し、重複リクエストを検知する"
+        priority: "must"
+        rationale: "arch-design SP-011: 冪等性保証"
+      - id: "REQ-COMP-API-004"
+        description: "ヘルスチェックエンドポイント（/healthz）を提供する"
+        priority: "must"
+        rationale: "arch-design CTP-005: ヘルスチェック"
+    constraints:
+      - "TypeScript / Hono スタック"
+      - "N+1 冗長構成"
+    dependencies:
+      - "database_primary"
+      - "cache"
+      - "message_queue"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "compute_worker"
+    name: "バックエンドワーカー コンピュート"
+    category: "compute"
+    description: "非同期処理・バッチ処理を実行するワーカー。月末精算バッチ、通知メール送信等"
+    requirements:
+      - id: "REQ-COMP-WK-001"
+        description: "MQ からのメッセージ駆動型ワーカーと CronJob ベースのバッチジョブを実行する"
+        priority: "must"
+        rationale: "arch-design SP-012: 精算バッチ処理, SP-013: ジョブ冪等性"
+      - id: "REQ-COMP-WK-002"
+        description: "月末精算バッチは8時間以内に完了すること"
+        priority: "must"
+        rationale: "NFR B.2.2.1: バッチ処理時間 8時間以内"
+    constraints:
+      - "ジョブ冪等性必須（ジョブ実行IDで管理）"
+    dependencies:
+      - "database_primary"
+      - "message_queue"
+      - "external_payment"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "api_gateway"
+    name: "API ゲートウェイ"
+    category: "networking"
+    description: "全ティアへのリクエストルーティング、JWT トークン検証、粗粒度 RBAC、レート制限、WAF 統合"
+    requirements:
+      - id: "REQ-GW-001"
+        description: "JWT トークンの一元検証を実施し、ユーザー情報をバックエンドにヘッダー伝播する"
+        priority: "must"
+        rationale: "arch-design SP-004: トークン検証の一元化"
+      - id: "REQ-GW-002"
+        description: "エンドポイントごとのロールベースアクセス制御を実施する"
+        priority: "must"
+        rationale: "arch-design SP-005: 粗粒度 RBAC"
+      - id: "REQ-GW-003"
+        description: "エンドポイントごとのレート制限を実施する"
+        priority: "must"
+        rationale: "arch-design SP-007: レート制限"
+      - id: "REQ-GW-004"
+        description: "管理画面 API への接続元 IP 制限を実施する"
+        priority: "should"
+        rationale: "arch-design SR-004: 管理画面接続元制限"
+    constraints:
+      - "WAF 統合必須"
+      - "TLS 終端"
+    dependencies:
+      - "waf"
+      - "idp"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "waf"
+    name: "Web Application Firewall"
+    category: "security"
+    description: "OWASP Top 10 対策を実施する WAF"
+    requirements:
+      - id: "REQ-WAF-001"
+        description: "OWASP Top 10 ルールセットを適用し、カスタムルールと定期チューニングを実施する"
+        priority: "must"
+        rationale: "arch-design SP-006: WAF 統合, NFR E.10.1.1"
+    constraints: []
+    dependencies:
+      - "api_gateway"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "cdn"
+    name: "コンテンツ配信ネットワーク"
+    category: "networking"
+    description: "静的アセットのグローバル配信と DDoS 緩和"
+    requirements:
+      - id: "REQ-CDN-001"
+        description: "フロントエンドの静的アセットをエッジキャッシュで配信する"
+        priority: "should"
+        rationale: "レスポンスタイム改善"
+    constraints: []
+    dependencies:
+      - "compute_frontend"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "idp"
+    name: "ID プロバイダ"
+    category: "security"
+    description: "OAuth2/OIDC 準拠の認証基盤。トークン発行・ユーザー登録・MFA 管理"
+    requirements:
+      - id: "REQ-IDP-001"
+        description: "OAuth2/OIDC 準拠の認証フローを提供する"
+        priority: "must"
+        rationale: "arch-design SP-009: OAuth2/OIDC 準拠, CTP-001"
+      - id: "REQ-IDP-002"
+        description: "全アクター種別に MFA を提供する"
+        priority: "must"
+        rationale: "arch-design SP-008: MFA 対応"
+      - id: "REQ-IDP-003"
+        description: "アクセストークン有効期限 15分〜1時間、リフレッシュトークン 7日〜30日を設定する"
+        priority: "must"
+        rationale: "arch-design CTP-007: トークンライフサイクル管理"
+    constraints:
+      - "マネージド IdP サービスを使用"
+    dependencies: []
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "database_primary"
+    name: "プライマリデータベース（RDB）"
+    category: "database"
+    description: "トランザクション整合性が必要な全エンティティ（15テーブル）の永続化層"
+    requirements:
+      - id: "REQ-DB-001"
+        description: "PostgreSQL 互換の RDB でトランザクション整合性を保証する"
+        priority: "must"
+        rationale: "arch-design SP-014: RDB メインストレージ, consistency_needs: strong"
+      - id: "REQ-DB-002"
+        description: "日次フル+差分バックアップを7世代管理する"
+        priority: "must"
+        rationale: "arch-design SP-016: 日次バックアップ"
+      - id: "REQ-DB-003"
+        description: "カード番号・個人情報（氏名、メールアドレス、電話番号）は保管時に暗号化する"
+        priority: "must"
+        rationale: "arch-design SP-017: 機密データ暗号化, data_sensitivity.pii: true"
+      - id: "REQ-DB-004"
+        description: "RPO 24時間、RTO 4時間以内を達成する"
+        priority: "must"
+        rationale: "recovery_target.rpo: 24h, rto: 4h"
+      - id: "REQ-DB-005"
+        description: "冪等キーカラムに UNIQUE 制約を設定する"
+        priority: "must"
+        rationale: "arch-design SR-006: 冪等キー UNIQUE 制約"
+    constraints:
+      - "PostgreSQL エンジン推奨"
+      - "warm_standby フェイルオーバー"
+      - "テスト環境では個人情報マスキング必須"
+    dependencies: []
+    source_refs:
+      - "aws-rds-postgresql"
+
+  - id: "cache"
+    name: "キャッシュ（KVS）"
+    category: "cache"
+    description: "セッション情報・冪等キーの高速参照用 KVS"
+    requirements:
+      - id: "REQ-CACHE-001"
+        description: "セッション情報と冪等キーを KVS で管理する"
+        priority: "must"
+        rationale: "arch-design SP-015: KVS キャッシュ・セッション"
+      - id: "REQ-CACHE-002"
+        description: "冪等キーの TTL を設定可能にする"
+        priority: "must"
+        rationale: "冪等キーの有効期限管理"
+    constraints:
+      - "Redis 互換推奨"
+    dependencies: []
+    source_refs:
+      - "aws-elasticache-redis"
+
+  - id: "message_queue"
+    name: "メッセージキュー"
+    category: "messaging"
+    description: "非同期処理用のメッセージキュー。バックエンド API からワーカーへのジョブ発行"
+    requirements:
+      - id: "REQ-MQ-001"
+        description: "バックエンド API からワーカーへの非同期ジョブ発行を保証する"
+        priority: "must"
+        rationale: "arch-design tier-backend-worker の MQ 連携"
+      - id: "REQ-MQ-002"
+        description: "メッセージに trace_id を含めてトレーサビリティを確保する"
+        priority: "must"
+        rationale: "arch-design SR-007: ワーカートレースID"
+    constraints:
+      - "At-least-once 配信保証"
+    dependencies: []
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "external_payment"
+    name: "外部決済連携アダプタ"
+    category: "integration"
+    description: "決済機関との連携アダプタ。精算依頼・利用料引き落としを処理"
+    requirements:
+      - id: "REQ-EXT-001"
+        description: "決済機関への精算依頼に冪等キーを付与する"
+        priority: "must"
+        rationale: "arch-design SP-018: 冪等性確保"
+      - id: "REQ-EXT-002"
+        description: "リトライとサーキットブレーカーを適用する"
+        priority: "must"
+        rationale: "arch-design SP-019: リトライ・サーキットブレーカー"
+      - id: "REQ-EXT-003"
+        description: "全通信内容を監査ログとして記録する"
+        priority: "must"
+        rationale: "arch-design SR-009: 外部連携ログ"
+    constraints:
+      - "TLS 暗号化必須"
+    dependencies:
+      - "compute_api"
+      - "compute_worker"
+    source_refs:
+      - "aws-well-architected-framework"
+
+  - id: "network_segmentation"
+    name: "ネットワーク分離"
+    category: "networking"
+    description: "DMZ + 内部セグメント分離。外部直接アクセスは API Gateway のみに制限"
+    requirements:
+      - id: "REQ-NET-001"
+        description: "DMZ と内部セグメントを分離し、外部アクセスを API Gateway のみに制限する"
+        priority: "must"
+        rationale: "arch-design CTR-004: ネットワーク分離"
+      - id: "REQ-NET-002"
+        description: "全ティア間通信を TLS で暗号化する"
+        priority: "must"
+        rationale: "arch-design CTR-001: 通信暗号化"
+    constraints: []
+    dependencies: []
+    source_refs:
+      - "aws-well-architected-framework"

@@ -10,6 +10,7 @@ version: "1.0"
 event_id: "{timestamp}_{変更名}"
 created_at: "YYYY-MM-DDTHH:MM:SS"
 source: "変更要望テキストのファイルパスまたは説明"
+system_name: "対象システムの名称"
 
 requirements:
   - id: "REQ-001"
@@ -38,6 +39,13 @@ requirements:
 ```
 
 ## フィールド説明
+
+### system_name（システム名）
+
+- 対象システムの名称を記述する
+- 変更要望テキストの内容から自然な日本語のシステム名を1つ抽出・決定する
+- 既存の `docs/usdm/latest/requirements.yaml` に `system_name` が存在する場合は、それを引き継ぐ（変更要望でシステム名の変更が明示されない限り）
+- RDRA モデルの `システム概要.json` の `system_name` と一致させる
 
 ### requirement（要求）
 

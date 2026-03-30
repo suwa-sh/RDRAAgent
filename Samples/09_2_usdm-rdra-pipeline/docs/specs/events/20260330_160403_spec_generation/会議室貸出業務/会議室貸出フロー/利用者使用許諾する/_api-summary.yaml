@@ -1,0 +1,17 @@
+uc: "利用者使用許諾する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/reservations/:id/approve"
+    summary: "利用者使用許諾"
+    request_schema: "ApproveReservationRequest"
+    response_schema: "ReservationResponse"
+    tags:
+      - "会議室貸出フロー"
+schemas:
+  - name: "ReservationResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

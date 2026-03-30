@@ -1,0 +1,41 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-003"
+title: "フロントエンドホスティング選定: App Runner vs ECS Fargate + ALB"
+status: "accepted"
+generated_at: "2026-03-30T15:32:40"
+source_refs:
+  - "aws-well-architected-framework"
+inputs_ref:
+  - "product-kashikaigishitsu-service-input"
+
+decision:
+  context: "Next.js SSR アプリケーションのホスティング先を選定する"
+  conflict_type: "capability"
+  options:
+    - id: "app-runner"
+      description: "AWS App Runner: フルマネージド Web アプリケーションホスティング"
+      pros:
+        - "運用負荷が極めて低い（ALB/ECS の管理不要）"
+        - "自動スケーリング内蔵"
+        - "HTTPS 自動設定"
+        - "コンテナイメージまたはソースコードからデプロイ可能"
+      cons:
+        - "細かいネットワーク制御に制限あり"
+        - "VPC 内リソースへのアクセスは VPC Connector 経由"
+    - id: "ecs-fargate-alb"
+      description: "Amazon ECS on Fargate + ALB"
+      pros:
+        - "バックエンド API と同一クラスタで管理可能"
+        - "ネットワーク制御の柔軟性"
+        - "ALB ルーティングの細かな制御"
+      cons:
+        - "ALB + ECS Service の管理が必要"
+        - "運用負荷が増加"
+  chosen_option: "app-runner"
+  rationale: "フロントエンドは外部公開のシンプルな Web アプリであり、App Runner の運用負荷の低さとコスト効率が最適。バックエンド API は VPC 内の ECS Fargate で稼働するため、フロントエンドから API Gateway 経由でアクセスする構成が自然"
+  risk_assessment: "App Runner のスケーリング特性がトラフィックパターンに合わない場合は ECS Fargate + ALB に移行。コンテナベースのためリスクは低い"
+  affected_elements:
+    - "compute_frontend"
+  review_date: "2027-03-30"

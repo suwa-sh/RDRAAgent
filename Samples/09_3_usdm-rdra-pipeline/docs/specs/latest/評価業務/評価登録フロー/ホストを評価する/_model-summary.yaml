@@ -1,0 +1,27 @@
+uc: "ホストを評価する"
+business: "評価業務"
+buc: "評価登録フロー"
+
+models:
+  - name: "ホストを評価するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "会議室評価"
+  - name: "ホストを評価するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "command"
+    rdra_info: "会議室評価"
+
+tables:
+  - name: "room_reviews"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによる会議室評価取得"

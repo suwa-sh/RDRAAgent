@@ -1,0 +1,34 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "product"
+artifact_id: "product-decision-002"
+title: "データベース選定: RDS for PostgreSQL (Multi-AZ)"
+status: "approved"
+generated_at: "2026-03-30T18:34:00"
+
+context: |
+  14エンティティ全てが RDB に格納される設計。
+  金銭取引（予約・精算）のトランザクション整合性が必須。
+  Aurora は高可用性だが 99% SLA には過剰。
+
+decision: |
+  Amazon RDS for PostgreSQL (Multi-AZ) を採用する。
+  Aurora ではなく標準 RDS を選択する理由:
+  1. 99% SLA + warm_standby の要件には Multi-AZ で十分
+  2. Aurora の自動フェイルオーバー（~30秒）は不要（60分未満で良い）
+  3. コストが Aurora より低い
+
+consequences:
+  positive:
+    - "Multi-AZ で warm_standby フェイルオーバーを実現"
+    - "自動バックアップで RPO 24h を満たす"
+    - "RDS Proxy で接続プール管理"
+  negative:
+    - "Aurora と比較してフェイルオーバー時間が長い（~1-2分）"
+    - "リードレプリカのスケーリングが Aurora ほど柔軟ではない"
+
+alternatives_considered:
+  - name: "Amazon Aurora PostgreSQL"
+    reason_rejected: "99% SLA には過剰。コストが高い"
+  - name: "Amazon DynamoDB"
+    reason_rejected: "強整合性のリレーショナルデータモデルが必要"

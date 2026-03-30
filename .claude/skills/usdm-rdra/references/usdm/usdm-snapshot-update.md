@@ -19,8 +19,9 @@ USDM イベントの requirements.yaml を latest/requirements.yaml にマージ
 
 ```yaml
 version: "1.0"
-last_updated: "{現在の日時}"
+last_updated: "{date '+%Y-%m-%dT%H:%M:%S' コマンドで取得した現在の日時}"
 last_event_id: "{event_id}"
+system_name: "{イベントの system_name}"
 requirements:
   # イベントの requirements をそのまま含める
 ```
@@ -30,7 +31,8 @@ requirements:
 1. イベントの requirements.yaml から各要求を取得
 2. 要求 ID が latest に存在しない場合: 末尾に追加
 3. 要求 ID が latest に存在する場合: イベント側の内容で上書き
-4. `last_updated` と `last_event_id` を更新
+4. `last_updated`（`date '+%Y-%m-%dT%H:%M:%S'` コマンドで取得）と `last_event_id` を更新
+5. イベントに `system_name` がある場合: latest の `system_name` を更新
 
 ### 注意事項
 

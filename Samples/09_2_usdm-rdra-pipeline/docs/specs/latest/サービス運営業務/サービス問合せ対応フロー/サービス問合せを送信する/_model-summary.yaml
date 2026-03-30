@@ -1,0 +1,26 @@
+uc: "サービス問合せを送信する"
+business: "サービス運営業務"
+buc: "サービス問合せ対応フロー"
+
+models:
+  - name: "サービス問合せを送信するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "問合せ"
+  - name: "CreateSupportInquiryRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "問合せ"
+
+tables:
+  - name: "inquiries"
+    rdra_info: "問合せ"
+    operations:
+      - type: "INSERT"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

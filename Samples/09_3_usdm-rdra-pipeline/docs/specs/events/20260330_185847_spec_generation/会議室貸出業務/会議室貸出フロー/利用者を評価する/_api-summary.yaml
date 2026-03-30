@@ -1,0 +1,17 @@
+uc: "利用者を評価する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/user-reviews"
+    summary: "利用者の利用態度等を評価し記録する"
+    request_schema: "利用者評価Request"
+    response_schema: "利用者評価Response"
+    tags:
+      - "会議室貸出業務"
+schemas:
+  - name: "利用者評価Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

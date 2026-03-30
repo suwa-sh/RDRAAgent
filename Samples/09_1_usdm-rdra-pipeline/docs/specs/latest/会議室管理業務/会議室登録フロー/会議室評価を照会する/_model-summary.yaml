@@ -1,0 +1,21 @@
+uc: "会議室評価を照会する"
+business: "会議室管理業務"
+buc: "会議室登録フロー"
+models:
+  - name: "ViewModel"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "会議室評価"
+tables:
+  - name: "会議室評価"
+    rdra_info: "会議室評価"
+    operations:
+      - type: "SELECT"
+        columns:
+          - name: "id"
+            value: "主キー"
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

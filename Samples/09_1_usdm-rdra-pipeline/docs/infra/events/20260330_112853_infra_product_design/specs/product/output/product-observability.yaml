@@ -1,0 +1,228 @@
+schema_version: "1.0"
+artifact_type: "observability_spec"
+skill_type: "product"
+artifact_id: "product-kashikaigishitsu-observability"
+title: "貸し会議室サービス オブザーバビリティ仕様"
+status: "draft"
+generated_at: "2026-03-30T11:32:05+09:00"
+source_refs:
+  - "aws-well-architected-framework"
+decision_refs: []
+inputs_ref:
+  - "product-kashikaigishitsu-workload-model"
+  - "shared-platform-context"
+
+sli_definitions:
+  - id: "sli-availability"
+    name: "可用性 SLI"
+    description: "ヘルスチェック成功率（全エンドポイント）"
+    measurement: "成功したヘルスチェック / 全ヘルスチェック * 100"
+    data_source: "Amazon Managed Prometheus"
+    query: "sum(rate(http_requests_total{status!~'5..'}[5m])) / sum(rate(http_requests_total[5m])) * 100"
+
+  - id: "sli-latency"
+    name: "レイテンシ SLI"
+    description: "API レスポンスタイム p99"
+    measurement: "HTTP リクエストレスポンスタイムの 99 パーセンタイル"
+    data_source: "Amazon Managed Prometheus"
+    query: "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+
+  - id: "sli-error-rate"
+    name: "エラーレート SLI"
+    description: "5xx エラー率"
+    measurement: "5xx レスポンス / 全レスポンス * 100"
+    data_source: "Amazon Managed Prometheus"
+    query: "sum(rate(http_requests_total{status=~'5..'}[5m])) / sum(rate(http_requests_total[5m])) * 100"
+
+  - id: "sli-throughput"
+    name: "スループット SLI"
+    description: "秒間リクエスト処理数"
+    measurement: "成功した HTTP リクエスト/秒"
+    data_source: "Amazon Managed Prometheus"
+    query: "sum(rate(http_requests_total{status!~'5..'}[5m]))"
+
+slo_definitions:
+  - id: "slo-availability"
+    sli_ref: "sli-availability"
+    target: 99.9
+    window: "30d"
+    error_budget:
+      total_minutes: 43.2
+      burn_rate_alert:
+        fast_burn: 14.4
+        slow_burn: 6.0
+    consequences: "エラーバジェット消費 50% 超過でデプロイ凍結、80% 超過でインシデント対応"
+
+  - id: "slo-latency"
+    sli_ref: "sli-latency"
+    target_ms: 500
+    percentile: 99
+    window: "30d"
+    consequences: "p99 が 500ms を 10 分以上超過した場合にアラート"
+
+  - id: "slo-error-rate"
+    sli_ref: "sli-error-rate"
+    target: 0.1
+    window: "30d"
+    consequences: "エラー率が 0.1% を 5 分以上超過した場合にアラート"
+
+metrics:
+  infrastructure:
+    - name: "CPU 使用率"
+      source: "ADOT Collector (DaemonSet)"
+      metric_name: "container_cpu_usage_seconds_total"
+      alert_threshold: "80%"
+    - name: "メモリ使用率"
+      source: "ADOT Collector (DaemonSet)"
+      metric_name: "container_memory_working_set_bytes"
+      alert_threshold: "85%"
+    - name: "ディスク使用率"
+      source: "CloudWatch"
+      metric_name: "FreeStorageSpace"
+      alert_threshold: "80%"
+    - name: "ネットワーク I/O"
+      source: "ADOT Collector"
+      metric_name: "container_network_receive_bytes_total"
+      alert_threshold: "定義なし（トレンド監視）"
+
+  application:
+    - name: "リクエストレイテンシ"
+      source: "ADOT Collector"
+      metric_name: "http_request_duration_seconds"
+      percentiles: [50, 90, 95, 99]
+    - name: "エラーレート"
+      source: "ADOT Collector"
+      metric_name: "http_requests_total{status=~'5..'}"
+      alert_threshold: "0.1%"
+    - name: "スループット"
+      source: "ADOT Collector"
+      metric_name: "http_requests_total"
+      alert_threshold: "100 rps（ピーク時上限監視）"
+    - name: "冪等キーヒット率"
+      source: "アプリケーションメトリクス"
+      metric_name: "idempotency_key_hit_total"
+      alert_threshold: "異常増加時にアラート（重複リクエストの兆候）"
+
+  database:
+    - name: "RDS 接続数"
+      source: "CloudWatch"
+      metric_name: "DatabaseConnections"
+      alert_threshold: "160（上限 200 の 80%）"
+    - name: "RDS レプリケーション遅延"
+      source: "CloudWatch"
+      metric_name: "ReplicaLag"
+      alert_threshold: "1 秒"
+    - name: "RDS IOPS"
+      source: "CloudWatch"
+      metric_name: "ReadIOPS/WriteIOPS"
+      alert_threshold: "プロビジョンド IOPS の 80%"
+
+  cache:
+    - name: "Redis キャッシュヒット率"
+      source: "CloudWatch"
+      metric_name: "CacheHitRate"
+      alert_threshold: "90%（下回った場合にアラート）"
+    - name: "Redis 接続数"
+      source: "CloudWatch"
+      metric_name: "CurrConnections"
+      alert_threshold: "上限の 80%"
+    - name: "Redis メモリ使用率"
+      source: "CloudWatch"
+      metric_name: "DatabaseMemoryUsagePercentage"
+      alert_threshold: "80%"
+
+logging:
+  format: "構造化 JSON"
+  required_fields:
+    - "timestamp"
+    - "level"
+    - "service"
+    - "trace_id"
+    - "span_id"
+    - "message"
+  log_types:
+    - type: "access"
+      description: "HTTP リクエスト/レスポンスのメタデータ"
+      destination: "CloudWatch Logs"
+      retention_days: 90
+    - type: "audit"
+      description: "状態遷移を伴うビジネスイベント（誰が、何を、どうしたか）"
+      destination: "CloudWatch Logs"
+      retention_days: 365
+    - type: "diagnostic"
+      description: "アプリケーションデバッグ情報"
+      destination: "CloudWatch Logs"
+      retention_days: 30
+    - type: "dependency"
+      description: "外部 DB/API 呼び出しの開始・終了・処理時間・成否"
+      destination: "CloudWatch Logs"
+      retention_days: 90
+  archive:
+    destination: "S3（log-archive アカウント）"
+    retention_days: 365
+    format: "gzip 圧縮 JSON"
+
+tracing:
+  provider: "AWS X-Ray + ADOT Collector"
+  sampling_rate: 0.1
+  propagation: "W3C Trace Context"
+  required_spans:
+    - "HTTP リクエスト受信"
+    - "データベースクエリ"
+    - "外部 API 呼び出し（決済機関）"
+    - "SQS メッセージ送受信"
+    - "Redis 操作"
+
+dashboards:
+  - name: "サービス概要ダッシュボード"
+    panels:
+      - "SLI/SLO ステータス（可用性・レイテンシ・エラーレート・スループット）"
+      - "エラーバジェット残量"
+      - "リクエストレート（全体・ロール別）"
+      - "レスポンスタイム分布（p50/p90/p95/p99）"
+  - name: "インフラダッシュボード"
+    panels:
+      - "EKS Pod 数・CPU・メモリ"
+      - "RDS 接続数・IOPS・レプリケーション遅延"
+      - "ElastiCache ヒット率・メモリ使用率"
+      - "SQS キュー深度・DLQ メッセージ数"
+  - name: "ビジネスダッシュボード"
+    panels:
+      - "予約数（日別・時間別）"
+      - "精算バッチ処理時間・処理件数"
+      - "決済成功率・失敗率"
+      - "冪等キーヒット数（重複検知）"
+
+alerting:
+  channels:
+    - type: "email"
+      targets: ["ops-team@example.com"]
+      severity: ["critical", "warning"]
+    - type: "slack"
+      webhook: "{slack_webhook_url}"
+      severity: ["critical", "warning", "info"]
+  rules:
+    - name: "高エラーレート"
+      condition: "エラーレート > 0.1% が 5 分以上継続"
+      severity: "critical"
+      action: "即座にオンコール担当に通知"
+    - name: "高レイテンシ"
+      condition: "p99 レイテンシ > 500ms が 10 分以上継続"
+      severity: "warning"
+      action: "Slack 通知 + インシデントチケット作成"
+    - name: "RDS 接続数逼迫"
+      condition: "DatabaseConnections > 160"
+      severity: "warning"
+      action: "Slack 通知"
+    - name: "精算バッチ長時間実行"
+      condition: "CronJob 実行時間 > 6 時間"
+      severity: "warning"
+      action: "Slack 通知 + エスカレーション"
+    - name: "DLQ メッセージ滞留"
+      condition: "DLQ メッセージ数 > 0"
+      severity: "warning"
+      action: "Slack 通知 + 調査チケット作成"
+    - name: "エラーバジェット消費"
+      condition: "月間エラーバジェット消費 > 50%"
+      severity: "warning"
+      action: "デプロイ凍結検討の通知"

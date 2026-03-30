@@ -112,7 +112,7 @@ node <skill-path>/scripts/validateRequirements.js docs/usdm/events/{event_id}/re
 
 - 終了コード 0（PASS）: 次の Step へ進む
 - 終了コード 1（FAIL）: エラー内容を確認し、requirements.yaml を修正してから再度バリデーションを実行する。修正対象は主に以下:
-  - `version`, `event_id`, `created_at`, `source` の必須フィールド
+  - `version`, `event_id`, `created_at`, `source`, `system_name` の必須フィールド
   - ID 形式（`REQ-001`, `SPEC-001-01`）
   - `priority` の値（`must`, `should`, `could` のいずれか）
   - `affected_models` の構造（`type`, `action`, `target` の必須フィールド）

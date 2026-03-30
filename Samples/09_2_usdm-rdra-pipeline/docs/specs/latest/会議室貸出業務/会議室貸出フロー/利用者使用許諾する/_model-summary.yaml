@@ -1,0 +1,33 @@
+uc: "利用者使用許諾する"
+business: "会議室貸出業務"
+buc: "会議室貸出フロー"
+
+models:
+  - name: "利用者使用許諾するState"
+    tier: "tier-frontend"
+    layer: "state"
+    type: "state"
+    rdra_info: "予約情報"
+  - name: "ApproveReservationRequest"
+    tier: "tier-backend-api"
+    layer: "presentation"
+    type: "request-dto"
+    rdra_info: "予約情報"
+
+tables:
+  - name: "reservations"
+    rdra_info: "予約情報"
+    operations:
+      - type: "UPDATE"
+        columns: []
+        where: ""
+    indexes_needed: []
+  - name: "user_reviews"
+    rdra_info: "利用者評価"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

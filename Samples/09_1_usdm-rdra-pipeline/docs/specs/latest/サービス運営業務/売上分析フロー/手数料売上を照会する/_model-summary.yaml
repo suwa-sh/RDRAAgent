@@ -1,0 +1,21 @@
+uc: "手数料売上を照会する"
+business: "サービス運営業務"
+buc: "売上分析フロー"
+models:
+  - name: "ViewModel"
+    tier: "tier-frontend"
+    layer: "ビュー層"
+    type: "view-model"
+    rdra_info: "手数料売上"
+tables:
+  - name: "手数料売上"
+    rdra_info: "手数料売上"
+    operations:
+      - type: "SELECT"
+        columns:
+          - name: "id"
+            value: "主キー"
+        where: ""
+    indexes_needed: []
+kvs: []
+object_storage: []

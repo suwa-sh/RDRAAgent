@@ -11,6 +11,17 @@
 - `docs/arch/latest/arch-design.yaml` — アーキテクチャ設計
 - `docs/design/latest/design-event.yaml` — デザインシステム
 
+## システム名の使い分け
+
+パイプライン全体で2種類のシステム名が存在する。Spec 工程では以下のルールで使い分ける:
+
+| 用途 | 参照元 | 例 |
+|------|--------|-----|
+| API ドメイン、コード識別子、OpenAPI info.title | `design-event.yaml` `brand.name`（英語） | `RoomConnect` |
+| 仕様書の見出し、UI ラベル（日本語）、ドキュメントタイトル | USDM `system_name`（和名） | `貸し会議室マッチングSaaS` |
+
+和名の参照先は `docs/usdm/latest/requirements.yaml` の `system_name`、または `docs/rdra/latest/システム概要.json` の `system_name`。
+
 ## 出力
 
 - 生成対象 UC 一覧（業務/BUC/UC のツリー）

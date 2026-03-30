@@ -1,0 +1,27 @@
+uc: "規約を参照する"
+business: "オーナー管理業務"
+buc: "オーナー登録フロー"
+
+models:
+  - name: "規約を参照するViewModel"
+    tier: "tier-frontend"
+    layer: "view"
+    type: "view-model"
+    rdra_info: "サービス規約"
+  - name: "規約を参照するCommand"
+    tier: "tier-backend-api"
+    layer: "usecase"
+    type: "query"
+    rdra_info: "サービス規約"
+
+tables:
+  - name: "service_terms"
+    rdra_info: "サービス規約"
+    operations:
+      - type: "SELECT"
+        columns: []
+        where: "id = :id"
+    indexes_needed:
+      - columns: ["id"]
+        reason: "主キー検索"
+        access_pattern: "IDによるサービス規約取得"

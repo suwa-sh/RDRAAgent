@@ -1,0 +1,17 @@
+uc: "運用状況を管理する"
+business: "サービス運営業務"
+buc: "サービス運営管理フロー"
+endpoints:
+  - method: "GET"
+    path: "/api/v1/analytics/dashboard"
+    summary: "サービス全体の運用状況を管理する"
+    
+    response_schema: "運用状況管理Response"
+    tags:
+      - "サービス運営業務"
+schemas:
+  - name: "運用状況管理Response"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true

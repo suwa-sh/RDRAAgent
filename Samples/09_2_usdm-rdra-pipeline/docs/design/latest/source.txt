@@ -1,0 +1,2 @@
+初期デザインシステム生成: 貸し会議室マッチングSaaS「RoomConnect」
+trigger_event: rdra:20260330_150443_initial_build, arch:20260330_153500_infra_feedback

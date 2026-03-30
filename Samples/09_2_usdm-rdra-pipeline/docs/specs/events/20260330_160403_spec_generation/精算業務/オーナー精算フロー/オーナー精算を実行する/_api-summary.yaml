@@ -1,0 +1,22 @@
+uc: "オーナー精算を実行する"
+business: "精算業務"
+buc: "オーナー精算フロー"
+endpoints:
+  - method: "POST"
+    path: "/api/v1/admin/settlements/execute"
+    summary: "精算実行"
+    request_schema: "ExecuteSettlementRequest"
+    response_schema: "SettlementExecutionResponse"
+    tags:
+      - "オーナー精算フロー"
+async_events:
+  - channel: "settlement-request-queue"
+    direction: "publish"
+    message_schema: "SettlementRequestMessage"
+    summary: "決済機関への精算依頼"
+schemas:
+  - name: "SettlementExecutionResponse"
+    properties:
+      - name: "id"
+        type: "string"
+        required: true
