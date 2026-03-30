@@ -1,2 +1,0 @@
-Spec 生成: RDRA/NFR/Arch/Design モデルから UC 単位の詳細仕様と全体横断 UX/UI 設計仕様を生成
-trigger_event: rdra:20260330_150443_initial_build, arch:20260330_153500_infra_feedback, design:20260330_154625_design_system
