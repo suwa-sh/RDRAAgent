@@ -108,7 +108,7 @@ app_architecture:
           responsibility: "ビジネスフロー制御、トランザクション境界"
           allowed_dependencies:
             - "L-backend-api-domain"
-            - "L-backend-api-gateway"
+            - "L-backend-api-repository"
           policies: []
           rules: []
         - id: "L-backend-api-domain"
@@ -117,13 +117,50 @@ app_architecture:
           allowed_dependencies: []
           policies: []
           rules: []
-        - id: "L-backend-api-gateway"
-          name: "ゲートウェイ層"
-          responsibility: "Driven Side の入出力。データストアアクセス、外部システム連携、MQ 発行"
+        - id: "L-backend-api-repository"
+          name: "リポジトリ層"
+          responsibility: "domain のデータアクセス方法。domain/aggregate root と 1:1 で定義。gateway/adapter を利用してデータを永続化・取得する"
           allowed_dependencies:
             - "L-backend-api-domain"
+            - "L-backend-api-gateway"
           policies: []
-          rules: []
+          rules:
+            - id: "LR-001"
+              name: "Aggregate Root 対応"
+              description: "repository は domain の aggregate root と 1:1 で定義する。複数テーブルにアクセスする場合は複数の gateway/adapter を利用する"
+              reason: "DDD の集約パターンに従い、データアクセスの責務を明確化"
+              source_model: "なし"
+              confidence: "default"
+            - id: "LR-002"
+              name: "Event/Snapshot 併用パターン"
+              description: "event_snapshot 型エンティティの場合、repository.save(domain) は historyAdapter.insert + snapshotAdapter.upsert を実行する"
+              reason: "イミュータブルデータモデルの永続化パターンを repository で隠蔽"
+              source_model: "なし"
+              confidence: "default"
+            - id: "LR-003"
+              name: "メソッド命名規約"
+              description: "method 名は JPA に寄せる: save, findById, findAll, deleteById など"
+              reason: "広く知られた命名規約に統一し、学習コストを低減"
+              source_model: "なし"
+              confidence: "default"
+        - id: "L-backend-api-gateway"
+          name: "ゲートウェイ層"
+          responsibility: "Driven Side の入出力。adapter と client で構成。adapter は datastore model と 1:1 で定義し datastore アクセスを担う。client は datastore SDK のラッパー"
+          allowed_dependencies: []
+          policies: []
+          rules:
+            - id: "LR-004"
+              name: "Adapter の責務"
+              description: "adapter は RDB テーブル等の datastore model と 1:1 で定義する。adapter/client や外部ライブラリの client を利用する。method 名は datastore の操作に寄せる: insert, update, delete など。ORM 利用時は自動生成コードの配置場所となる"
+              reason: "datastore モデルとの対応を明確にし、変更影響範囲を限定する"
+              source_model: "なし"
+              confidence: "default"
+            - id: "LR-005"
+              name: "Client の責務"
+              description: "client は datastore を操作する SDK。外部ライブラリの使い方に共通ルールがある場合や SDK が提供されていない場合に作成する"
+              reason: "SDK の利用方法を一箇所に集約し、横断的な設定変更を容易にする"
+              source_model: "なし"
+              confidence: "default"
       cross_layer_policies:
         - id: "CLP-001"
           name: "IF なし（直接依存）"
@@ -142,8 +179,9 @@ app_architecture:
         graph TD
           P[presentation] --> U[usecase]
           U --> D[domain]
-          U --> G[gateway]
-          G --> D
+          U --> R[repository]
+          R --> D
+          R --> G[gateway]
 
 data_architecture:
   entities:
@@ -371,10 +409,70 @@ docs/arch/
       arch-design.md         # Markdown 表現（Mermaid 図含む）
       _inference.md          # 推論根拠サマリ
       source.txt             # トリガー説明
+      decisions/             # 決定記録
+        arch-decision-001.yaml
+        arch-decision-002.yaml
   latest/
     arch-design.yaml         # 最新スナップショット
     arch-design.md           # 最新 Markdown
+    decisions/               # 決定記録（events からコピー）
+      arch-decision-001.yaml
+      arch-decision-002.yaml
 ```
+
+### 決定記録スキーマ
+
+`decisions/` 配下に格納する決定記録（Decision Record）の YAML フォーマット。
+
+```yaml
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "architecture"
+artifact_id: "arch-decision-{NNN}"
+title: "判断タイトル"
+status: "approved"
+generated_at: "YYYY-MM-DDTHH:MM:SS"
+context: |
+  問題の背景・制約を記述する。
+  なぜこの判断が必要になったかの文脈。
+decision: |
+  判断内容と理由を記述する。
+  何を選択し、なぜその選択が最適かの根拠。
+consequences:
+  positive:
+    - "ポジティブな結果1"
+    - "ポジティブな結果2"
+  negative:
+    - "ネガティブな結果・トレードオフ1"
+alternatives_considered:
+  - name: "代替案名"
+    reason_rejected: "不採用理由"
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|-----------|---|------|------|
+| schema_version | string | Yes | スキーマバージョン（"1.0"固定） |
+| artifact_type | string | Yes | 成果物種別（"decision_record"固定） |
+| skill_type | string | Yes | スキル種別（"architecture"固定） |
+| artifact_id | string | Yes | 決定記録ID（"arch-decision-{NNN}" 形式、001から連番） |
+| title | string | Yes | 判断タイトル（日本語） |
+| status | string | Yes | ステータス（"approved"固定） |
+| generated_at | string | Yes | 生成日時（ISO 8601。イベントの created_at と同じ値） |
+| context | string | Yes | 問題の背景・制約 |
+| decision | string | Yes | 判断内容と理由 |
+| consequences.positive | string[] | Yes | ポジティブな結果（1つ以上） |
+| consequences.negative | string[] | Yes | ネガティブな結果・トレードオフ（0個以上） |
+| alternatives_considered | object[] | Yes | 検討した代替案（0個以上。各要素は name と reason_rejected を持つ） |
+
+決定カテゴリ:
+
+| カテゴリ | 内容 |
+|---------|------|
+| テクノロジースタック選定 | 言語・FW の選択理由 |
+| ティアパターン選定 | CaaS vs FaaS 等、ティアごとの選定理由 |
+| データモデル戦略 | event_snapshot vs resource_mutable の使い分け基準 |
+| 認証方式選定 | OAuth2/OIDC の採用理由 |
+| レイヤリング戦略 | 凹型 vs 直接依存 等 |
 
 ### スクリプト実装メモ
 

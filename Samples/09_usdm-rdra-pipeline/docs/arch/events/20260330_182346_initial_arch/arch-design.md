@@ -249,16 +249,18 @@ S --> A["api client"]
 graph TD
 P["presentation"] --> U["usecase"]
 U --> D["domain"]
-U --> G["gateway"]
-G --> D
+U --> R["repository"]
+R --> D
+R --> G["gateway"]
 ```
 
 | ID | レイヤー名 | 責務 | 依存許可先 |
 |-----|---------|------|----------|
 | L-backend-api-presentation | プレゼンテーション層 | HTTP リクエスト/レスポンスの変換、入力バリデーション、アクセスログ出力 | L-backend-api-usecase |
-| L-backend-api-usecase | ユースケース層 | ビジネスフロー制御、トランザクション境界、認可チェック（細粒度） | L-backend-api-domain, L-backend-api-gateway |
+| L-backend-api-usecase | ユースケース層 | ビジネスフロー制御、トランザクション境界、認可チェック（細粒度） | L-backend-api-domain, L-backend-api-repository |
 | L-backend-api-domain | ドメイン層 | ビジネスルール、エンティティ、値オブジェクト、状態遷移の整合性保証 | - |
-| L-backend-api-gateway | ゲートウェイ層 | データストアアクセス、外部システム連携、冪等キー管理 | L-backend-api-domain |
+| L-backend-api-repository | リポジトリ層 | domain のデータアクセス方法。aggregate root と 1:1 で定義。gateway/adapter を利用してデータを永続化・取得する | L-backend-api-domain, L-backend-api-gateway |
+| L-backend-api-gateway | ゲートウェイ層 | Driven Side の入出力。adapter（datastore model と 1:1）と client（SDK ラッパー）で構成。外部システム連携、冪等キー管理 | - |
 
 #### プレゼンテーション層 (L-backend-api-presentation) の方針・ルール
 
@@ -288,15 +290,36 @@ G --> D
 | LP-008 | 状態遷移 | 予約状態（7遷移）・オーナー申請状態（6遷移）・問合せ状態（5遷移）の状態整合性をドメインモデル内で保証する | 状態.tsv に3つの状態モデルと計18の状態遷移パスが定義されているため | 状態: 予約状態, オーナー申請状態, 問合せ状態 | 高 |
 | LP-009 | ログ出力禁止 | domain 層は直接ログ出力を行わない。ドメインイベントの発行または例外のスローで状態変化を通知する | ドメインモデルの純粋性を維持し、インフラ層への依存を排除する | なし | 高 |
 
+#### リポジトリ層 (L-backend-api-repository) の方針・ルール
+
+**方針**
+
+| ID | 方針名 | 内容 | 根拠 | RDRA/NFR 要素 | 確信度 |
+|-----|---------|------|------|--------------|:------:|
+| LP-010 | イベント+スナップショット二重書き込み | event_snapshot 型エンティティに対し、repository.save(domain) で historyAdapter.insert + snapshotAdapter.upsert を1トランザクションで実行する | 予約情報・オーナー情報等の event_snapshot 型エンティティの整合性確保 | 情報: 予約情報, オーナー情報, 問合せ | 高 |
+
+**ルール**
+
+| ID | ルール名 | 内容 | 根拠 | RDRA/NFR 要素 | 確信度 |
+|-----|---------|------|------|--------------|:------:|
+| LR-001 | Aggregate Root 対応 | repository は domain の aggregate root と 1:1 で定義する。複数テーブルにアクセスする場合は複数の gateway/adapter を利用する | DDD の集約パターンに従い、データアクセスの責務を明確化 | なし | デフォルト |
+| LR-002 | メソッド命名規約 | method 名は JPA に寄せる: save, findById, findAll, deleteById など | 広く知られた命名規約に統一し、学習コストを低減 | なし | デフォルト |
+
 #### ゲートウェイ層 (L-backend-api-gateway) の方針・ルール
 
 **方針**
 
 | ID | 方針名 | 内容 | 根拠 | RDRA/NFR 要素 | 確信度 |
 |-----|---------|------|------|--------------|:------:|
-| LP-010 | イベント+スナップショット二重書き込み | event_snapshot 型エンティティに対し、イベント追記とスナップショット更新を1トランザクションで実行する | 予約情報・オーナー情報等の event_snapshot 型エンティティの整合性確保 | 情報: 予約情報, オーナー情報, 問合せ | 高 |
 | LP-011 | 外部システム連携の冪等性 | 決済機関との連携で冪等性を保証し、リトライ時の二重処理を防止する | 外部システム「決済機関」との精算処理で二重支払いリスクがあるため | 外部システム: 決済機関, BUC: オーナー精算フロー | 高 |
 | LP-012 | 依存関係ログ | 外部 DB/API 呼び出しの開始・終了、処理時間、成否を構造化ログで出力する | NFR C.1.3.1 監視範囲(Lv3: アプリケーション監視) への対応 | NFR C.1.3.1, NFR C.6.1.2 | 中 |
+
+**ルール**
+
+| ID | ルール名 | 内容 | 根拠 | RDRA/NFR 要素 | 確信度 |
+|-----|---------|------|------|--------------|:------:|
+| LR-003 | Adapter の責務 | adapter は RDB テーブル等の datastore model と 1:1 で定義する。method 名は datastore の操作に寄せる: insert, update, delete など。ORM 利用時は自動生成コードの配置場所となる | datastore モデルとの対応を明確にし、変更影響範囲を限定する | なし | デフォルト |
+| LR-004 | Client の責務 | client は datastore を操作する SDK。外部ライブラリの使い方に共通ルールがある場合や SDK が提供されていない場合に作成する | SDK の利用方法を一箇所に集約し、横断的な設定変更を容易にする | なし | デフォルト |
 
 #### レイヤー共通の方針
 
@@ -309,7 +332,7 @@ G --> D
 | ID | ルール名 | 内容 | 根拠 | RDRA/NFR 要素 | 確信度 |
 |-----|---------|------|------|--------------|:------:|
 | CLR-002 | エラーハンドリング方針 | domain の例外は usecase でキャッチし、presentation で HTTP ステータスに変換する | レイヤー責務の分離 | なし | デフォルト |
-| CLR-003 | ロギング方針 | presentation: アクセスログ、usecase: 監査ログ+ビジネスイベント、domain: ログ出力禁止、gateway: 依存関係ログ | NFR C.6.1.2 ログ種別(Lv3) への対応。レイヤーごとに責務に応じたログカテゴリを出力する | NFR C.6.1.2 | 中 |
+| CLR-003 | ロギング方針 | presentation: アクセスログ、usecase: 監査ログ+ビジネスイベント、domain: ログ出力禁止、repository: ログ出力禁止（gateway に委譲）、gateway: 依存関係ログ | NFR C.6.1.2 ログ種別(Lv3) への対応。レイヤーごとに責務に応じたログカテゴリを出力する | NFR C.6.1.2 | 中 |
 
 ### tier-backend-worker のレイヤー構成
 
@@ -319,16 +342,18 @@ G --> D
 graph TD
 P["presentation"] --> U["usecase"]
 U --> D["domain"]
-U --> G["gateway"]
-G --> D
+U --> R["repository"]
+R --> D
+R --> G["gateway"]
 ```
 
 | ID | レイヤー名 | 責務 | 依存許可先 |
 |-----|---------|------|----------|
 | L-worker-presentation | プレゼンテーション層 | ジョブエントリポイント、パラメータ解析、ジョブ実行ログ出力 | L-worker-usecase |
-| L-worker-usecase | ユースケース層 | 精算バッチフロー制御、トランザクション境界 | L-worker-domain, L-worker-gateway |
+| L-worker-usecase | ユースケース層 | 精算バッチフロー制御、トランザクション境界 | L-worker-domain, L-worker-repository |
 | L-worker-domain | ドメイン層 | 精算ビジネスルール（Backend API と共有） | - |
-| L-worker-gateway | ゲートウェイ層 | データストアアクセス、決済機関連携（Backend API と共有） | L-worker-domain |
+| L-worker-repository | リポジトリ層 | domain のデータアクセス方法（Backend API と共有） | L-worker-domain, L-worker-gateway |
+| L-worker-gateway | ゲートウェイ層 | Driven Side の入出力。adapter（datastore model と 1:1）と client（SDK ラッパー）で構成。決済機関連携（Backend API と共有） | - |
 
 #### ユースケース層 (L-worker-usecase) の方針・ルール
 
@@ -358,7 +383,7 @@ G --> D
 
 | ID | 方針名 | 内容 | 根拠 | RDRA/NFR 要素 | 確信度 |
 |-----|---------|------|------|--------------|:------:|
-| CLP-003 | IF なし（直接依存） | レイヤー間は直接依存とし、Backend API と domain/gateway を共有する | 新規構築のため IF による疎結合化は過剰 | なし | デフォルト |
+| CLP-003 | IF なし（直接依存） | レイヤー間は直接依存とし、Backend API と domain/repository/gateway を共有する | 新規構築のため IF による疎結合化は過剰 | なし | デフォルト |
 
 #### レイヤー共通のルール
 

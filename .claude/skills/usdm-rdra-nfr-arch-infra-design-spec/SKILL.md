@@ -81,11 +81,14 @@ docs/specs/
         object-storage-schema.yaml     # Object Storage パス定義（使用時のみ）
         datastore-schema.md            # 統合 Markdown（generateDatastoreMd.js で生成）
       traceability-matrix.md           # 要件トレーサビリティマトリクス（網羅率）
+    decisions/                         # 設計判断記録（Decision Records）
+      spec-decision-001.yaml           # 判断記録（API スタイル、イベント駆動パターン等）
+      ...
     spec-event.yaml                    # メタデータ（UC一覧、横断仕様サマリ）
     spec-event.md                      # Markdown 概要（generateSpecEventMd.js で生成）
     source.txt                         # トリガー説明
   latest/                              # 最新スナップショット（完全上書き）
-    (events/{event_id}/ と同一構造)
+    (events/{event_id}/ と同一構造。decisions/ 含む)
 ```
 
 ### ティアファイルの動的生成ルール
@@ -378,6 +381,46 @@ OpenAPI 統合が特に重い場合は、業務単位で分割して並列生成
 
    **是正ループ**: パターンA の修正を適用後、トレーサビリティマトリクスを再計算する。パターンA で対応可能な要素が残っている限り繰り返す。パターンB のみが残った時点でループを終了する。最終的な網羅率と `rdra-feedback.md` の有無をユーザーに報告する
 
+#### Step4f: 設計判断記録（Decision Records）生成
+
+Step4a〜4d の設計判断を Decision Record YAML として `docs/specs/events/{event_id}/decisions/` に記録する。イベントあたり少なくとも1つの決定記録を生成すること。
+
+**判断カテゴリ:**
+
+- **API スタイル選定**: REST vs GraphQL vs gRPC をティアごとに選定した理由。openapi.yaml / asyncapi.yaml の設計根拠
+- **イベント駆動パターン**: 同期/非同期境界の決定。どの UC 間通信を非同期にしたか、その理由
+- **データ正規化レベル**: 3NF vs 非正規化の基準。rdb-schema.yaml のテーブル設計で正規化を崩した箇所とその理由
+- **横断関心事の解決方針**: エラーハンドリング戦略、ページネーション方式、認証伝播方式の決定
+
+**YAML フォーマット:**
+
+```yaml
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "specification"
+artifact_id: "spec-decision-{NNN}"
+title: "判断タイトル"
+status: "approved"
+generated_at: "{ISO 8601}"
+context: |
+  ...問題の背景・制約...
+decision: |
+  ...判断内容と理由...
+consequences:
+  positive: [...]
+  negative: [...]
+alternatives_considered:
+  - name: "代替案名"
+    reason_rejected: "不採用理由"
+```
+
+**生成手順:**
+1. Step4a（API 統合）の結果から API スタイル選定の判断記録を生成する
+2. Step4a（AsyncAPI）の結果からイベント駆動パターンの判断記録を生成する（非同期イベントがある場合）
+3. Step4b（データストアレイアウト）の結果からデータ正規化レベルの判断記録を生成する
+4. Step4c/4d の結果から横断関心事の解決方針の判断記録を生成する
+5. 各判断記録を `docs/specs/events/{event_id}/decisions/spec-decision-{NNN}.yaml` として出力する（NNN は 001 から連番）
+
 #### Step4e: 共通コンポーネント UC フィードバック
 
 **このステップを省略してはならない**（Step4.5）。`common-components.md` の設計を各 UC の tier-frontend-*.md にフィードバックする。
@@ -514,7 +557,7 @@ node <skill-path>/scripts/generateDatastoreMd.js docs/specs/events/{event_id}/_c
 **読み込み:** `references/specs/spec-snapshot-update.md`
 
 1. `docs/specs/latest/` を完全削除する
-2. `docs/specs/events/{event_id}/` の全内容を `docs/specs/latest/` にコピーする
+2. `docs/specs/events/{event_id}/` の全内容を `docs/specs/latest/` にコピーする（`decisions/` ディレクトリを含む）
 3. `docs/specs/latest/README.md` を生成する（UC 一覧インデックス）
 
 ### Step9: Storybook Story 生成
@@ -581,6 +624,11 @@ Step8 でスナップショットが確定した後、Spec の内容を Storyboo
 - Storybook のカテゴリ構造: `Pages/{ポータル名}/{画面名}` でグルーピングする
 - **Logo コンポーネントを利用する**: design-event.yaml の `brand.logo.variants` で定義された Logo SVG（full, icon, stacked）を、ページのヘッダー・サイドバー・ログイン画面等で積極的に使用する。既存の Logo コンポーネント（`@/components/ui/Logo`）をインポートして配置する
 - _cross-cutting/ux-ui/common-components.md の共通コンポーネント設計を参照し、ページ間で一貫したレイアウトシェルを使用する
+
+### 出力チェック
+
+- `docs/specs/events/{event_id}/decisions/` に少なくとも1つの決定記録（spec-decision-*.yaml）が存在すること
+- 各決定記録が schema_version, artifact_type, skill_type, artifact_id, title, status, generated_at, context, decision, consequences, alternatives_considered を含むこと
 
 ### タスク完了時
 

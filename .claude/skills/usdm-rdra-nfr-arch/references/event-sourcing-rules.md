@@ -23,9 +23,11 @@ docs/arch/
     _changes.md             # 変更サマリ（何を追加/変更/削除したか）
     _inference.md           # 推論根拠サマリ
     source.txt              # トリガー説明
+    decisions/              # 決定記録（arch-decision-001.yaml, ...）
   latest/
     arch-design.yaml        # 全セクションの完全版（マージ結果）
     arch-design.md          # Markdown 表現（Mermaid 図含む）
+    decisions/              # 決定記録（events からコピー）
 ```
 
 ## イベント ID
@@ -125,6 +127,15 @@ data_architecture:
 
 マージ後、`arch-design.md` を再生成する。
 
+### decisions/ のスナップショット更新
+
+`latest/decisions/` はイベントの `decisions/` ディレクトリを **全置換** で更新する（マージではない）:
+
+1. `latest/decisions/` が存在する場合は中身を全て削除する
+2. `events/{event_id}/decisions/` の全ファイルを `latest/decisions/` にコピーする
+
+これにより、latest の決定記録は常に最新イベントの決定記録と一致する。
+
 ### マージ手順
 
 ```bash
@@ -142,8 +153,10 @@ data_architecture:
 
 1. RDRA モデル + NFR グレードから全セクションを推論する
 2. 全量を `arch-design.yaml`（差分ファイル名ではなく完全版）として `events/{event_id}/` に記録する
-3. 同じ内容を `latest/arch-design.yaml` にコピーする
-4. 初期構築イベントの `_changes.md` には全要素を「追加」として記載する
+3. 決定記録を `events/{event_id}/decisions/` に記録する
+4. 同じ内容を `latest/arch-design.yaml` にコピーする
+5. `events/{event_id}/decisions/` を `latest/decisions/` にコピーする
+6. 初期構築イベントの `_changes.md` には全要素を「追加」として記載する
 5. 以後の更新は差分イベント方式で動作する
 
 ## 差分更新モードの動作

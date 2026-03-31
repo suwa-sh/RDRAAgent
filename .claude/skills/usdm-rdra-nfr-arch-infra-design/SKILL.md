@@ -78,12 +78,14 @@ docs/design/
   events/{event_id}/           # イベント履歴（不変）
     design-event.yaml          # ★ 中核成果物（brand/tokens/components/screens/states）
     design-event.md            # Markdown 表現（generateDesignEventMd.js で生成）
+    decisions/                 # 決定記録（design-decision-{NNN}.yaml）
     _inference.md              # 推論根拠
     source.txt                 # トリガー説明
     storybook-app/             # Next.js + Storybook プロジェクト
   latest/                      # 最新スナップショット（完全上書き）
     design-event.yaml
     design-event.md
+    decisions/                 # 決定記録（events/ からコピー）
     storybook-app/
 ```
 
@@ -175,6 +177,41 @@ node <skill-path>/scripts/generateDesignEventMd.js docs/design/events/{event_id}
 
 - `design-event.md` が同ディレクトリに生成される
 - Brand、Portals、Tokens、Components、Screens、States、NFR Decisions のセクション
+
+### Step5.5: 決定記録（Decision Record）生成
+
+Step2 の対話で確定した設計判断を決定記録として YAML ファイルに出力する。
+`docs/design/events/{event_id}/decisions/` に `design-decision-{NNN}.yaml` を生成する。
+
+1. Step2 の各確認ステップで確定した内容を決定記録として構造化する
+2. 1イベントにつき少なくとも1つの決定記録を生成する
+3. 決定カテゴリ:
+   - **ブランドアイデンティティ方向性**: 名称・トーン・カラー選定理由
+   - **ポータル構成戦略**: アクター⇔ポータルマッピング根拠
+   - **トークンアーキテクチャ**: 3層構造の採用理由
+   - **コンポーネント戦略**: フレームワーク選定、コンポーネント設計方針
+
+各ファイルのフォーマット:
+
+```yaml
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "design_system"
+artifact_id: "design-decision-{NNN}"
+title: "判断タイトル"
+status: "approved"
+generated_at: "{ISO 8601}"
+context: |
+  ...問題の背景・制約...
+decision: |
+  ...判断内容と理由...
+consequences:
+  positive: [...]
+  negative: [...]
+alternatives_considered:
+  - name: "代替案名"
+    reason_rejected: "不採用理由"
+```
 
 ### Step6: アセット生成 (Logo / Icon SVG)
 
@@ -277,10 +314,11 @@ Logo SVG (3バリアント) と Icon SVG (ドメイン必要セット) を生成
 2. `events/{event_id}/` に記録する（storybook-app/ は含めない）:
    - `design-event.yaml`（全量の完全版）
    - `assets/`（Logo SVG + Icon SVG）
+   - `decisions/`（決定記録 YAML）
    - `_changes.md`（全要素を「追加」として記載）
    - `_inference.md`、`source.txt`
 3. `latest/` に以下を配置する:
-   - `design-event.yaml`、`design-event.md`、`assets/` → events/ からコピー
+   - `design-event.yaml`、`design-event.md`、`assets/`、`decisions/` → events/ からコピー
    - `storybook-app/` → latest/ で開発・ビルド済みのものをそのまま維持
 
 #### 差分更新時
@@ -289,11 +327,16 @@ Logo SVG (3バリアント) と Icon SVG (ドメイン必要セット) を生成
 2. `events/{event_id}/` に差分を記録する:
    - `design-event-diff.yaml`（変更要素のみ）
    - `assets/`（追加/変更 SVG のみ。変更なければ省略）
+   - `decisions/`（決定記録 YAML。少なくとも1つ）
    - `_changes.md`、`_inference.md`、`source.txt`
 3. `latest/` を更新する:
    - `design-event.yaml` ← 差分マージ（マージキーで照合）
    - `assets/` ← 差分マージ（SVG 追加/上書き/削除）
+   - `decisions/` ← 差分マージ（artifact_id で照合）
    - `storybook-app/` ← **全量再ビルド**（latest/design-event.yaml を入力として再生成 → `storybook build` で検証）
+
+**出力チェック**:
+- `docs/design/events/{event_id}/decisions/` に少なくとも1つの決定記録（design-decision-{NNN}.yaml）が存在すること
 
 **注意**: events/ は不変。storybook-app/ は events/ に含めない（全量再ビルドのため latest/ design-event.yaml から再現可能）。
 
@@ -320,6 +363,7 @@ Ctrl+C
 |--------|------|:-------------:|--------------|
 | `design-event.yaml` | **差分マージ** | `design-event-diff.yaml` | マージキーで照合・追加・上書き |
 | `assets/` (SVG) | **差分マージ** | 追加/変更 SVG のみ | SVG 追加/上書き/削除 |
+| `decisions/` | **差分マージ** | 決定記録 YAML（少なくとも1つ） | artifact_id で照合・追加・上書き |
 | `storybook-app/` | **★ 全量再ビルド** | 含めない | `design-event.yaml` を入力に全量再生成 |
 
 - events/ ディレクトリは **不変**（書き込み後の変更・削除禁止）

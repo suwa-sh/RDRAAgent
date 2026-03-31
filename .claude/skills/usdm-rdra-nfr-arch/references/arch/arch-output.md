@@ -136,7 +136,66 @@ docs/arch/events/{event_id}/
   source.txt             # トリガー説明
 ```
 
-### 6. バリデーション
+### 6. 決定記録生成
+
+対話で確定した設計判断を決定記録（Decision Record）として YAML ファイルに出力する。
+
+#### 出力先
+
+```
+docs/arch/events/{event_id}/decisions/
+  arch-decision-001.yaml
+  arch-decision-002.yaml
+  ...
+```
+
+#### 決定記録のフォーマット
+
+```yaml
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "architecture"
+artifact_id: "arch-decision-{NNN}"
+title: "判断タイトル"
+status: "approved"
+generated_at: "{created_at と同じタイムスタンプ}"
+context: |
+  ...問題の背景・制約...
+decision: |
+  ...判断内容と理由...
+consequences:
+  positive: [...]
+  negative: [...]
+alternatives_considered:
+  - name: "代替案名"
+    reason_rejected: "不採用理由"
+```
+
+`generated_at` にはイベントの `created_at` と同じタイムスタンプを使用する。
+
+#### 記録すべき決定カテゴリ
+
+以下のカテゴリから、該当する判断を全て記録する。1イベントにつき少なくとも1つの決定記録を生成すること。
+
+| カテゴリ | 内容 | 対応する対話 Phase |
+|---------|------|-------------------|
+| テクノロジースタック選定 | 言語・FW の選択理由 | Phase 0 |
+| ティアパターン選定 | CaaS vs FaaS 等、ティアごとの選定理由 | Phase 1 |
+| データモデル戦略 | event_snapshot vs resource_mutable の使い分け基準 | Phase 3 |
+| 認証方式選定 | OAuth2/OIDC の採用理由 | Phase 1 |
+| レイヤリング戦略 | 凹型 vs 直接依存 等 | Phase 2 |
+
+#### 生成ルール
+
+- `artifact_id` は `arch-decision-001` から連番
+- `title` は日本語で簡潔に（例: 「TypeScript 統一スタック採用」「API ティアに CaaS(k8s) を選定」）
+- `context` には問題の背景と制約を記述する
+- `decision` には判断内容と根拠を記述する
+- `consequences.positive` / `consequences.negative` はそれぞれ文字列の配列
+- `alternatives_considered` には検討した代替案と不採用理由を記載する（代替案がない場合は空配列）
+- ユーザーが対話で変更した項目は特に重要な決定記録として記録する
+
+### 7. バリデーション
 
 出力後、スキーマバリデータを実行して arch-design.yaml の構造を検証する:
 
@@ -149,7 +208,7 @@ node <skill-path>/scripts/validateArchDesign.js docs/arch/events/{event_id}/arch
 
 `<skill-path>` は `.claude/skills/usdm-rdra-nfr-arch`。
 
-### 7. Markdown 表の生成
+### 8. Markdown 表の生成
 
 バリデーション通過後、arch-design.yaml を Markdown 形式に変換する:
 
@@ -159,7 +218,7 @@ node <skill-path>/scripts/generateArchDesignMd.js docs/arch/events/{event_id}/ar
 
 これにより `docs/arch/events/{event_id}/arch-design.md` が生成される。このスクリプトは決定論的（同一入力 → 同一出力）なため、LLM に依存せずバンドルスクリプトで実行する。
 
-### 8. スナッ���ショット更新
+### 9. スナップショット更新
 
 `references/arch/arch-snapshot-update.md` に従い、`docs/arch/latest/` を更新する。
 
@@ -169,6 +228,8 @@ node <skill-path>/scripts/generateArchDesignMd.js docs/arch/events/{event_id}/ar
 node <skill-path>/scripts/generateArchDesignMd.js docs/arch/latest/arch-design.yaml
 ```
 
+スナップショット更新時、`decisions/` ディレクトリも `events/{event_id}/decisions/` から `latest/decisions/` に全置換でコピーする（マージではなく全置換）。
+
 ## 出力ファイル一覧
 
 | ファイル | 内容 |
@@ -177,8 +238,10 @@ node <skill-path>/scripts/generateArchDesignMd.js docs/arch/latest/arch-design.y
 | `docs/arch/events/{event_id}/arch-design.md` | イベント: Markdown 表現 |
 | `docs/arch/events/{event_id}/_inference.md` | イベント: 推論根拠サマリ |
 | `docs/arch/events/{event_id}/source.txt` | イベント: トリガー説明 |
+| `docs/arch/events/{event_id}/decisions/arch-decision-{NNN}.yaml` | イベント: 決定記録（1つ以上） |
 | `docs/arch/latest/arch-design.yaml` | スナップショット: 最新アーキテクチャ設計 |
-| `docs/arch/latest/arch-design.md` | ス��ップショット: 最新 Markdown |
+| `docs/arch/latest/arch-design.md` | スナップショット: 最新 Markdown |
+| `docs/arch/latest/decisions/arch-decision-{NNN}.yaml` | スナップショット: 最新決定記録 |
 
 ## 注意事項
 

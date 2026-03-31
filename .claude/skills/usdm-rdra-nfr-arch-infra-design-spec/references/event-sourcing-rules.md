@@ -46,6 +46,9 @@ docs/specs/
       api/
       datastore/
       traceability-matrix.md
+    decisions/                     # 設計判断記録（Decision Records）
+      spec-decision-001.yaml
+      ...
     _changes.md                    # 変更サマリ（追加/変更/削除 UC 一覧）
     spec-event.yaml                # メタデータ
     spec-event.md                  # Markdown 概要
@@ -62,6 +65,7 @@ docs/specs/
           _api-summary.yaml
           _model-summary.yaml
     _cross-cutting/
+    decisions/                     # 設計判断記録（events からコピー）
     spec-event.yaml
     spec-event.md
     README.md
@@ -135,10 +139,11 @@ latest/ の全 UC を入力として cross-cutting を再生成する:
 
 生成結果を `events/{event_id}/_cross-cutting/` に書き出す。
 
-### Phase 4: cross-cutting を latest にマージ
+### Phase 4: cross-cutting・decisions を latest にマージ
 
 1. `events/{event_id}/_cross-cutting/` を `latest/_cross-cutting/` に上書きする
-2. `spec-event.yaml`, `spec-event.md`, `README.md` を events/{event_id}/ と latest/ の両方に配置する
+2. `events/{event_id}/decisions/` を `latest/decisions/` に**全置換**する（既存の latest/decisions/ を削除してからコピー）
+3. `spec-event.yaml`, `spec-event.md`, `README.md` を events/{event_id}/ と latest/ の両方に配置する
 
 ### Phase 5: buc-spec.md を再生成
 
@@ -155,7 +160,8 @@ latest/ の全 UC を入力として cross-cutting を再生成する:
 2. 全量を `latest/` にコピーする
 3. cross-cutting を `latest/` の全 UC を参照して生成し、`events/{event_id}/_cross-cutting/` と `latest/_cross-cutting/` に配置する
 4. buc-spec.md を生成し、`events/{event_id}/` と `latest/` に配置する
-5. `spec-event.yaml`, `README.md` を `events/{event_id}/` と `latest/` に配置する
+5. `decisions/` を `events/{event_id}/decisions/` と `latest/decisions/` に配置する
+6. `spec-event.yaml`, `README.md` を `events/{event_id}/` と `latest/` に配置する
 6. 初期構築イベントの `_changes.md` には全 UC を「追加」として記載する
 7. 以後の更新は差分イベント方式で動作する
 

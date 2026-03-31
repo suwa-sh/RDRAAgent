@@ -1,0 +1,39 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "architecture"
+artifact_id: "arch-decision-004"
+title: "ログ観測性方針"
+status: "approved"
+generated_at: "2026-04-01T04:14:08"
+context: |
+  既存の CTP-003 は構造化ログと trace_id の基本方針のみで、以下が不足していた:
+  - 劣化兆候の早期検知（リトライ発生、CB状態遷移、リソース逼迫等）
+  - ログ運用設計（ローテーション、保持期間、動的レベル変更、出力先統一）
+  - アンチパターン防止（多重ログ、catch握り潰し、機密情報漏洩、TZ不統一等）
+  - トレーサビリティID体系の詳細（span_id のティア単位発行、業務属性のcontext格納）
+  NFR C.3.1.1（障害検知Lv2）、C.6.1（ログ管理）、E.7.1（監査ログ）、B.2.1.1（レスポンスタイム）への
+  対応として、ログの観測性を体系的に強化する必要があった。
+decision: |
+  WARN レベルの劣化兆候ログを gateway/presentation 層で出力する。
+  対象はリトライ発生、サーキットブレーカー状態遷移、DNS/TLSハンドシェイク遅延、
+  キャッシュミス率上昇、コネクションプール逼迫、楽観ロック競合、トークン期限接近。
+  しきい値はコードにハードコードせず設定ファイルから読み込む。
+  OpenTelemetry標準 (trace_id + span_id) をティア単位で発行し、
+  session_id/user_id/業務エンティティIDをログcontextに含める。
+  非同期ログ出力を原則とし、DEBUG/TRACEは本番無効、動的レベル変更を可能にする。
+  ログ出力先はstdout/stderrに統一（ベンダーニュートラル）。
+  タイムスタンプはUTC（ISO 8601）統一。
+consequences:
+  positive:
+    - "劣化兆候を障害発生前に検知でき、プロアクティブな対応が可能になる"
+    - "OpenTelemetry 標準により、ベンダーニュートラルな分散トレーシングが実現する"
+    - "しきい値の外部設定化により、運用環境ごとの調整が容易になる"
+    - "アンチパターン防止により、ログ品質が維持される"
+  negative:
+    - "WARN ログの増加により、ログストレージコストが増加する可能性がある"
+    - "しきい値の初期チューニングが必要（運用開始後の調整コスト）"
+alternatives_considered:
+  - name: "カスタムトレーシング ID（OpenTelemetry 不採用）"
+    reason_rejected: "独自実装のメンテナンスコストが高く、APM ツールとの互換性が失われる"
+  - name: "しきい値ハードコード"
+    reason_rejected: "運用環境ごとの特性に合わせた調整ができず、過検知/検知漏れが発生する"

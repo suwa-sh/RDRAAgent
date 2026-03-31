@@ -442,6 +442,18 @@ system_architecture:
       reason: "NFR F.1.1.1 対応OS(Lv2) および NFR F.1.1.3 対応デバイス(Lv2) への対応"
       source_model: "NFR F.1.1.1, NFR F.1.1.3"
       confidence: "medium"
+    - id: "CTP-032"
+      name: "トレーサビリティ ID 体系"
+      description: "OpenTelemetry 標準 (trace_id + span_id) をティア単位で発行する。session_id, user_id, 業務エンティティ ID（予約ID・精算ID等）をログ context に含め、リクエスト横断・業務横断の追跡を可能にする"
+      reason: "NFR C.1.3.1 監視範囲(Lv3: アプリケーション監視)、NFR C.6.1.2 ログ種別(Lv3) への対応。分散システムの横断トレーサビリティに OpenTelemetry 標準を採用"
+      source_model: "NFR C.1.3.1, NFR C.6.1.1, NFR C.6.1.2"
+      confidence: "medium"
+    - id: "CTP-033"
+      name: "ログ運用方針"
+      description: "非同期ログ出力を原則とし、DEBUG/TRACE は本番環境で無効をデフォルトとする。ログローテーションはサイズ（100MB）+日次の併用、保持期間はアクセスログ/診断ログは NFR C.6.1 準拠、監査ログは NFR E.7.1 準拠（最長）とする。再起動なしの動的ログレベル変更を可能にし、ログ出力先は stdout/stderr に統一する"
+      reason: "NFR C.6.1.1 ログ保管期間(Lv4: 1年)、NFR E.7.1.1 監査ログ(Lv2)、NFR C.3.1.1 障害検知方式(Lv2)、NFR B.2.1.1 レスポンスタイム(Lv3) への対応。ログ運用設計のベストプラクティスを体系化"
+      source_model: "NFR C.6.1.1, NFR E.7.1.1, NFR C.3.1.1, NFR B.2.1.1"
+      confidence: "medium"
   cross_tier_rules:
     - id: "CTR-001"
       name: "通信暗号化"
@@ -473,6 +485,12 @@ system_architecture:
       reason: "NFR C.1.3.2 監視方式(Lv2) および NFR C.1.3.3 監視間隔(Lv2) への対応"
       source_model: "NFR C.1.3.2, NFR C.1.3.3"
       confidence: "default"
+    - id: "CTR-006"
+      name: "ログアンチパターン防止"
+      description: "多重ログ禁止（集約ポイントで1回のみ出力）、catch握り潰し禁止（catch内は必ずログ出力or再スロー）、機密情報マスキング必須（PII・認証情報はマスキング/ハッシュ化）、ループ内逐次ログ禁止（サマリログを使用）、構造化ログ強制（JSON形式の必須フィールドを遵守）、タイムスタンプは UTC（ISO 8601）統一"
+      reason: "NFR C.6.1.2 ログ種別(Lv3)、NFR E.6.1.1 データ暗号化(Lv1)、NFR B.2.1.1 レスポンスタイム(Lv3) への対応。実装時のアンチパターンを体系的に防止"
+      source_model: "NFR C.6.1.2, NFR E.6.1.1, NFR B.2.1.1"
+      confidence: "medium"
   diagram_mermaid: |
     graph TD
       FE["Frontend<br/>(SSR/SPA)"] -->|HTTPS| GW["API Gateway<br/>(WAF + RBAC)"]
@@ -499,6 +517,12 @@ app_architecture:
               description: "業務単位（オーナー管理・予約・精算等）でページコンポーネントを分割する"
               reason: "BUC が7業務あり、業務ごとに画面群が独立しているため"
               source_model: "BUC: オーナー管理業務, 会議室管理業務, 予約業務, 会議室貸出業務, 評価業務, サービス運営業務, 精算業務"
+              confidence: "medium"
+            - id: "LP-016"
+              name: "トークン期限ログ"
+              description: "アクセストークンの有効期限接近（TTL <= 5分）を WARN レベルで検知し、プロアクティブにリフレッシュを実行する。しきい値は設定で調整可能"
+              reason: "NFR E.5.1.1 認証方式(Lv2) への対応。トークン期限切れによるUX劣化を早期検知"
+              source_model: "NFR E.5.1.1, NFR C.3.1.1"
               confidence: "medium"
           rules: []
         - id: "L-frontend-state"
@@ -530,9 +554,9 @@ app_architecture:
       cross_layer_rules:
         - id: "CLR-001"
           name: "エラーハンドリング"
-          description: "API クライアント層のエラーを状態管理層でキャッチし、ビュー層でユーザーフレンドリーなメッセージに変換する"
-          reason: "レイヤー責務の分離"
-          source_model: "なし"
+          description: "API クライアント層のエラーを状態管理層でキャッチし1回だけログ出力（集約ポイント）。cause chain を context に保持し、ビュー層でユーザーフレンドリーなメッセージに変換する。多重ログ防止"
+          reason: "レイヤー責務の分離とエラーハンドリング伝播方針の適用"
+          source_model: "NFR C.6.1.2"
           confidence: "default"
       diagram_mermaid: |
         graph TD
@@ -564,7 +588,7 @@ app_architecture:
           responsibility: "ビジネスフロー制御、トランザクション境界、認可チェック（細粒度）"
           allowed_dependencies:
             - "L-backend-api-domain"
-            - "L-backend-api-gateway"
+            - "L-backend-api-repository"
           policies:
             - id: "LP-005"
               name: "トランザクション境界"
@@ -603,18 +627,37 @@ app_architecture:
               source_model: "なし"
               confidence: "high"
           rules: []
-        - id: "L-backend-api-gateway"
-          name: "ゲートウェイ層"
-          responsibility: "データストアアクセス、外部システム連携、冪等キー管理"
+        - id: "L-backend-api-repository"
+          name: "リポジトリ層"
+          responsibility: "domain のデータアクセス方法。aggregate root と 1:1 で定義。gateway/adapter を利用してデータを永続化・取得する"
           allowed_dependencies:
             - "L-backend-api-domain"
+            - "L-backend-api-gateway"
           policies:
             - id: "LP-010"
               name: "イベント+スナップショット二重書き込み"
-              description: "event_snapshot 型エンティティに対し、イベント追記とスナップショット更新を1トランザクションで実行する"
+              description: "event_snapshot 型エンティティに対し、repository.save(domain) で historyAdapter.insert + snapshotAdapter.upsert を1トランザクションで実行する"
               reason: "予約情報・オーナー情報等の event_snapshot 型エンティティの整合性確保"
               source_model: "情報: 予約情報, オーナー情報, 問合せ"
               confidence: "high"
+          rules:
+            - id: "LR-001"
+              name: "Aggregate Root 対応"
+              description: "repository は domain の aggregate root と 1:1 で定義する。複数テーブルにアクセスする場合は複数の gateway/adapter を利用する"
+              reason: "DDD の集約パターンに従い、データアクセスの責務を明確化"
+              source_model: "なし"
+              confidence: "default"
+            - id: "LR-002"
+              name: "メソッド命名規約"
+              description: "method 名は JPA に寄せる: save, findById, findAll, deleteById など"
+              reason: "広く知られた命名規約に統一し、学習コストを低減"
+              source_model: "なし"
+              confidence: "default"
+        - id: "L-backend-api-gateway"
+          name: "ゲートウェイ層"
+          responsibility: "Driven Side の入出力。adapter（datastore model と 1:1）と client（SDK ラッパー）で構成。外部システム連携、冪等キー管理"
+          allowed_dependencies: []
+          policies:
             - id: "LP-011"
               name: "外部システム連携の冪等性"
               description: "決済機関との連携で冪等性を保証し、リトライ時の二重処理を防止する"
@@ -627,7 +670,37 @@ app_architecture:
               reason: "NFR C.1.3.1 監視範囲(Lv3: アプリケーション監視) への対応"
               source_model: "NFR C.1.3.1, NFR C.6.1.2"
               confidence: "medium"
-          rules: []
+            - id: "LP-017"
+              name: "劣化兆候ログ"
+              description: "リトライ発生、サーキットブレーカー状態遷移（Closed→Open, Open→Half-Open）、DNS/TLS ハンドシェイク遅延を WARN レベルで出力する。しきい値は設定ファイルから読み込み、運用環境に合わせて調整可能にする"
+              reason: "NFR C.3.1.1 障害検知方式(Lv2)、NFR A.2.1.1 サーバ内の冗長化(Lv3) への対応。正常動作中の劣化兆候を早期検知"
+              source_model: "NFR C.3.1.1, NFR A.2.1.1"
+              confidence: "medium"
+            - id: "LP-018"
+              name: "キャッシュ劣化ログ"
+              description: "キャッシュミス率上昇（miss_rate >= 50%）、コネクションプール逼迫（pool_usage >= 80%）を WARN レベルで出力する。しきい値は設定ファイルから読み込み"
+              reason: "NFR B.2.1.1 レスポンスタイム(Lv3)、NFR C.3.1.1 障害検知方式(Lv2) への対応。リソース逼迫を早期検知"
+              source_model: "NFR B.2.1.1, NFR C.3.1.1"
+              confidence: "medium"
+            - id: "LP-019"
+              name: "楽観ロック競合ログ"
+              description: "OptimisticLockException 発生時に WARN レベルで出力する。競合頻度の上昇は設計見直しのシグナル"
+              reason: "NFR B.2.1.1 レスポンスタイム(Lv3) への対応。楽観ロック競合の頻発はパフォーマンス劣化の兆候"
+              source_model: "NFR B.2.1.1"
+              confidence: "medium"
+          rules:
+            - id: "LR-003"
+              name: "Adapter の責務"
+              description: "adapter は RDB テーブル等の datastore model と 1:1 で定義する。method 名は datastore の操作に寄せる: insert, update, delete など。ORM 利用時は自動生成コードの配置場所となる"
+              reason: "datastore モデルとの対応を明確にし、変更影響範囲を限定する"
+              source_model: "なし"
+              confidence: "default"
+            - id: "LR-004"
+              name: "Client の責務"
+              description: "client は datastore を操作する SDK。外部ライブラリの使い方に共通ルールがある場合や SDK が提供されていない場合に作成する"
+              reason: "SDK の利用方法を一箇所に集約し、横断的な設定変更を容易にする"
+              source_model: "なし"
+              confidence: "default"
       cross_layer_policies:
         - id: "CLP-002"
           name: "IF なし（直接依存）"
@@ -635,25 +708,38 @@ app_architecture:
           reason: "新規構築のため IF による疎結合化は過剰。前提条件が崩れた場合に凹型へ移行"
           source_model: "なし"
           confidence: "default"
+        - id: "CLP-004"
+          name: "ログ運用方針"
+          description: "非同期ログ出力を原則とし、DEBUG/TRACE は本番環境で無効をデフォルトとする。再起動なしの動的ログレベル変更を可能にする"
+          reason: "NFR B.2.1.1 レスポンスタイム(Lv3)、NFR C.3.1.1 障害検知方式(Lv2) への対応"
+          source_model: "NFR B.2.1.1, NFR C.3.1.1"
+          confidence: "medium"
+        - id: "CLP-005"
+          name: "ログアンチパターン防止"
+          description: "多重ログ禁止、catch握り潰し禁止、機密情報マスキング必須、ループ内逐次ログ禁止、構造化ログ強制、TZ は UTC 統一"
+          reason: "NFR C.6.1.2 ログ種別(Lv3)、NFR E.6.1.1 データ暗号化(Lv1) への対応"
+          source_model: "NFR C.6.1.2, NFR E.6.1.1"
+          confidence: "medium"
       cross_layer_rules:
         - id: "CLR-002"
           name: "エラーハンドリング方針"
-          description: "domain の例外は usecase でキャッチし、presentation で HTTP ステータスに変換する"
-          reason: "レイヤー責務の分離"
-          source_model: "なし"
+          description: "usecase で集約キャッチし1回だけログ出力（集約ポイント）。cause chain を context に保持し、presentation で HTTP ステータスに変換する。中間レイヤー（repository）はキャッチ→ラップ→再スローのみ。gateway は依存関係ログ（外部通信エラー）のみ出力。多重ログ防止"
+          reason: "レイヤー責務の分離とエラーハンドリング伝播方針の適用"
+          source_model: "NFR C.6.1.2"
           confidence: "default"
         - id: "CLR-003"
           name: "ロギング方針"
-          description: "presentation: アクセスログ、usecase: 監査ログ+ビジネスイベント、domain: ログ出力禁止、gateway: 依存関係ログ"
-          reason: "NFR C.6.1.2 ログ種別(Lv3) への対応。レイヤーごとに責務に応じたログカテゴリを出力する"
-          source_model: "NFR C.6.1.2"
+          description: "presentation: アクセスログ、usecase: 監査ログ+ビジネスイベント（集約ポイント）、domain: ログ出力禁止、repository: ログ出力禁止（gateway に委譲）、gateway: 依存関係ログ+劣化兆候ログ（リトライ発生/CB状態遷移/DNS-TLS遅延/キャッシュミス率上昇/コネクションプール逼迫/楽観ロック競合を WARN レベルで出力。しきい値は設定ファイルから読み込み）"
+          reason: "NFR C.6.1.2 ログ種別(Lv3)、NFR C.3.1.1 障害検知方式(Lv2) への対応。レイヤーごとに責務に応じたログカテゴリを出力し、劣化兆候を早期検知"
+          source_model: "NFR C.6.1.2, NFR C.3.1.1"
           confidence: "medium"
       diagram_mermaid: |
         graph TD
           P["presentation"] --> U["usecase"]
           U --> D["domain"]
-          U --> G["gateway"]
-          G --> D
+          U --> R["repository"]
+          R --> D
+          R --> G["gateway"]
     - tier_id: "tier-backend-worker"
       layers:
         - id: "L-worker-presentation"
@@ -668,7 +754,7 @@ app_architecture:
           responsibility: "精算バッチフロー制御、トランザクション境界"
           allowed_dependencies:
             - "L-worker-domain"
-            - "L-worker-gateway"
+            - "L-worker-repository"
           policies:
             - id: "LP-013"
               name: "バッチトランザクション"
@@ -689,11 +775,18 @@ app_architecture:
               source_model: "条件: 精算条件, 情報: 利用履歴, 手数料情報"
               confidence: "high"
           rules: []
-        - id: "L-worker-gateway"
-          name: "ゲートウェイ層"
-          responsibility: "データストアアクセス、決済機関連携（Backend API と共有）"
+        - id: "L-worker-repository"
+          name: "リポジトリ層"
+          responsibility: "domain のデータアクセス方法（Backend API と共有）"
           allowed_dependencies:
             - "L-worker-domain"
+            - "L-worker-gateway"
+          policies: []
+          rules: []
+        - id: "L-worker-gateway"
+          name: "ゲートウェイ層"
+          responsibility: "Driven Side の入出力。adapter（datastore model と 1:1）と client（SDK ラッパー）で構成。決済機関連携（Backend API と共有）"
+          allowed_dependencies: []
           policies:
             - id: "LP-015"
               name: "精算支払連携"
@@ -705,23 +798,36 @@ app_architecture:
       cross_layer_policies:
         - id: "CLP-003"
           name: "IF なし（直接依存）"
-          description: "レイヤー間は直接依存とし、Backend API と domain/gateway を共有する"
+          description: "レイヤー間は直接依存とし、Backend API と domain/repository/gateway を共有する"
           reason: "新規構築のため IF による疎結合化は過剰"
           source_model: "なし"
           confidence: "default"
+        - id: "CLP-006"
+          name: "ログ運用方針"
+          description: "非同期ログ出力を原則とし、DEBUG/TRACE は本番環境で無効をデフォルトとする。再起動なしの動的ログレベル変更を可能にする"
+          reason: "NFR C.3.1.1 障害検知方式(Lv2) への対応"
+          source_model: "NFR C.3.1.1"
+          confidence: "medium"
+        - id: "CLP-007"
+          name: "ログアンチパターン防止"
+          description: "多重ログ禁止、catch握り潰し禁止、機密情報マスキング必須、ループ内逐次ログ禁止、構造化ログ強制、TZ は UTC 統一"
+          reason: "NFR C.6.1.2 ログ種別(Lv3)、NFR E.6.1.1 データ暗号化(Lv1) への対応"
+          source_model: "NFR C.6.1.2, NFR E.6.1.1"
+          confidence: "medium"
       cross_layer_rules:
         - id: "CLR-004"
           name: "エラーハンドリング方針"
-          description: "domain の例外は usecase でキャッチし、presentation でジョブエラーログに変換する"
-          reason: "レイヤー責務の分離"
-          source_model: "なし"
+          description: "usecase で集約キャッチし1回だけログ出力（集約ポイント）。cause chain を context に保持し、presentation でジョブエラーログに変換する。中間レイヤー（repository）はキャッチ→ラップ→再スローのみ。gateway は依存関係ログ（外部通信エラー）のみ出力。多重ログ防止"
+          reason: "レイヤー責務の分離とエラーハンドリング伝播方針の適用"
+          source_model: "NFR C.6.1.2"
           confidence: "default"
       diagram_mermaid: |
         graph TD
           P["presentation"] --> U["usecase"]
           U --> D["domain"]
-          U --> G["gateway"]
-          G --> D
+          U --> R["repository"]
+          R --> D
+          R --> G["gateway"]
 
 data_architecture:
   entities:

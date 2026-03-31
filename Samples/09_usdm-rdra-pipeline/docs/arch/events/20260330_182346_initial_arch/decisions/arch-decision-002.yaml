@@ -1,0 +1,34 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "architecture"
+artifact_id: "arch-decision-002"
+title: "データモデル戦略: event_snapshot パターン優先"
+status: "approved"
+generated_at: "2026-03-30T18:23:46"
+
+context: |
+  RDRA 状態モデルで予約状態（7遷移）、オーナー申請状態（6遷移）、
+  問合せ状態（5遷移）が定義されており、状態遷移の履歴追跡が必要。
+  金銭取引（予約・精算）はトランザクション整合性と監査証跡が求められる。
+  NFR C.1.3.1（監査ログ 1年保管）への対応も必要。
+
+decision: |
+  状態遷移を持つエンティティには event_snapshot パターンを採用する。
+  イベントテーブル（INSERT のみ）でイミュータブルな履歴を保持し、
+  スナップショットテーブルで最新状態を参照可能にする。
+  マスタデータ等の参照系は resource_scd2 または resource_mutable を使い分ける。
+
+consequences:
+  positive:
+    - "状態遷移の完全な履歴が自動的に保持され、監査証跡として利用できる"
+    - "イベントテーブルは INSERT のみで更新競合が発生しない"
+    - "スナップショットテーブルにより最新状態の参照が高速"
+  negative:
+    - "テーブル数が増加し、データモデルの複雑性が上がる"
+    - "スナップショットの更新ロジックが必要"
+
+alternatives_considered:
+  - name: "従来型ミュータブル（UPDATE 方式）"
+    reason_rejected: "状態遷移の履歴が失われ、監査証跡の要件（NFR C.1.3.1）を満たせない"
+  - name: "完全イベントソーシング"
+    reason_rejected: "参照クエリの複雑性が高く、現時点では過剰。event_snapshot で十分"

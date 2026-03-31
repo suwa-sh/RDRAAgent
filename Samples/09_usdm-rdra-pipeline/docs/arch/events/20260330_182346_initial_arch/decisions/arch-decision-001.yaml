@@ -1,0 +1,36 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "architecture"
+artifact_id: "arch-decision-001"
+title: "テクノロジースタック選定: TypeScript + Next.js + Hono"
+status: "approved"
+generated_at: "2026-03-30T18:23:46"
+
+context: |
+  貸し会議室サービスは利用者・オーナー・運営の3アクター向け Web UI と
+  バックエンド API を提供する。フロントエンドとバックエンドで言語を統一し、
+  モノレポ構成での開発効率を最大化する必要がある。
+  NFR F.1.1.2（対応ブラウザ Lv3）と NFR B.2.1.1（レスポンスタイム 5秒以内）
+  から SSR 対応フレームワークが求められる。
+
+decision: |
+  TypeScript を唯一の言語とし、フロントエンドに Next.js、
+  バックエンド API に Hono を採用する。モノレポ構成で型定義を共有し、
+  フロントエンド〜バックエンド間のスキーマ不整合を防止する。
+  Next.js は SSR/ISR 対応で初回表示高速化が可能。
+  Hono は軽量で CaaS/FaaS 両方にデプロイ可能。
+
+consequences:
+  positive:
+    - "フロントエンド・バックエンドで TypeScript を統一し、型定義を共有できる"
+    - "Next.js の SSR により NFR B.2.1.1 レスポンスタイム要件を満たしやすい"
+    - "Hono は軽量で起動が速く、CaaS/FaaS いずれのデプロイ先にも対応可能"
+  negative:
+    - "TypeScript 単一言語のため、CPU バウンドな処理で Go/Rust 等より性能が劣る可能性"
+    - "Hono は比較的新しいフレームワークであり、エコシステムが Express/Fastify ほど成熟していない"
+
+alternatives_considered:
+  - name: "Go + React"
+    reason_rejected: "フロントエンドとバックエンドで言語が分かれ、モノレポでの型共有が困難"
+  - name: "TypeScript + Express"
+    reason_rejected: "Express は非同期処理のサポートが弱く、Hono と比較してパフォーマンスが劣る"

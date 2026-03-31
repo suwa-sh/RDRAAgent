@@ -2,7 +2,7 @@
 
 > 会議室オーナーが物件情報を登録し利用者に貸し出す、会議室シェアリングサービス。オーナーは会議室の登録・運用ルール設定・鍵管理・評価確認を行い、利用者は会議室の検索・予約・決済・評価を行う。サービス運営担当者がオーナー審査・手数料管理・利用状況分析・精算処理を担い、決済機関と連携してオーナーへの月末精算を実施する。
 
-**最終更新**: 2026-03-30 19:24:23 spec stories (design)
+**最終更新**: 2026-04-01 04:14:08 logging policy enhancement (arch)
 
 ## 成果物一覧
 
@@ -11,7 +11,7 @@
 | [USDM（要求分解）](#usdm要求分解) | [usdm/latest/](usdm/latest/) | 1 |
 | [RDRA（要件定義）](#rdra要件定義) | [rdra/latest/](rdra/latest/) | 1 |
 | [NFR（非機能要求）](#nfr非機能要求) | [nfr/latest/](nfr/latest/) | 1 |
-| [Arch（アーキテクチャ）](#archアーキテクチャ) | [arch/latest/](arch/latest/) | 1 |
+| [Arch（アーキテクチャ）](#archアーキテクチャ) | [arch/latest/](arch/latest/) | 2 |
 | [Infra（インフラ設計）](#infraインフラ設計) | [infra/events/20260330_183227_infra_product_design/](infra/events/20260330_183227_infra_product_design/) | 1 |
 | [Design（デザイン）](#designデザイン) | [design/latest/](design/latest/) | 2 |
 | [Specs（詳細仕様）](#specs詳細仕様) | [specs/latest/](specs/latest/) | 1 |
@@ -134,8 +134,9 @@ S --> A["api client"]
 graph TD
 P["presentation"] --> U["usecase"]
 U --> D["domain"]
-U --> G["gateway"]
-G --> D
+U --> R["repository"]
+R --> D
+R --> G["gateway"]
 ```
 
 **tier-backend-worker**
@@ -144,8 +145,9 @@ G --> D
 graph TD
 P["presentation"] --> U["usecase"]
 U --> D["domain"]
-U --> G["gateway"]
-G --> D
+U --> R["repository"]
+R --> D
+R --> G["gateway"]
 ```
 
 ## Infra（インフラ設計）
@@ -352,9 +354,15 @@ Stories: 42 ファイル
 
 | # | ドメイン | 判断 | ステータス |
 |---|---------|------|----------|
-| 1 | Infra | [コンピュートプラットフォーム選定: ECS Fargate](infra/events/20260330_183227_infra_product_design/docs/cloud-context/decisions/product/product-decision-001.yaml) | approved |
-| 2 | Infra | [データベース選定: RDS for PostgreSQL (Multi-AZ)](infra/events/20260330_183227_infra_product_design/docs/cloud-context/decisions/product/product-decision-002.yaml) | approved |
-| 3 | Infra | [バッチ処理方式: Lambda + EventBridge Scheduler](infra/events/20260330_183227_infra_product_design/docs/cloud-context/decisions/product/product-decision-003.yaml) | approved |
+| 1 | Arch | [テクノロジースタック選定: TypeScript + Next.js + Hono](arch/events/20260330_182346_initial_arch/decisions/arch-decision-001.yaml) | approved |
+| 2 | Arch | [データモデル戦略: event_snapshot パターン優先](arch/events/20260330_182346_initial_arch/decisions/arch-decision-002.yaml) | approved |
+| 3 | Arch | [エラーハンドリング伝播方針](arch/events/20260401_041408_logging_policy_enhancement/decisions/arch-decision-003.yaml) | approved |
+| 4 | Arch | [ログ観測性方針](arch/events/20260401_041408_logging_policy_enhancement/decisions/arch-decision-004.yaml) | approved |
+| 5 | Infra | [コンピュートプラットフォーム選定: ECS Fargate](infra/events/20260330_183227_infra_product_design/docs/cloud-context/decisions/product/product-decision-001.yaml) | approved |
+| 6 | Infra | [データベース選定: RDS for PostgreSQL (Multi-AZ)](infra/events/20260330_183227_infra_product_design/docs/cloud-context/decisions/product/product-decision-002.yaml) | approved |
+| 7 | Infra | [バッチ処理方式: Lambda + EventBridge Scheduler](infra/events/20260330_183227_infra_product_design/docs/cloud-context/decisions/product/product-decision-003.yaml) | approved |
+| 8 | Design | [ブランドアイデンティティ: 信頼性と使いやすさ重視のデザイン方向性](design/events/20260330_184257_design_system/decisions/design-decision-001.yaml) | approved |
+| 9 | Specs | [API スタイル選定: REST + AsyncAPI イベント駆動](specs/events/20260330_185847_spec_generation/decisions/spec-decision-001.yaml) | approved |
 
 ## イベント履歴
 
@@ -368,6 +376,7 @@ Stories: 42 ファイル
 | 2026-03-30 18:42:57 | Design（デザイン） | [20260330_184257_design_system](design/events/20260330_184257_design_system) |
 | 2026-03-30 18:58:47 | Specs（詳細仕様） | [20260330_185847_spec_generation](specs/events/20260330_185847_spec_generation) |
 | 2026-03-30 19:24:23 | Design（デザイン） | [20260330_192423_spec_stories](design/events/20260330_192423_spec_stories) |
+| 2026-04-01 04:14:08 | Arch（アーキテクチャ） | [20260401_041408_logging_policy_enhancement](arch/events/20260401_041408_logging_policy_enhancement) |
 
 ---
 

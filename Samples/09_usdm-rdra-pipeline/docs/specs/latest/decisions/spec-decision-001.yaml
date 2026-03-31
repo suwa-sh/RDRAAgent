@@ -1,0 +1,34 @@
+schema_version: "1.0"
+artifact_type: "decision_record"
+skill_type: "specification"
+artifact_id: "spec-decision-001"
+title: "API スタイル選定: REST + AsyncAPI イベント駆動"
+status: "approved"
+generated_at: "2026-03-30T18:58:47"
+
+context: |
+  33 UC のうち、同期的なリクエスト/レスポンスが必要な UC が大半を占めるが、
+  精算業務（月末バッチ）や通知系は非同期処理が適している。
+  arch-design.yaml でバックエンド API（CaaS）とワーカー（FaaS/CronJob）の
+  2ティアが定義されており、ティア間の連携パターンを決定する必要がある。
+
+decision: |
+  フロントエンド↔バックエンド API 間は REST（OpenAPI 3.1）を採用する。
+  バックエンド API↔ワーカー間は AsyncAPI 3.0 ベースのイベント駆動とする。
+  MQ を介した非同期メッセージングで疎結合を実現し、
+  精算バッチ・通知送信・評価集計等の非同期処理をワーカーに委譲する。
+
+consequences:
+  positive:
+    - "REST は広く普及しており、フロントエンド開発者の学習コストが低い"
+    - "AsyncAPI でイベントスキーマを明文化し、ティア間の契約を保証できる"
+    - "非同期処理をワーカーに分離することで、API のレスポンスタイムに影響しない"
+  negative:
+    - "REST + AsyncAPI の2種類の API 定義を管理する必要がある"
+    - "非同期処理のデバッグ・テストが同期 API より複雑"
+
+alternatives_considered:
+  - name: "GraphQL"
+    reason_rejected: "UC 数33で API 粒度が適切に設計可能なため、GraphQL の柔軟性は過剰。REST の方がキャッシュ戦略がシンプル"
+  - name: "全同期 REST（ワーカーなし）"
+    reason_rejected: "月末精算バッチ（~10,000件/8時間）を API サーバーで処理するとレスポンスタイムに影響する"

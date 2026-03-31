@@ -134,19 +134,25 @@ function extractAllDecisions(docsRoot) {
   for (const [domain, subPaths] of Object.entries(domainDecPaths)) {
     const events = listEventDirs(path.join(docsRoot, domain));
     if (!events.length) continue;
-    const latestEvent = events[events.length - 1];
-    const eventRoot = path.join(docsRoot, domain, 'events', latestEvent);
-    for (const sub of subPaths) {
-      const decDir = path.join(eventRoot, sub);
-      if (!dirExists(decDir)) continue;
-      try {
-        for (const f of fs.readdirSync(decDir).filter(f => f.endsWith('.yaml')).sort()) {
-          const content = readFile(path.join(decDir, f));
-          const title = yVal(content, 'title');
-          const status = yVal(content, 'status');
-          if (title) allDecs.push({ domain, file: f, title, status: status || 'unknown', fullPath: path.join(decDir, f) });
-        }
-      } catch { /* */ }
+    const seen = new Set();
+    for (const ev of events) {
+      const eventRoot = path.join(docsRoot, domain, 'events', ev);
+      for (const sub of subPaths) {
+        const decDir = path.join(eventRoot, sub);
+        if (!dirExists(decDir)) continue;
+        try {
+          for (const f of fs.readdirSync(decDir).filter(f => f.endsWith('.yaml')).sort()) {
+            const content = readFile(path.join(decDir, f));
+            const title = yVal(content, 'title');
+            const status = yVal(content, 'status');
+            const artId = yVal(content, 'artifact_id') || f;
+            if (title && !seen.has(artId)) {
+              seen.add(artId);
+              allDecs.push({ domain, file: f, title, status: status || 'unknown', fullPath: path.join(decDir, f) });
+            }
+          }
+        } catch { /* */ }
+      }
     }
   }
   return allDecs;
