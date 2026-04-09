@@ -20,15 +20,12 @@ Thumbs.db
 *~
 
 # パイプライン進捗ダッシュボード（スキルバンドルディレクトリ内に生成）
-.claude/skills/usdm-rdra-pipeline/.pipeline-status-*.json
 
 # 作業用
 tmp/
 rdra-workspace/
-usdm-rdra-workspace/
-usdm-rdra-nfr-arch-workspace/
-usdm-rdra-pipeline-workspace/
 
 !samples/02_rdra/0_RDRAZeroOne
 !samples/02_rdra/1_RDRA
 !samples/02_rdra/2_RDRASpec
+usdm-rdra-pipeline-workspace/

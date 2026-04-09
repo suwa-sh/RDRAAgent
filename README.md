@@ -38,7 +38,7 @@ cd RDRAAgent
 ./install.sh
 ```
 
-`~/.claude/skills/` に `rdra`, `usdm-rdra`, `usdm-rdra-nfr` のシンボリックリンクが作成され、どのプロジェクトからでもスキルを利用できます。
+`~/.claude/skills/` に `rdra` スキルのシンボリックリンクが作成され、どのプロジェクトからでもスキルを利用できます。
 
 ### プロジェクト固有インストール
 
@@ -150,6 +150,10 @@ RDRAAgent/
 | バリエーション | 業務のバリエーションパラメータ |
 
 詳細は `.claude/skills/rdra/references/rdra-knowledge.md` を参照してください。
+
+## 関連プロジェクト
+
+- **[distillery](https://github.com/suwa-sh/suwa-sh-claude-plugins/tree/main/plugins/distillery)** — 本リポジトリの `rdra` スキルを起点に、USDM 分解・非機能要求グレード・アーキテクチャ設計・インフラ設計・デザインシステム・詳細仕様まで一気通貫するパイプライン型の Claude Code プラグイン
 
 ## 参考リンク
 
