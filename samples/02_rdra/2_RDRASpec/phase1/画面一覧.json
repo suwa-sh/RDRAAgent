@@ -1,0 +1,945 @@
+{
+  "screens": [
+    {
+      "screen_name": "サービス利用規約画面",
+      "fields": [
+        {"field_name": "規約ID", "type": "string", "tooltip": "規約の識別ID"},
+        {"field_name": "バージョン", "type": "string", "tooltip": "規約のバージョン"},
+        {"field_name": "本文", "type": "string", "tooltip": "規約の本文"},
+        {"field_name": "改定日", "type": "string", "tooltip": "規約の改定日"},
+        {"field_name": "同意", "type": "enum", "tooltip": "同意する,同意しない"}
+      ],
+      "screen_datas": [
+        {"display_name": "規約v1.0", "dummy_data": [{"field_name": "規約ID", "value": "T001"}, {"field_name": "バージョン", "value": "1.0"}, {"field_name": "本文", "value": "本規約は貸し会議室サービスの利用条件を定める..."}, {"field_name": "改定日", "value": "2024-01-01"}, {"field_name": "同意", "value": "同意する"}]},
+        {"display_name": "規約v1.1", "dummy_data": [{"field_name": "規約ID", "value": "T002"}, {"field_name": "バージョン", "value": "1.1"}, {"field_name": "本文", "value": "決済条件を改定..."}, {"field_name": "改定日", "value": "2024-06-15"}, {"field_name": "同意", "value": "同意する"}]},
+        {"display_name": "規約v2.0", "dummy_data": [{"field_name": "規約ID", "value": "T003"}, {"field_name": "バージョン", "value": "2.0"}, {"field_name": "本文", "value": "運用ルールを大幅改訂..."}, {"field_name": "改定日", "value": "2025-01-01"}, {"field_name": "同意", "value": "同意しない"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "オーナー申請画面",
+      "fields": [
+        {"field_name": "氏名", "type": "string", "tooltip": "申請者の氏名"},
+        {"field_name": "連絡先", "type": "string", "tooltip": "電話番号"},
+        {"field_name": "メールアドレス", "type": "string", "tooltip": "連絡用メールアドレス"},
+        {"field_name": "住所", "type": "string", "tooltip": "申請者の住所"},
+        {"field_name": "規約同意", "type": "enum", "tooltip": "同意済,未同意"},
+        {"field_name": "申請日", "type": "string", "tooltip": "申請を行った日付"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の申請", "dummy_data": [{"field_name": "氏名", "value": "山田太郎"}, {"field_name": "連絡先", "value": "090-1111-2222"}, {"field_name": "メールアドレス", "value": "yamada@example.com"}, {"field_name": "住所", "value": "東京都千代田区1-1"}, {"field_name": "規約同意", "value": "同意済"}, {"field_name": "申請日", "value": "2025-01-10"}]},
+        {"display_name": "鈴木花子の申請", "dummy_data": [{"field_name": "氏名", "value": "鈴木花子"}, {"field_name": "連絡先", "value": "090-3333-4444"}, {"field_name": "メールアドレス", "value": "suzuki@example.com"}, {"field_name": "住所", "value": "東京都新宿区2-2"}, {"field_name": "規約同意", "value": "同意済"}, {"field_name": "申請日", "value": "2025-01-12"}]},
+        {"display_name": "佐藤次郎の申請", "dummy_data": [{"field_name": "氏名", "value": "佐藤次郎"}, {"field_name": "連絡先", "value": "090-5555-6666"}, {"field_name": "メールアドレス", "value": "sato@example.com"}, {"field_name": "住所", "value": "東京都渋谷区3-3"}, {"field_name": "規約同意", "value": "同意済"}, {"field_name": "申請日", "value": "2025-01-15"}]}
+      ],
+      "operation": "申請"
+    },
+    {
+      "screen_name": "オーナー申請審査画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "申請中オーナーのID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "申請者の氏名"},
+        {"field_name": "申請日", "type": "string", "tooltip": "申請を行った日付"},
+        {"field_name": "審査結果", "type": "enum", "tooltip": "承認、却下、保留"},
+        {"field_name": "審査コメント", "type": "string", "tooltip": "審査担当者のコメント"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の審査", "dummy_data": [{"field_name": "オーナーID", "value": "O001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "申請日", "value": "2025-01-10"}, {"field_name": "審査結果", "value": "承認"}, {"field_name": "審査コメント", "value": "問題なし"}]},
+        {"display_name": "鈴木花子の審査", "dummy_data": [{"field_name": "オーナーID", "value": "O002"}, {"field_name": "氏名", "value": "鈴木花子"}, {"field_name": "申請日", "value": "2025-01-12"}, {"field_name": "審査結果", "value": "保留"}, {"field_name": "審査コメント", "value": "追加資料要求"}]},
+        {"display_name": "佐藤次郎の審査", "dummy_data": [{"field_name": "オーナーID", "value": "O003"}, {"field_name": "氏名", "value": "佐藤次郎"}, {"field_name": "申請日", "value": "2025-01-15"}, {"field_name": "審査結果", "value": "却下"}, {"field_name": "審査コメント", "value": "住所不備"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "オーナー登録承認画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "承認対象オーナーのID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "承認対象の氏名"},
+        {"field_name": "承認日", "type": "string", "tooltip": "承認を行う日付"},
+        {"field_name": "審査結果", "type": "enum", "tooltip": "承認、却下、保留"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎を承認", "dummy_data": [{"field_name": "オーナーID", "value": "O001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "承認日", "value": "2025-01-11"}, {"field_name": "審査結果", "value": "承認"}]},
+        {"display_name": "田中三郎を承認", "dummy_data": [{"field_name": "オーナーID", "value": "O004"}, {"field_name": "氏名", "value": "田中三郎"}, {"field_name": "承認日", "value": "2025-01-14"}, {"field_name": "審査結果", "value": "承認"}]},
+        {"display_name": "高橋四郎を承認", "dummy_data": [{"field_name": "オーナーID", "value": "O005"}, {"field_name": "氏名", "value": "高橋四郎"}, {"field_name": "承認日", "value": "2025-01-17"}, {"field_name": "審査結果", "value": "承認"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "オーナー申請却下画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "却下対象オーナーのID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "却下対象の氏名"},
+        {"field_name": "審査結果", "type": "enum", "tooltip": "承認、却下、保留"},
+        {"field_name": "却下理由", "type": "string", "tooltip": "却下の理由"}
+      ],
+      "screen_datas": [
+        {"display_name": "佐藤次郎を却下", "dummy_data": [{"field_name": "オーナーID", "value": "O003"}, {"field_name": "氏名", "value": "佐藤次郎"}, {"field_name": "審査結果", "value": "却下"}, {"field_name": "却下理由", "value": "住所不備"}]},
+        {"display_name": "伊藤五郎を却下", "dummy_data": [{"field_name": "オーナーID", "value": "O006"}, {"field_name": "氏名", "value": "伊藤五郎"}, {"field_name": "審査結果", "value": "却下"}, {"field_name": "却下理由", "value": "書類不足"}]},
+        {"display_name": "渡辺六郎を却下", "dummy_data": [{"field_name": "オーナーID", "value": "O007"}, {"field_name": "氏名", "value": "渡辺六郎"}, {"field_name": "審査結果", "value": "却下"}, {"field_name": "却下理由", "value": "連絡不通"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "オーナープロフィール登録画面",
+      "fields": [
+        {"field_name": "個人情報ID", "type": "string", "tooltip": "個人情報の識別ID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "オーナーの氏名"},
+        {"field_name": "生年月日", "type": "string", "tooltip": "オーナーの生年月日"},
+        {"field_name": "連絡先", "type": "string", "tooltip": "電話番号"},
+        {"field_name": "住所", "type": "string", "tooltip": "オーナーの住所"},
+        {"field_name": "プロフィール文", "type": "string", "tooltip": "自己紹介文"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎のプロフィール", "dummy_data": [{"field_name": "個人情報ID", "value": "P001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "生年月日", "value": "1980-05-10"}, {"field_name": "連絡先", "value": "090-1111-2222"}, {"field_name": "住所", "value": "東京都千代田区1-1"}, {"field_name": "プロフィール文", "value": "会議室を運営しています"}]},
+        {"display_name": "田中三郎のプロフィール", "dummy_data": [{"field_name": "個人情報ID", "value": "P004"}, {"field_name": "氏名", "value": "田中三郎"}, {"field_name": "生年月日", "value": "1975-11-22"}, {"field_name": "連絡先", "value": "090-7777-8888"}, {"field_name": "住所", "value": "東京都品川区4-4"}, {"field_name": "プロフィール文", "value": "複数の会議室を所有"}]},
+        {"display_name": "高橋四郎のプロフィール", "dummy_data": [{"field_name": "個人情報ID", "value": "P005"}, {"field_name": "氏名", "value": "高橋四郎"}, {"field_name": "生年月日", "value": "1990-03-15"}, {"field_name": "連絡先", "value": "090-9999-0000"}, {"field_name": "住所", "value": "東京都中央区5-5"}, {"field_name": "プロフィール文", "value": "駅近の会議室を提供"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "オーナープロフィール更新画面",
+      "fields": [
+        {"field_name": "個人情報ID", "type": "string", "tooltip": "個人情報の識別ID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "オーナーの氏名"},
+        {"field_name": "連絡先", "type": "string", "tooltip": "電話番号"},
+        {"field_name": "住所", "type": "string", "tooltip": "オーナーの住所"},
+        {"field_name": "プロフィール文", "type": "string", "tooltip": "自己紹介文"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の更新", "dummy_data": [{"field_name": "個人情報ID", "value": "P001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "連絡先", "value": "090-1111-9999"}, {"field_name": "住所", "value": "東京都千代田区1-2"}, {"field_name": "プロフィール文", "value": "会議室を拡大中"}]},
+        {"display_name": "田中三郎の更新", "dummy_data": [{"field_name": "個人情報ID", "value": "P004"}, {"field_name": "氏名", "value": "田中三郎"}, {"field_name": "連絡先", "value": "090-7777-1111"}, {"field_name": "住所", "value": "東京都品川区4-5"}, {"field_name": "プロフィール文", "value": "サービス改善中"}]},
+        {"display_name": "高橋四郎の更新", "dummy_data": [{"field_name": "個人情報ID", "value": "P005"}, {"field_name": "氏名", "value": "高橋四郎"}, {"field_name": "連絡先", "value": "090-9999-2222"}, {"field_name": "住所", "value": "東京都中央区5-6"}, {"field_name": "プロフィール文", "value": "新規開設"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "オーナー退会申請画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "退会申請者のオーナーID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "オーナーの氏名"},
+        {"field_name": "退会希望日", "type": "string", "tooltip": "退会希望日"},
+        {"field_name": "退会理由", "type": "string", "tooltip": "退会の理由"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の退会申請", "dummy_data": [{"field_name": "オーナーID", "value": "O001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "退会希望日", "value": "2025-03-31"}, {"field_name": "退会理由", "value": "事業撤退"}]},
+        {"display_name": "田中三郎の退会申請", "dummy_data": [{"field_name": "オーナーID", "value": "O004"}, {"field_name": "氏名", "value": "田中三郎"}, {"field_name": "退会希望日", "value": "2025-04-15"}, {"field_name": "退会理由", "value": "他業種転換"}]},
+        {"display_name": "高橋四郎の退会申請", "dummy_data": [{"field_name": "オーナーID", "value": "O005"}, {"field_name": "氏名", "value": "高橋四郎"}, {"field_name": "退会希望日", "value": "2025-05-31"}, {"field_name": "退会理由", "value": "業績不振"}]}
+      ],
+      "operation": "申請"
+    },
+    {
+      "screen_name": "オーナー退会承認画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "退会承認対象のオーナーID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "オーナーの氏名"},
+        {"field_name": "清算状況", "type": "enum", "tooltip": "清算対象、清算済、保留"},
+        {"field_name": "退会承認日", "type": "string", "tooltip": "退会を承認した日付"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の退会承認", "dummy_data": [{"field_name": "オーナーID", "value": "O001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "清算状況", "value": "清算済"}, {"field_name": "退会承認日", "value": "2025-03-30"}]},
+        {"display_name": "田中三郎の退会承認", "dummy_data": [{"field_name": "オーナーID", "value": "O004"}, {"field_name": "氏名", "value": "田中三郎"}, {"field_name": "清算状況", "value": "清算済"}, {"field_name": "退会承認日", "value": "2025-04-14"}]},
+        {"display_name": "高橋四郎の退会保留", "dummy_data": [{"field_name": "オーナーID", "value": "O005"}, {"field_name": "氏名", "value": "高橋四郎"}, {"field_name": "清算状況", "value": "保留"}, {"field_name": "退会承認日", "value": "2025-05-30"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "オーナー退会処理画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "退会処理対象のオーナーID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "オーナーの氏名"},
+        {"field_name": "退会日", "type": "string", "tooltip": "退会処理を完了した日付"},
+        {"field_name": "清算状況", "type": "enum", "tooltip": "清算対象、清算済、保留"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の退会処理", "dummy_data": [{"field_name": "オーナーID", "value": "O001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "退会日", "value": "2025-03-31"}, {"field_name": "清算状況", "value": "清算済"}]},
+        {"display_name": "田中三郎の退会処理", "dummy_data": [{"field_name": "オーナーID", "value": "O004"}, {"field_name": "氏名", "value": "田中三郎"}, {"field_name": "退会日", "value": "2025-04-15"}, {"field_name": "清算状況", "value": "清算済"}]},
+        {"display_name": "佐々木七郎の退会処理", "dummy_data": [{"field_name": "オーナーID", "value": "O008"}, {"field_name": "氏名", "value": "佐々木七郎"}, {"field_name": "退会日", "value": "2025-06-30"}, {"field_name": "清算状況", "value": "清算済"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "オーナー申請内容参照画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "参照対象のオーナーID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "申請者の氏名"},
+        {"field_name": "連絡先", "type": "string", "tooltip": "電話番号"},
+        {"field_name": "メールアドレス", "type": "string", "tooltip": "連絡用メールアドレス"},
+        {"field_name": "住所", "type": "string", "tooltip": "申請者の住所"},
+        {"field_name": "申請日", "type": "string", "tooltip": "申請日"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の申請内容", "dummy_data": [{"field_name": "オーナーID", "value": "O001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "連絡先", "value": "090-1111-2222"}, {"field_name": "メールアドレス", "value": "yamada@example.com"}, {"field_name": "住所", "value": "東京都千代田区1-1"}, {"field_name": "申請日", "value": "2025-01-10"}]},
+        {"display_name": "鈴木花子の申請内容", "dummy_data": [{"field_name": "オーナーID", "value": "O002"}, {"field_name": "氏名", "value": "鈴木花子"}, {"field_name": "連絡先", "value": "090-3333-4444"}, {"field_name": "メールアドレス", "value": "suzuki@example.com"}, {"field_name": "住所", "value": "東京都新宿区2-2"}, {"field_name": "申請日", "value": "2025-01-12"}]},
+        {"display_name": "佐藤次郎の申請内容", "dummy_data": [{"field_name": "オーナーID", "value": "O003"}, {"field_name": "氏名", "value": "佐藤次郎"}, {"field_name": "連絡先", "value": "090-5555-6666"}, {"field_name": "メールアドレス", "value": "sato@example.com"}, {"field_name": "住所", "value": "東京都渋谷区3-3"}, {"field_name": "申請日", "value": "2025-01-15"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "オーナー審査結果記録画面",
+      "fields": [
+        {"field_name": "オーナーID", "type": "string", "tooltip": "審査対象のオーナーID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "申請者の氏名"},
+        {"field_name": "審査結果", "type": "enum", "tooltip": "承認、却下、保留"},
+        {"field_name": "審査コメント", "type": "string", "tooltip": "審査コメント"},
+        {"field_name": "審査日", "type": "string", "tooltip": "審査を実施した日"}
+      ],
+      "screen_datas": [
+        {"display_name": "山田太郎の審査結果", "dummy_data": [{"field_name": "オーナーID", "value": "O001"}, {"field_name": "氏名", "value": "山田太郎"}, {"field_name": "審査結果", "value": "承認"}, {"field_name": "審査コメント", "value": "問題なし"}, {"field_name": "審査日", "value": "2025-01-11"}]},
+        {"display_name": "鈴木花子の審査結果", "dummy_data": [{"field_name": "オーナーID", "value": "O002"}, {"field_name": "氏名", "value": "鈴木花子"}, {"field_name": "審査結果", "value": "保留"}, {"field_name": "審査コメント", "value": "追加資料必要"}, {"field_name": "審査日", "value": "2025-01-13"}]},
+        {"display_name": "佐藤次郎の審査結果", "dummy_data": [{"field_name": "オーナーID", "value": "O003"}, {"field_name": "氏名", "value": "佐藤次郎"}, {"field_name": "審査結果", "value": "却下"}, {"field_name": "審査コメント", "value": "住所不備"}, {"field_name": "審査日", "value": "2025-01-16"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室物件情報登録画面",
+      "fields": [
+        {"field_name": "会議室ID", "type": "string", "tooltip": "会議室の識別ID"},
+        {"field_name": "会議室名", "type": "string", "tooltip": "会議室の名称"},
+        {"field_name": "住所", "type": "string", "tooltip": "会議室の所在地"},
+        {"field_name": "広さ", "type": "enum", "tooltip": "少人数用、中規模、大規模"},
+        {"field_name": "価格", "type": "number", "tooltip": "利用料金"},
+        {"field_name": "機能性", "type": "enum", "tooltip": "プロジェクター、ホワイトボード、Wi-Fi、スクリーン、音響設備、テレビ会議設備"}
+      ],
+      "screen_datas": [
+        {"display_name": "千代田会議室の登録", "dummy_data": [{"field_name": "会議室ID", "value": "R001"}, {"field_name": "会議室名", "value": "千代田会議室A"}, {"field_name": "住所", "value": "東京都千代田区1-1"}, {"field_name": "広さ", "value": "中規模"}, {"field_name": "価格", "value": "5000"}, {"field_name": "機能性", "value": "Wi-Fi"}]},
+        {"display_name": "新宿会議室の登録", "dummy_data": [{"field_name": "会議室ID", "value": "R002"}, {"field_name": "会議室名", "value": "新宿大会議室"}, {"field_name": "住所", "value": "東京都新宿区2-2"}, {"field_name": "広さ", "value": "大規模"}, {"field_name": "価格", "value": "12000"}, {"field_name": "機能性", "value": "プロジェクター"}]},
+        {"display_name": "渋谷会議室の登録", "dummy_data": [{"field_name": "会議室ID", "value": "R003"}, {"field_name": "会議室名", "value": "渋谷小会議室"}, {"field_name": "住所", "value": "東京都渋谷区3-3"}, {"field_name": "広さ", "value": "少人数用"}, {"field_name": "価格", "value": "3000"}, {"field_name": "機能性", "value": "ホワイトボード"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室運用ルール設定画面",
+      "fields": [
+        {"field_name": "運用ルールID", "type": "string", "tooltip": "運用ルールの識別ID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "キャンセルポリシー", "type": "enum", "tooltip": "無料キャンセル、一部返金、返金なし"},
+        {"field_name": "貸出可否", "type": "enum", "tooltip": "貸出可、貸出停止"},
+        {"field_name": "設定日", "type": "string", "tooltip": "ルール設定日"}
+      ],
+      "screen_datas": [
+        {"display_name": "千代田会議室のルール", "dummy_data": [{"field_name": "運用ルールID", "value": "U001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "キャンセルポリシー", "value": "一部返金"}, {"field_name": "貸出可否", "value": "貸出可"}, {"field_name": "設定日", "value": "2025-01-20"}]},
+        {"display_name": "新宿会議室のルール", "dummy_data": [{"field_name": "運用ルールID", "value": "U002"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "キャンセルポリシー", "value": "無料キャンセル"}, {"field_name": "貸出可否", "value": "貸出可"}, {"field_name": "設定日", "value": "2025-01-21"}]},
+        {"display_name": "渋谷会議室のルール", "dummy_data": [{"field_name": "運用ルールID", "value": "U003"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "キャンセルポリシー", "value": "返金なし"}, {"field_name": "貸出可否", "value": "貸出停止"}, {"field_name": "設定日", "value": "2025-01-22"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室登録受付画面",
+      "fields": [
+        {"field_name": "会議室ID", "type": "string", "tooltip": "会議室の識別ID"},
+        {"field_name": "オーナーID", "type": "string", "tooltip": "オーナーのID"},
+        {"field_name": "会議室名", "type": "string", "tooltip": "会議室の名称"},
+        {"field_name": "登録日", "type": "string", "tooltip": "登録受付日"},
+        {"field_name": "貸出可否", "type": "enum", "tooltip": "貸出可、貸出停止"}
+      ],
+      "screen_datas": [
+        {"display_name": "千代田会議室の受付", "dummy_data": [{"field_name": "会議室ID", "value": "R001"}, {"field_name": "オーナーID", "value": "O001"}, {"field_name": "会議室名", "value": "千代田会議室A"}, {"field_name": "登録日", "value": "2025-01-20"}, {"field_name": "貸出可否", "value": "貸出可"}]},
+        {"display_name": "新宿会議室の受付", "dummy_data": [{"field_name": "会議室ID", "value": "R002"}, {"field_name": "オーナーID", "value": "O004"}, {"field_name": "会議室名", "value": "新宿大会議室"}, {"field_name": "登録日", "value": "2025-01-21"}, {"field_name": "貸出可否", "value": "貸出可"}]},
+        {"display_name": "渋谷会議室の受付", "dummy_data": [{"field_name": "会議室ID", "value": "R003"}, {"field_name": "オーナーID", "value": "O005"}, {"field_name": "会議室名", "value": "渋谷小会議室"}, {"field_name": "登録日", "value": "2025-01-22"}, {"field_name": "貸出可否", "value": "貸出停止"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "会議室評価参照画面",
+      "fields": [
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "会議室名", "type": "string", "tooltip": "会議室の名称"},
+        {"field_name": "評価値", "type": "enum", "tooltip": "星1、星2、星3、星4、星5"},
+        {"field_name": "コメント", "type": "string", "tooltip": "利用者コメント"},
+        {"field_name": "評価日", "type": "string", "tooltip": "評価日付"}
+      ],
+      "screen_datas": [
+        {"display_name": "千代田会議室Aの評価", "dummy_data": [{"field_name": "会議室ID", "value": "R001"}, {"field_name": "会議室名", "value": "千代田会議室A"}, {"field_name": "評価値", "value": "星4"}, {"field_name": "コメント", "value": "綺麗でした"}, {"field_name": "評価日", "value": "2025-02-10"}]},
+        {"display_name": "新宿大会議室の評価", "dummy_data": [{"field_name": "会議室ID", "value": "R002"}, {"field_name": "会議室名", "value": "新宿大会議室"}, {"field_name": "評価値", "value": "星5"}, {"field_name": "コメント", "value": "設備充実"}, {"field_name": "評価日", "value": "2025-02-12"}]},
+        {"display_name": "渋谷小会議室の評価", "dummy_data": [{"field_name": "会議室ID", "value": "R003"}, {"field_name": "会議室名", "value": "渋谷小会議室"}, {"field_name": "評価値", "value": "星3"}, {"field_name": "コメント", "value": "普通"}, {"field_name": "評価日", "value": "2025-02-14"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "会議室検索画面",
+      "fields": [
+        {"field_name": "検索キーワード", "type": "string", "tooltip": "会議室名・住所で検索"},
+        {"field_name": "広さ", "type": "enum", "tooltip": "少人数用、中規模、大規模"},
+        {"field_name": "機能性", "type": "enum", "tooltip": "プロジェクター、ホワイトボード、Wi-Fi、スクリーン、音響設備、テレビ会議設備"},
+        {"field_name": "料金プラン", "type": "enum", "tooltip": "時間単位、半日、一日"},
+        {"field_name": "最低評価", "type": "enum", "tooltip": "星1、星2、星3、星4、星5"}
+      ],
+      "screen_datas": [
+        {"display_name": "広め会議室検索", "dummy_data": [{"field_name": "検索キーワード", "value": "新宿"}, {"field_name": "広さ", "value": "大規模"}, {"field_name": "機能性", "value": "プロジェクター"}, {"field_name": "料金プラン", "value": "半日"}, {"field_name": "最低評価", "value": "星4"}]},
+        {"display_name": "小規模会議室検索", "dummy_data": [{"field_name": "検索キーワード", "value": "渋谷"}, {"field_name": "広さ", "value": "少人数用"}, {"field_name": "機能性", "value": "ホワイトボード"}, {"field_name": "料金プラン", "value": "時間単位"}, {"field_name": "最低評価", "value": "星3"}]},
+        {"display_name": "中規模検索", "dummy_data": [{"field_name": "検索キーワード", "value": "千代田"}, {"field_name": "広さ", "value": "中規模"}, {"field_name": "機能性", "value": "Wi-Fi"}, {"field_name": "料金プラン", "value": "一日"}, {"field_name": "最低評価", "value": "星3"}]}
+      ],
+      "operation": "一覧"
+    },
+    {
+      "screen_name": "会議室詳細画面",
+      "fields": [
+        {"field_name": "会議室ID", "type": "string", "tooltip": "会議室の識別ID"},
+        {"field_name": "会議室名", "type": "string", "tooltip": "会議室の名称"},
+        {"field_name": "住所", "type": "string", "tooltip": "会議室の所在地"},
+        {"field_name": "広さ", "type": "enum", "tooltip": "少人数用、中規模、大規模"},
+        {"field_name": "価格", "type": "number", "tooltip": "利用料金"},
+        {"field_name": "機能性", "type": "enum", "tooltip": "プロジェクター、ホワイトボード、Wi-Fi、スクリーン、音響設備、テレビ会議設備"},
+        {"field_name": "評価値", "type": "enum", "tooltip": "星1、星2、星3、星4、星5"}
+      ],
+      "screen_datas": [
+        {"display_name": "千代田会議室A詳細", "dummy_data": [{"field_name": "会議室ID", "value": "R001"}, {"field_name": "会議室名", "value": "千代田会議室A"}, {"field_name": "住所", "value": "東京都千代田区1-1"}, {"field_name": "広さ", "value": "中規模"}, {"field_name": "価格", "value": "5000"}, {"field_name": "機能性", "value": "Wi-Fi"}, {"field_name": "評価値", "value": "星4"}]},
+        {"display_name": "新宿大会議室詳細", "dummy_data": [{"field_name": "会議室ID", "value": "R002"}, {"field_name": "会議室名", "value": "新宿大会議室"}, {"field_name": "住所", "value": "東京都新宿区2-2"}, {"field_name": "広さ", "value": "大規模"}, {"field_name": "価格", "value": "12000"}, {"field_name": "機能性", "value": "プロジェクター"}, {"field_name": "評価値", "value": "星5"}]},
+        {"display_name": "渋谷小会議室詳細", "dummy_data": [{"field_name": "会議室ID", "value": "R003"}, {"field_name": "会議室名", "value": "渋谷小会議室"}, {"field_name": "住所", "value": "東京都渋谷区3-3"}, {"field_name": "広さ", "value": "少人数用"}, {"field_name": "価格", "value": "3000"}, {"field_name": "機能性", "value": "ホワイトボード"}, {"field_name": "評価値", "value": "星3"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "利用日時選択画面",
+      "fields": [
+        {"field_name": "会議室ID", "type": "string", "tooltip": "予約対象の会議室ID"},
+        {"field_name": "利用開始日時", "type": "string", "tooltip": "利用開始日時"},
+        {"field_name": "利用終了日時", "type": "string", "tooltip": "利用終了日時"},
+        {"field_name": "料金プラン", "type": "enum", "tooltip": "時間単位、半日、一日"}
+      ],
+      "screen_datas": [
+        {"display_name": "千代田会議室の日時選択", "dummy_data": [{"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用開始日時", "value": "2025-02-15 10:00"}, {"field_name": "利用終了日時", "value": "2025-02-15 12:00"}, {"field_name": "料金プラン", "value": "時間単位"}]},
+        {"display_name": "新宿会議室の日時選択", "dummy_data": [{"field_name": "会議室ID", "value": "R002"}, {"field_name": "利用開始日時", "value": "2025-02-20 09:00"}, {"field_name": "利用終了日時", "value": "2025-02-20 18:00"}, {"field_name": "料金プラン", "value": "一日"}]},
+        {"display_name": "渋谷会議室の日時選択", "dummy_data": [{"field_name": "会議室ID", "value": "R003"}, {"field_name": "利用開始日時", "value": "2025-02-25 13:00"}, {"field_name": "利用終了日時", "value": "2025-02-25 17:00"}, {"field_name": "料金プラン", "value": "半日"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "決済手段登録画面",
+      "fields": [
+        {"field_name": "決済手段ID", "type": "string", "tooltip": "決済手段の識別ID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "決済種別", "type": "enum", "tooltip": "クレジットカード、電子マネー"},
+        {"field_name": "カード番号", "type": "string", "tooltip": "カード番号"},
+        {"field_name": "有効期限", "type": "string", "tooltip": "カード有効期限"}
+      ],
+      "screen_datas": [
+        {"display_name": "田中の決済手段", "dummy_data": [{"field_name": "決済手段ID", "value": "PM001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "決済種別", "value": "クレジットカード"}, {"field_name": "カード番号", "value": "**** **** **** 1234"}, {"field_name": "有効期限", "value": "2027-12"}]},
+        {"display_name": "佐々木の決済手段", "dummy_data": [{"field_name": "決済手段ID", "value": "PM002"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "決済種別", "value": "電子マネー"}, {"field_name": "カード番号", "value": "EMONEY-5678"}, {"field_name": "有効期限", "value": "2028-06"}]},
+        {"display_name": "中村の決済手段", "dummy_data": [{"field_name": "決済手段ID", "value": "PM003"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "決済種別", "value": "クレジットカード"}, {"field_name": "カード番号", "value": "**** **** **** 9999"}, {"field_name": "有効期限", "value": "2026-03"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室予約登録画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "利用日時", "type": "string", "tooltip": "予約の利用日時"},
+        {"field_name": "決済手段ID", "type": "string", "tooltip": "決済手段のID"},
+        {"field_name": "料金", "type": "number", "tooltip": "利用料金"}
+      ],
+      "screen_datas": [
+        {"display_name": "田中の予約登録", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "利用日時", "value": "2025-02-15 10:00"}, {"field_name": "決済手段ID", "value": "PM001"}, {"field_name": "料金", "value": "10000"}]},
+        {"display_name": "佐々木の予約登録", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "利用日時", "value": "2025-02-20 09:00"}, {"field_name": "決済手段ID", "value": "PM002"}, {"field_name": "料金", "value": "108000"}]},
+        {"display_name": "中村の予約登録", "dummy_data": [{"field_name": "予約ID", "value": "B003"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "利用日時", "value": "2025-02-25 13:00"}, {"field_name": "決済手段ID", "value": "PM003"}, {"field_name": "料金", "value": "6000"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室予約受付画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "予約日時", "type": "string", "tooltip": "予約を登録した日時"},
+        {"field_name": "料金", "type": "number", "tooltip": "料金"}
+      ],
+      "screen_datas": [
+        {"display_name": "B001受付", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "予約日時", "value": "2025-02-10 12:00"}, {"field_name": "料金", "value": "10000"}]},
+        {"display_name": "B002受付", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "予約日時", "value": "2025-02-15 14:00"}, {"field_name": "料金", "value": "108000"}]},
+        {"display_name": "B003受付", "dummy_data": [{"field_name": "予約ID", "value": "B003"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "予約日時", "value": "2025-02-20 16:00"}, {"field_name": "料金", "value": "6000"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "予約照会画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "会議室名", "type": "string", "tooltip": "会議室名"},
+        {"field_name": "利用日時", "type": "string", "tooltip": "利用日時"},
+        {"field_name": "料金", "type": "number", "tooltip": "利用料金"},
+        {"field_name": "予約状態", "type": "enum", "tooltip": "仮予約、確定、変更済、取消、利用済、ノーショー"}
+      ],
+      "screen_datas": [
+        {"display_name": "B001照会", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "会議室名", "value": "千代田会議室A"}, {"field_name": "利用日時", "value": "2025-02-15 10:00"}, {"field_name": "料金", "value": "10000"}, {"field_name": "予約状態", "value": "確定"}]},
+        {"display_name": "B002照会", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "会議室名", "value": "新宿大会議室"}, {"field_name": "利用日時", "value": "2025-02-20 09:00"}, {"field_name": "料金", "value": "108000"}, {"field_name": "予約状態", "value": "変更済"}]},
+        {"display_name": "B003照会", "dummy_data": [{"field_name": "予約ID", "value": "B003"}, {"field_name": "会議室名", "value": "渋谷小会議室"}, {"field_name": "利用日時", "value": "2025-02-25 13:00"}, {"field_name": "料金", "value": "6000"}, {"field_name": "予約状態", "value": "取消"}]}
+      ],
+      "operation": "一覧"
+    },
+    {
+      "screen_name": "予約変更・取消画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "利用日時", "type": "string", "tooltip": "利用日時"},
+        {"field_name": "キャンセルポリシー", "type": "enum", "tooltip": "無料キャンセル、一部返金、返金なし"},
+        {"field_name": "変更・取消区分", "type": "enum", "tooltip": "変更、取消"}
+      ],
+      "screen_datas": [
+        {"display_name": "B001の変更", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "利用日時", "value": "2025-02-16 10:00"}, {"field_name": "キャンセルポリシー", "value": "一部返金"}, {"field_name": "変更・取消区分", "value": "変更"}]},
+        {"display_name": "B002の取消", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "利用日時", "value": "2025-02-20 09:00"}, {"field_name": "キャンセルポリシー", "value": "無料キャンセル"}, {"field_name": "変更・取消区分", "value": "取消"}]},
+        {"display_name": "B003の取消", "dummy_data": [{"field_name": "予約ID", "value": "B003"}, {"field_name": "利用日時", "value": "2025-02-25 13:00"}, {"field_name": "キャンセルポリシー", "value": "返金なし"}, {"field_name": "変更・取消区分", "value": "取消"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "予約取消受付画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "取消日時", "type": "string", "tooltip": "取消受付日時"},
+        {"field_name": "返金額", "type": "number", "tooltip": "返金額"}
+      ],
+      "screen_datas": [
+        {"display_name": "B002取消受付", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "取消日時", "value": "2025-02-18 10:00"}, {"field_name": "返金額", "value": "108000"}]},
+        {"display_name": "B003取消受付", "dummy_data": [{"field_name": "予約ID", "value": "B003"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "取消日時", "value": "2025-02-24 12:00"}, {"field_name": "返金額", "value": "0"}]},
+        {"display_name": "B004取消受付", "dummy_data": [{"field_name": "予約ID", "value": "B004"}, {"field_name": "利用者ID", "value": "U004"}, {"field_name": "取消日時", "value": "2025-03-01 14:00"}, {"field_name": "返金額", "value": "2500"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "オーナー問合せ登録画面",
+      "fields": [
+        {"field_name": "問合せID", "type": "string", "tooltip": "問合せの識別ID"},
+        {"field_name": "宛先オーナーID", "type": "string", "tooltip": "宛先オーナーのID"},
+        {"field_name": "問合せ種別", "type": "enum", "tooltip": "トラブル、質問、要望、クレーム"},
+        {"field_name": "本文", "type": "string", "tooltip": "問合せ本文"},
+        {"field_name": "受付日", "type": "string", "tooltip": "受付日"}
+      ],
+      "screen_datas": [
+        {"display_name": "鍵について質問", "dummy_data": [{"field_name": "問合せID", "value": "Q001"}, {"field_name": "宛先オーナーID", "value": "O001"}, {"field_name": "問合せ種別", "value": "質問"}, {"field_name": "本文", "value": "鍵の受渡場所は？"}, {"field_name": "受付日", "value": "2025-02-13"}]},
+        {"display_name": "設備トラブル", "dummy_data": [{"field_name": "問合せID", "value": "Q002"}, {"field_name": "宛先オーナーID", "value": "O004"}, {"field_name": "問合せ種別", "value": "トラブル"}, {"field_name": "本文", "value": "Wi-Fiが使えません"}, {"field_name": "受付日", "value": "2025-02-20"}]},
+        {"display_name": "改善要望", "dummy_data": [{"field_name": "問合せID", "value": "Q003"}, {"field_name": "宛先オーナーID", "value": "O005"}, {"field_name": "問合せ種別", "value": "要望"}, {"field_name": "本文", "value": "ホワイトボードがほしい"}, {"field_name": "受付日", "value": "2025-02-26"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "オーナー問合せ受付画面",
+      "fields": [
+        {"field_name": "問合せID", "type": "string", "tooltip": "問合せの識別ID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "問合せ元の利用者ID"},
+        {"field_name": "宛先オーナーID", "type": "string", "tooltip": "宛先オーナーのID"},
+        {"field_name": "問合せ種別", "type": "enum", "tooltip": "トラブル、質問、要望、クレーム"},
+        {"field_name": "受付日", "type": "string", "tooltip": "受付日"}
+      ],
+      "screen_datas": [
+        {"display_name": "Q001受付", "dummy_data": [{"field_name": "問合せID", "value": "Q001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "宛先オーナーID", "value": "O001"}, {"field_name": "問合せ種別", "value": "質問"}, {"field_name": "受付日", "value": "2025-02-13"}]},
+        {"display_name": "Q002受付", "dummy_data": [{"field_name": "問合せID", "value": "Q002"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "宛先オーナーID", "value": "O004"}, {"field_name": "問合せ種別", "value": "トラブル"}, {"field_name": "受付日", "value": "2025-02-20"}]},
+        {"display_name": "Q003受付", "dummy_data": [{"field_name": "問合せID", "value": "Q003"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "宛先オーナーID", "value": "O005"}, {"field_name": "問合せ種別", "value": "要望"}, {"field_name": "受付日", "value": "2025-02-26"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "当日予約確認画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "利用日時", "type": "string", "tooltip": "利用日時"},
+        {"field_name": "予約状態", "type": "enum", "tooltip": "仮予約、確定、変更済、取消、利用済、ノーショー"}
+      ],
+      "screen_datas": [
+        {"display_name": "本日のB001", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "利用日時", "value": "2025-02-15 10:00"}, {"field_name": "予約状態", "value": "確定"}]},
+        {"display_name": "本日のB005", "dummy_data": [{"field_name": "予約ID", "value": "B005"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用者ID", "value": "U005"}, {"field_name": "利用日時", "value": "2025-02-15 14:00"}, {"field_name": "予約状態", "value": "確定"}]},
+        {"display_name": "本日のB006", "dummy_data": [{"field_name": "予約ID", "value": "B006"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用者ID", "value": "U006"}, {"field_name": "利用日時", "value": "2025-02-15 17:00"}, {"field_name": "予約状態", "value": "確定"}]}
+      ],
+      "operation": "一覧"
+    },
+    {
+      "screen_name": "利用者評価履歴画面",
+      "fields": [
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "利用者の氏名"},
+        {"field_name": "過去評価", "type": "enum", "tooltip": "星1、星2、星3、星4、星5"},
+        {"field_name": "コメント", "type": "string", "tooltip": "評価コメント"},
+        {"field_name": "評価日", "type": "string", "tooltip": "評価日付"}
+      ],
+      "screen_datas": [
+        {"display_name": "田中の評価履歴", "dummy_data": [{"field_name": "利用者ID", "value": "U001"}, {"field_name": "氏名", "value": "田中さん"}, {"field_name": "過去評価", "value": "星5"}, {"field_name": "コメント", "value": "丁寧な利用"}, {"field_name": "評価日", "value": "2025-01-20"}]},
+        {"display_name": "佐々木の評価履歴", "dummy_data": [{"field_name": "利用者ID", "value": "U002"}, {"field_name": "氏名", "value": "佐々木さん"}, {"field_name": "過去評価", "value": "星4"}, {"field_name": "コメント", "value": "良好"}, {"field_name": "評価日", "value": "2025-01-25"}]},
+        {"display_name": "中村の評価履歴", "dummy_data": [{"field_name": "利用者ID", "value": "U003"}, {"field_name": "氏名", "value": "中村さん"}, {"field_name": "過去評価", "value": "星2"}, {"field_name": "コメント", "value": "ゴミが残っていた"}, {"field_name": "評価日", "value": "2025-01-30"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "利用者使用許諾画面",
+      "fields": [
+        {"field_name": "貸出ID", "type": "string", "tooltip": "貸出の識別ID"},
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "利用許諾日時", "type": "string", "tooltip": "利用許諾の日時"},
+        {"field_name": "許諾判定", "type": "enum", "tooltip": "許諾、拒否"}
+      ],
+      "screen_datas": [
+        {"display_name": "田中を許諾", "dummy_data": [{"field_name": "貸出ID", "value": "L001"}, {"field_name": "予約ID", "value": "B001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "利用許諾日時", "value": "2025-02-15 09:55"}, {"field_name": "許諾判定", "value": "許諾"}]},
+        {"display_name": "佐々木を許諾", "dummy_data": [{"field_name": "貸出ID", "value": "L002"}, {"field_name": "予約ID", "value": "B002"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "利用許諾日時", "value": "2025-02-20 08:55"}, {"field_name": "許諾判定", "value": "許諾"}]},
+        {"display_name": "中村を拒否", "dummy_data": [{"field_name": "貸出ID", "value": "L003"}, {"field_name": "予約ID", "value": "B003"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "利用許諾日時", "value": "2025-02-25 12:55"}, {"field_name": "許諾判定", "value": "拒否"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "カギ貸出記録画面",
+      "fields": [
+        {"field_name": "貸出ID", "type": "string", "tooltip": "貸出の識別ID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "会議室のID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "カギ貸出日時", "type": "string", "tooltip": "カギを貸し出した日時"}
+      ],
+      "screen_datas": [
+        {"display_name": "L001の貸出", "dummy_data": [{"field_name": "貸出ID", "value": "L001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "カギ貸出日時", "value": "2025-02-15 09:58"}]},
+        {"display_name": "L002の貸出", "dummy_data": [{"field_name": "貸出ID", "value": "L002"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "カギ貸出日時", "value": "2025-02-20 08:59"}]},
+        {"display_name": "L004の貸出", "dummy_data": [{"field_name": "貸出ID", "value": "L004"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用者ID", "value": "U005"}, {"field_name": "カギ貸出日時", "value": "2025-02-15 13:58"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "カギ受取記録画面",
+      "fields": [
+        {"field_name": "貸出ID", "type": "string", "tooltip": "貸出の識別ID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "会議室のID"},
+        {"field_name": "受取日時", "type": "string", "tooltip": "カギを受け取った日時"}
+      ],
+      "screen_datas": [
+        {"display_name": "L001の受取", "dummy_data": [{"field_name": "貸出ID", "value": "L001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "受取日時", "value": "2025-02-15 09:59"}]},
+        {"display_name": "L002の受取", "dummy_data": [{"field_name": "貸出ID", "value": "L002"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "受取日時", "value": "2025-02-20 09:00"}]},
+        {"display_name": "L004の受取", "dummy_data": [{"field_name": "貸出ID", "value": "L004"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "受取日時", "value": "2025-02-15 13:59"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "カギ返却記録画面",
+      "fields": [
+        {"field_name": "貸出ID", "type": "string", "tooltip": "貸出の識別ID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "会議室のID"},
+        {"field_name": "カギ返却日時", "type": "string", "tooltip": "カギを返却した日時"}
+      ],
+      "screen_datas": [
+        {"display_name": "L001の返却", "dummy_data": [{"field_name": "貸出ID", "value": "L001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "カギ返却日時", "value": "2025-02-15 12:05"}]},
+        {"display_name": "L002の返却", "dummy_data": [{"field_name": "貸出ID", "value": "L002"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "カギ返却日時", "value": "2025-02-20 18:05"}]},
+        {"display_name": "L004の返却", "dummy_data": [{"field_name": "貸出ID", "value": "L004"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "カギ返却日時", "value": "2025-02-15 16:05"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室利用終了確定画面",
+      "fields": [
+        {"field_name": "貸出ID", "type": "string", "tooltip": "貸出の識別ID"},
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "利用終了日時", "type": "string", "tooltip": "利用終了日時"},
+        {"field_name": "会議室利用状態", "type": "enum", "tooltip": "鍵貸出済（利用中）、鍵返却済（利用終了）、キャンセル"}
+      ],
+      "screen_datas": [
+        {"display_name": "L001利用終了確定", "dummy_data": [{"field_name": "貸出ID", "value": "L001"}, {"field_name": "予約ID", "value": "B001"}, {"field_name": "利用終了日時", "value": "2025-02-15 12:05"}, {"field_name": "会議室利用状態", "value": "鍵返却済（利用終了）"}]},
+        {"display_name": "L002利用終了確定", "dummy_data": [{"field_name": "貸出ID", "value": "L002"}, {"field_name": "予約ID", "value": "B002"}, {"field_name": "利用終了日時", "value": "2025-02-20 18:05"}, {"field_name": "会議室利用状態", "value": "鍵返却済（利用終了）"}]},
+        {"display_name": "L004利用終了確定", "dummy_data": [{"field_name": "貸出ID", "value": "L004"}, {"field_name": "予約ID", "value": "B005"}, {"field_name": "利用終了日時", "value": "2025-02-15 16:05"}, {"field_name": "会議室利用状態", "value": "鍵返却済（利用終了）"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "利用者評価登録画面",
+      "fields": [
+        {"field_name": "評価ID", "type": "string", "tooltip": "評価の識別ID"},
+        {"field_name": "評価者ID", "type": "string", "tooltip": "評価するオーナーのID"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "評価対象の利用者ID"},
+        {"field_name": "評価値", "type": "enum", "tooltip": "星1、星2、星3、星4、星5"},
+        {"field_name": "コメント", "type": "string", "tooltip": "評価コメント"}
+      ],
+      "screen_datas": [
+        {"display_name": "田中への評価", "dummy_data": [{"field_name": "評価ID", "value": "E001"}, {"field_name": "評価者ID", "value": "O001"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "評価値", "value": "星5"}, {"field_name": "コメント", "value": "丁寧に利用いただきました"}]},
+        {"display_name": "佐々木への評価", "dummy_data": [{"field_name": "評価ID", "value": "E002"}, {"field_name": "評価者ID", "value": "O004"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "評価値", "value": "星4"}, {"field_name": "コメント", "value": "良好でした"}]},
+        {"display_name": "中村への評価", "dummy_data": [{"field_name": "評価ID", "value": "E003"}, {"field_name": "評価者ID", "value": "O005"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "評価値", "value": "星2"}, {"field_name": "コメント", "value": "ゴミが残っていた"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室評価登録画面",
+      "fields": [
+        {"field_name": "評価ID", "type": "string", "tooltip": "評価の識別ID"},
+        {"field_name": "評価者ID", "type": "string", "tooltip": "評価する利用者のID"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "評価対象の会議室ID"},
+        {"field_name": "評価値", "type": "enum", "tooltip": "星1、星2、星3、星4、星5"},
+        {"field_name": "コメント", "type": "string", "tooltip": "評価コメント"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001への評価", "dummy_data": [{"field_name": "評価ID", "value": "E101"}, {"field_name": "評価者ID", "value": "U001"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "評価値", "value": "星4"}, {"field_name": "コメント", "value": "きれいでした"}]},
+        {"display_name": "R002への評価", "dummy_data": [{"field_name": "評価ID", "value": "E102"}, {"field_name": "評価者ID", "value": "U002"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "評価値", "value": "星5"}, {"field_name": "コメント", "value": "設備充実"}]},
+        {"display_name": "R003への評価", "dummy_data": [{"field_name": "評価ID", "value": "E103"}, {"field_name": "評価者ID", "value": "U003"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "評価値", "value": "星3"}, {"field_name": "コメント", "value": "普通"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "ホスト評価登録画面",
+      "fields": [
+        {"field_name": "評価ID", "type": "string", "tooltip": "評価の識別ID"},
+        {"field_name": "評価者ID", "type": "string", "tooltip": "評価する利用者のID"},
+        {"field_name": "オーナーID", "type": "string", "tooltip": "評価対象のオーナーID"},
+        {"field_name": "評価値", "type": "enum", "tooltip": "星1、星2、星3、星4、星5"},
+        {"field_name": "コメント", "type": "string", "tooltip": "評価コメント"}
+      ],
+      "screen_datas": [
+        {"display_name": "O001への評価", "dummy_data": [{"field_name": "評価ID", "value": "E201"}, {"field_name": "評価者ID", "value": "U001"}, {"field_name": "オーナーID", "value": "O001"}, {"field_name": "評価値", "value": "星5"}, {"field_name": "コメント", "value": "対応が丁寧"}]},
+        {"display_name": "O004への評価", "dummy_data": [{"field_name": "評価ID", "value": "E202"}, {"field_name": "評価者ID", "value": "U002"}, {"field_name": "オーナーID", "value": "O004"}, {"field_name": "評価値", "value": "星4"}, {"field_name": "コメント", "value": "感じが良い"}]},
+        {"display_name": "O005への評価", "dummy_data": [{"field_name": "評価ID", "value": "E203"}, {"field_name": "評価者ID", "value": "U003"}, {"field_name": "オーナーID", "value": "O005"}, {"field_name": "評価値", "value": "星3"}, {"field_name": "コメント", "value": "普通"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "問合せ内容参照画面",
+      "fields": [
+        {"field_name": "問合せID", "type": "string", "tooltip": "問合せの識別ID"},
+        {"field_name": "問合せ種別", "type": "enum", "tooltip": "トラブル、質問、要望、クレーム"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "問合せ元の利用者ID"},
+        {"field_name": "本文", "type": "string", "tooltip": "問合せ本文"},
+        {"field_name": "受付日", "type": "string", "tooltip": "受付日"}
+      ],
+      "screen_datas": [
+        {"display_name": "Q001参照", "dummy_data": [{"field_name": "問合せID", "value": "Q001"}, {"field_name": "問合せ種別", "value": "質問"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "本文", "value": "鍵の受渡場所は？"}, {"field_name": "受付日", "value": "2025-02-13"}]},
+        {"display_name": "Q002参照", "dummy_data": [{"field_name": "問合せID", "value": "Q002"}, {"field_name": "問合せ種別", "value": "トラブル"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "本文", "value": "Wi-Fiが使えません"}, {"field_name": "受付日", "value": "2025-02-20"}]},
+        {"display_name": "Q003参照", "dummy_data": [{"field_name": "問合せID", "value": "Q003"}, {"field_name": "問合せ種別", "value": "要望"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "本文", "value": "ホワイトボードがほしい"}, {"field_name": "受付日", "value": "2025-02-26"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "問合せ回答登録画面",
+      "fields": [
+        {"field_name": "問合せID", "type": "string", "tooltip": "問合せの識別ID"},
+        {"field_name": "回答本文", "type": "string", "tooltip": "問合せ回答本文"},
+        {"field_name": "回答日", "type": "string", "tooltip": "回答日"}
+      ],
+      "screen_datas": [
+        {"display_name": "Q001への回答", "dummy_data": [{"field_name": "問合せID", "value": "Q001"}, {"field_name": "回答本文", "value": "入口のキーボックスです"}, {"field_name": "回答日", "value": "2025-02-13"}]},
+        {"display_name": "Q002への回答", "dummy_data": [{"field_name": "問合せID", "value": "Q002"}, {"field_name": "回答本文", "value": "再起動してお試しください"}, {"field_name": "回答日", "value": "2025-02-20"}]},
+        {"display_name": "Q003への回答", "dummy_data": [{"field_name": "問合せID", "value": "Q003"}, {"field_name": "回答本文", "value": "今後検討します"}, {"field_name": "回答日", "value": "2025-02-27"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室別利用実績集計画面",
+      "fields": [
+        {"field_name": "集計期間", "type": "string", "tooltip": "集計対象期間"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "貸出件数", "type": "number", "tooltip": "貸出件数"},
+        {"field_name": "利用履歴集計区分", "type": "enum", "tooltip": "会員別、物件別"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001の2月集計", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "貸出件数", "value": "42"}, {"field_name": "利用履歴集計区分", "value": "物件別"}]},
+        {"display_name": "R002の2月集計", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "貸出件数", "value": "18"}, {"field_name": "利用履歴集計区分", "value": "物件別"}]},
+        {"display_name": "R003の2月集計", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "貸出件数", "value": "25"}, {"field_name": "利用履歴集計区分", "value": "物件別"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "売上実績集計画面",
+      "fields": [
+        {"field_name": "売上実績ID", "type": "string", "tooltip": "売上実績の識別ID"},
+        {"field_name": "集計期間", "type": "string", "tooltip": "集計対象期間"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "売上金額", "type": "number", "tooltip": "売上金額"},
+        {"field_name": "利用履歴集計区分", "type": "enum", "tooltip": "会員別、物件別"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001の2月売上", "dummy_data": [{"field_name": "売上実績ID", "value": "S001"}, {"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "売上金額", "value": "210000"}, {"field_name": "利用履歴集計区分", "value": "物件別"}]},
+        {"display_name": "R002の2月売上", "dummy_data": [{"field_name": "売上実績ID", "value": "S002"}, {"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "売上金額", "value": "2160000"}, {"field_name": "利用履歴集計区分", "value": "物件別"}]},
+        {"display_name": "R003の2月売上", "dummy_data": [{"field_name": "売上実績ID", "value": "S003"}, {"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "売上金額", "value": "75000"}, {"field_name": "利用履歴集計区分", "value": "物件別"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "会議室利用実績参照画面",
+      "fields": [
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "集計期間", "type": "string", "tooltip": "集計対象期間"},
+        {"field_name": "貸出件数", "type": "number", "tooltip": "貸出件数"},
+        {"field_name": "売上金額", "type": "number", "tooltip": "売上金額"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001の実績", "dummy_data": [{"field_name": "会議室ID", "value": "R001"}, {"field_name": "集計期間", "value": "2025-02"}, {"field_name": "貸出件数", "value": "42"}, {"field_name": "売上金額", "value": "210000"}]},
+        {"display_name": "R002の実績", "dummy_data": [{"field_name": "会議室ID", "value": "R002"}, {"field_name": "集計期間", "value": "2025-02"}, {"field_name": "貸出件数", "value": "18"}, {"field_name": "売上金額", "value": "2160000"}]},
+        {"display_name": "R003の実績", "dummy_data": [{"field_name": "会議室ID", "value": "R003"}, {"field_name": "集計期間", "value": "2025-02"}, {"field_name": "貸出件数", "value": "25"}, {"field_name": "売上金額", "value": "75000"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "手数料売上集計画面",
+      "fields": [
+        {"field_name": "手数料売上ID", "type": "string", "tooltip": "手数料売上の識別ID"},
+        {"field_name": "集計期間", "type": "string", "tooltip": "集計対象期間"},
+        {"field_name": "手数料金額", "type": "number", "tooltip": "手数料金額"},
+        {"field_name": "手数料売上分析区分", "type": "enum", "tooltip": "会議室別、貸出別"}
+      ],
+      "screen_datas": [
+        {"display_name": "2月手数料集計", "dummy_data": [{"field_name": "手数料売上ID", "value": "F001"}, {"field_name": "集計期間", "value": "2025-02"}, {"field_name": "手数料金額", "value": "244500"}, {"field_name": "手数料売上分析区分", "value": "会議室別"}]},
+        {"display_name": "3月手数料集計", "dummy_data": [{"field_name": "手数料売上ID", "value": "F002"}, {"field_name": "集計期間", "value": "2025-03"}, {"field_name": "手数料金額", "value": "318000"}, {"field_name": "手数料売上分析区分", "value": "会議室別"}]},
+        {"display_name": "4月手数料集計", "dummy_data": [{"field_name": "手数料売上ID", "value": "F003"}, {"field_name": "集計期間", "value": "2025-04"}, {"field_name": "手数料金額", "value": "295000"}, {"field_name": "手数料売上分析区分", "value": "貸出別"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "手数料売上分析画面",
+      "fields": [
+        {"field_name": "集計期間", "type": "string", "tooltip": "分析対象期間"},
+        {"field_name": "手数料金額", "type": "number", "tooltip": "手数料金額"},
+        {"field_name": "手数料売上分析区分", "type": "enum", "tooltip": "会議室別、貸出別"},
+        {"field_name": "前期比", "type": "number", "tooltip": "前期比率"}
+      ],
+      "screen_datas": [
+        {"display_name": "2月分析", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "手数料金額", "value": "244500"}, {"field_name": "手数料売上分析区分", "value": "会議室別"}, {"field_name": "前期比", "value": "1.15"}]},
+        {"display_name": "3月分析", "dummy_data": [{"field_name": "集計期間", "value": "2025-03"}, {"field_name": "手数料金額", "value": "318000"}, {"field_name": "手数料売上分析区分", "value": "会議室別"}, {"field_name": "前期比", "value": "1.30"}]},
+        {"display_name": "4月分析", "dummy_data": [{"field_name": "集計期間", "value": "2025-04"}, {"field_name": "手数料金額", "value": "295000"}, {"field_name": "手数料売上分析区分", "value": "貸出別"}, {"field_name": "前期比", "value": "0.93"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "会員別利用履歴画面",
+      "fields": [
+        {"field_name": "利用者ID", "type": "string", "tooltip": "対象利用者のID"},
+        {"field_name": "氏名", "type": "string", "tooltip": "利用者氏名"},
+        {"field_name": "利用日", "type": "string", "tooltip": "利用日"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "利用した会議室"},
+        {"field_name": "利用料", "type": "number", "tooltip": "利用料"}
+      ],
+      "screen_datas": [
+        {"display_name": "田中の履歴", "dummy_data": [{"field_name": "利用者ID", "value": "U001"}, {"field_name": "氏名", "value": "田中さん"}, {"field_name": "利用日", "value": "2025-02-15"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "利用料", "value": "10000"}]},
+        {"display_name": "佐々木の履歴", "dummy_data": [{"field_name": "利用者ID", "value": "U002"}, {"field_name": "氏名", "value": "佐々木さん"}, {"field_name": "利用日", "value": "2025-02-20"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "利用料", "value": "108000"}]},
+        {"display_name": "中村の履歴", "dummy_data": [{"field_name": "利用者ID", "value": "U003"}, {"field_name": "氏名", "value": "中村さん"}, {"field_name": "利用日", "value": "2025-02-25"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "利用料", "value": "6000"}]}
+      ],
+      "operation": "一覧"
+    },
+    {
+      "screen_name": "物件別利用履歴画面",
+      "fields": [
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "会議室名", "type": "string", "tooltip": "会議室名"},
+        {"field_name": "利用日", "type": "string", "tooltip": "利用日"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "利用者のID"},
+        {"field_name": "利用料", "type": "number", "tooltip": "利用料"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001の履歴", "dummy_data": [{"field_name": "会議室ID", "value": "R001"}, {"field_name": "会議室名", "value": "千代田会議室A"}, {"field_name": "利用日", "value": "2025-02-15"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "利用料", "value": "10000"}]},
+        {"display_name": "R002の履歴", "dummy_data": [{"field_name": "会議室ID", "value": "R002"}, {"field_name": "会議室名", "value": "新宿大会議室"}, {"field_name": "利用日", "value": "2025-02-20"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "利用料", "value": "108000"}]},
+        {"display_name": "R003の履歴", "dummy_data": [{"field_name": "会議室ID", "value": "R003"}, {"field_name": "会議室名", "value": "渋谷小会議室"}, {"field_name": "利用日", "value": "2025-02-25"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "利用料", "value": "6000"}]}
+      ],
+      "operation": "一覧"
+    },
+    {
+      "screen_name": "会議室利用状況集計画面",
+      "fields": [
+        {"field_name": "集計期間", "type": "string", "tooltip": "集計対象期間"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "稼働率", "type": "number", "tooltip": "稼働率（%）"},
+        {"field_name": "貸出件数", "type": "number", "tooltip": "貸出件数"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001の2月稼働", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "稼働率", "value": "72"}, {"field_name": "貸出件数", "value": "42"}]},
+        {"display_name": "R002の2月稼働", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "稼働率", "value": "45"}, {"field_name": "貸出件数", "value": "18"}]},
+        {"display_name": "R003の2月稼働", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "稼働率", "value": "55"}, {"field_name": "貸出件数", "value": "25"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "会議室利用状況分析画面",
+      "fields": [
+        {"field_name": "集計期間", "type": "string", "tooltip": "分析対象期間"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "稼働率", "type": "number", "tooltip": "稼働率（%）"},
+        {"field_name": "前期比", "type": "number", "tooltip": "前期比率"},
+        {"field_name": "広さ", "type": "enum", "tooltip": "少人数用、中規模、大規模"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001の分析", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "稼働率", "value": "72"}, {"field_name": "前期比", "value": "1.10"}, {"field_name": "広さ", "value": "中規模"}]},
+        {"display_name": "R002の分析", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "稼働率", "value": "45"}, {"field_name": "前期比", "value": "0.95"}, {"field_name": "広さ", "value": "大規模"}]},
+        {"display_name": "R003の分析", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "稼働率", "value": "55"}, {"field_name": "前期比", "value": "1.20"}, {"field_name": "広さ", "value": "少人数用"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "サービス問合せ受付画面",
+      "fields": [
+        {"field_name": "問合せID", "type": "string", "tooltip": "問合せの識別ID"},
+        {"field_name": "問合せ種別", "type": "enum", "tooltip": "トラブル、質問、要望、クレーム"},
+        {"field_name": "利用者ID", "type": "string", "tooltip": "問合せ元の利用者ID"},
+        {"field_name": "本文", "type": "string", "tooltip": "問合せ本文"},
+        {"field_name": "受付日", "type": "string", "tooltip": "受付日"}
+      ],
+      "screen_datas": [
+        {"display_name": "S001サービス問合せ", "dummy_data": [{"field_name": "問合せID", "value": "SQ001"}, {"field_name": "問合せ種別", "value": "質問"}, {"field_name": "利用者ID", "value": "U001"}, {"field_name": "本文", "value": "予約変更したい"}, {"field_name": "受付日", "value": "2025-02-10"}]},
+        {"display_name": "S002サービス問合せ", "dummy_data": [{"field_name": "問合せID", "value": "SQ002"}, {"field_name": "問合せ種別", "value": "クレーム"}, {"field_name": "利用者ID", "value": "U002"}, {"field_name": "本文", "value": "返金まだですか"}, {"field_name": "受付日", "value": "2025-02-22"}]},
+        {"display_name": "S003サービス問合せ", "dummy_data": [{"field_name": "問合せID", "value": "SQ003"}, {"field_name": "問合せ種別", "value": "要望"}, {"field_name": "利用者ID", "value": "U003"}, {"field_name": "本文", "value": "アプリ化してほしい"}, {"field_name": "受付日", "value": "2025-02-28"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "サービス問合せ回答画面",
+      "fields": [
+        {"field_name": "問合せID", "type": "string", "tooltip": "問合せの識別ID"},
+        {"field_name": "回答本文", "type": "string", "tooltip": "回答本文"},
+        {"field_name": "回答日", "type": "string", "tooltip": "回答日"}
+      ],
+      "screen_datas": [
+        {"display_name": "SQ001回答", "dummy_data": [{"field_name": "問合せID", "value": "SQ001"}, {"field_name": "回答本文", "value": "マイページから変更できます"}, {"field_name": "回答日", "value": "2025-02-11"}]},
+        {"display_name": "SQ002回答", "dummy_data": [{"field_name": "問合せID", "value": "SQ002"}, {"field_name": "回答本文", "value": "本日中に処理します"}, {"field_name": "回答日", "value": "2025-02-22"}]},
+        {"display_name": "SQ003回答", "dummy_data": [{"field_name": "問合せID", "value": "SQ003"}, {"field_name": "回答本文", "value": "ロードマップに追加しました"}, {"field_name": "回答日", "value": "2025-03-01"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "会議室別利用履歴集計画面",
+      "fields": [
+        {"field_name": "集計期間", "type": "string", "tooltip": "集計対象期間"},
+        {"field_name": "会議室ID", "type": "string", "tooltip": "対象会議室のID"},
+        {"field_name": "オーナーID", "type": "string", "tooltip": "オーナーID"},
+        {"field_name": "利用件数", "type": "number", "tooltip": "利用件数"},
+        {"field_name": "利用料合計", "type": "number", "tooltip": "利用料合計"}
+      ],
+      "screen_datas": [
+        {"display_name": "R001の清算集計", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R001"}, {"field_name": "オーナーID", "value": "O001"}, {"field_name": "利用件数", "value": "42"}, {"field_name": "利用料合計", "value": "210000"}]},
+        {"display_name": "R002の清算集計", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R002"}, {"field_name": "オーナーID", "value": "O004"}, {"field_name": "利用件数", "value": "18"}, {"field_name": "利用料合計", "value": "2160000"}]},
+        {"display_name": "R003の清算集計", "dummy_data": [{"field_name": "集計期間", "value": "2025-02"}, {"field_name": "会議室ID", "value": "R003"}, {"field_name": "オーナーID", "value": "O005"}, {"field_name": "利用件数", "value": "25"}, {"field_name": "利用料合計", "value": "75000"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "オーナー清算額算出画面",
+      "fields": [
+        {"field_name": "清算ID", "type": "string", "tooltip": "清算の識別ID"},
+        {"field_name": "オーナーID", "type": "string", "tooltip": "オーナーのID"},
+        {"field_name": "対象期間", "type": "string", "tooltip": "対象期間"},
+        {"field_name": "清算額", "type": "number", "tooltip": "清算額"},
+        {"field_name": "手数料", "type": "number", "tooltip": "手数料"},
+        {"field_name": "料金プラン", "type": "enum", "tooltip": "時間単位、半日、一日"}
+      ],
+      "screen_datas": [
+        {"display_name": "O001の清算", "dummy_data": [{"field_name": "清算ID", "value": "C001"}, {"field_name": "オーナーID", "value": "O001"}, {"field_name": "対象期間", "value": "2025-02"}, {"field_name": "清算額", "value": "189000"}, {"field_name": "手数料", "value": "21000"}, {"field_name": "料金プラン", "value": "時間単位"}]},
+        {"display_name": "O004の清算", "dummy_data": [{"field_name": "清算ID", "value": "C002"}, {"field_name": "オーナーID", "value": "O004"}, {"field_name": "対象期間", "value": "2025-02"}, {"field_name": "清算額", "value": "1944000"}, {"field_name": "手数料", "value": "216000"}, {"field_name": "料金プラン", "value": "一日"}]},
+        {"display_name": "O005の清算", "dummy_data": [{"field_name": "清算ID", "value": "C003"}, {"field_name": "オーナーID", "value": "O005"}, {"field_name": "対象期間", "value": "2025-02"}, {"field_name": "清算額", "value": "67500"}, {"field_name": "手数料", "value": "7500"}, {"field_name": "料金プラン", "value": "半日"}]}
+      ],
+      "operation": "分析"
+    },
+    {
+      "screen_name": "清算額承認画面",
+      "fields": [
+        {"field_name": "清算ID", "type": "string", "tooltip": "清算の識別ID"},
+        {"field_name": "オーナーID", "type": "string", "tooltip": "オーナーのID"},
+        {"field_name": "清算額", "type": "number", "tooltip": "清算額"},
+        {"field_name": "清算状態", "type": "enum", "tooltip": "清算対象、清算済、保留"},
+        {"field_name": "支払予定日", "type": "string", "tooltip": "支払予定日"}
+      ],
+      "screen_datas": [
+        {"display_name": "C001承認", "dummy_data": [{"field_name": "清算ID", "value": "C001"}, {"field_name": "オーナーID", "value": "O001"}, {"field_name": "清算額", "value": "189000"}, {"field_name": "清算状態", "value": "清算対象"}, {"field_name": "支払予定日", "value": "2025-03-31"}]},
+        {"display_name": "C002承認", "dummy_data": [{"field_name": "清算ID", "value": "C002"}, {"field_name": "オーナーID", "value": "O004"}, {"field_name": "清算額", "value": "1944000"}, {"field_name": "清算状態", "value": "清算対象"}, {"field_name": "支払予定日", "value": "2025-03-31"}]},
+        {"display_name": "C003承認保留", "dummy_data": [{"field_name": "清算ID", "value": "C003"}, {"field_name": "オーナーID", "value": "O005"}, {"field_name": "清算額", "value": "67500"}, {"field_name": "清算状態", "value": "保留"}, {"field_name": "支払予定日", "value": "2025-04-30"}]}
+      ],
+      "operation": "承認"
+    },
+    {
+      "screen_name": "支払指示送信画面",
+      "fields": [
+        {"field_name": "清算ID", "type": "string", "tooltip": "清算の識別ID"},
+        {"field_name": "オーナーID", "type": "string", "tooltip": "オーナーのID"},
+        {"field_name": "清算額", "type": "number", "tooltip": "清算額"},
+        {"field_name": "支払指示日", "type": "string", "tooltip": "支払指示を送った日"},
+        {"field_name": "清算状態", "type": "enum", "tooltip": "清算対象、清算済、保留"}
+      ],
+      "screen_datas": [
+        {"display_name": "C001送信", "dummy_data": [{"field_name": "清算ID", "value": "C001"}, {"field_name": "オーナーID", "value": "O001"}, {"field_name": "清算額", "value": "189000"}, {"field_name": "支払指示日", "value": "2025-03-31"}, {"field_name": "清算状態", "value": "清算済"}]},
+        {"display_name": "C002送信", "dummy_data": [{"field_name": "清算ID", "value": "C002"}, {"field_name": "オーナーID", "value": "O004"}, {"field_name": "清算額", "value": "1944000"}, {"field_name": "支払指示日", "value": "2025-03-31"}, {"field_name": "清算状態", "value": "清算済"}]},
+        {"display_name": "C004送信", "dummy_data": [{"field_name": "清算ID", "value": "C004"}, {"field_name": "オーナーID", "value": "O008"}, {"field_name": "清算額", "value": "330000"}, {"field_name": "支払指示日", "value": "2025-03-31"}, {"field_name": "清算状態", "value": "清算済"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "オーナー支払結果確認画面",
+      "fields": [
+        {"field_name": "清算ID", "type": "string", "tooltip": "清算の識別ID"},
+        {"field_name": "対象期間", "type": "string", "tooltip": "対象期間"},
+        {"field_name": "清算額", "type": "number", "tooltip": "清算額"},
+        {"field_name": "支払完了日", "type": "string", "tooltip": "支払が完了した日"},
+        {"field_name": "清算状態", "type": "enum", "tooltip": "清算対象、清算済、保留"}
+      ],
+      "screen_datas": [
+        {"display_name": "C001の結果", "dummy_data": [{"field_name": "清算ID", "value": "C001"}, {"field_name": "対象期間", "value": "2025-02"}, {"field_name": "清算額", "value": "189000"}, {"field_name": "支払完了日", "value": "2025-04-01"}, {"field_name": "清算状態", "value": "清算済"}]},
+        {"display_name": "C002の結果", "dummy_data": [{"field_name": "清算ID", "value": "C002"}, {"field_name": "対象期間", "value": "2025-02"}, {"field_name": "清算額", "value": "1944000"}, {"field_name": "支払完了日", "value": "2025-04-01"}, {"field_name": "清算状態", "value": "清算済"}]},
+        {"display_name": "C003の結果", "dummy_data": [{"field_name": "清算ID", "value": "C003"}, {"field_name": "対象期間", "value": "2025-02"}, {"field_name": "清算額", "value": "67500"}, {"field_name": "支払完了日", "value": ""}, {"field_name": "清算状態", "value": "保留"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "会議室利用完了確認画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "貸出ID", "type": "string", "tooltip": "貸出の識別ID"},
+        {"field_name": "利用日時", "type": "string", "tooltip": "利用日時"},
+        {"field_name": "予約状態", "type": "enum", "tooltip": "仮予約、確定、変更済、取消、利用済、ノーショー"}
+      ],
+      "screen_datas": [
+        {"display_name": "B001完了確認", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "貸出ID", "value": "L001"}, {"field_name": "利用日時", "value": "2025-02-15 10:00"}, {"field_name": "予約状態", "value": "利用済"}]},
+        {"display_name": "B002完了確認", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "貸出ID", "value": "L002"}, {"field_name": "利用日時", "value": "2025-02-20 09:00"}, {"field_name": "予約状態", "value": "利用済"}]},
+        {"display_name": "B005完了確認", "dummy_data": [{"field_name": "予約ID", "value": "B005"}, {"field_name": "貸出ID", "value": "L004"}, {"field_name": "利用日時", "value": "2025-02-15 14:00"}, {"field_name": "予約状態", "value": "利用済"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "利用料算出画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "利用料", "type": "number", "tooltip": "算出した利用料"},
+        {"field_name": "料金プラン", "type": "enum", "tooltip": "時間単位、半日、一日"},
+        {"field_name": "決済手段区分", "type": "enum", "tooltip": "クレジットカード、電子マネー"}
+      ],
+      "screen_datas": [
+        {"display_name": "B001の算出", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "利用料", "value": "10000"}, {"field_name": "料金プラン", "value": "時間単位"}, {"field_name": "決済手段区分", "value": "クレジットカード"}]},
+        {"display_name": "B002の算出", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "利用料", "value": "108000"}, {"field_name": "料金プラン", "value": "一日"}, {"field_name": "決済手段区分", "value": "電子マネー"}]},
+        {"display_name": "B005の算出", "dummy_data": [{"field_name": "予約ID", "value": "B005"}, {"field_name": "利用料", "value": "10000"}, {"field_name": "料金プラン", "value": "時間単位"}, {"field_name": "決済手段区分", "value": "クレジットカード"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "引落指示送信画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "決済手段ID", "type": "string", "tooltip": "決済手段のID"},
+        {"field_name": "引落金額", "type": "number", "tooltip": "引落金額"},
+        {"field_name": "決済手段区分", "type": "enum", "tooltip": "クレジットカード、電子マネー"}
+      ],
+      "screen_datas": [
+        {"display_name": "B001引落指示", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "決済手段ID", "value": "PM001"}, {"field_name": "引落金額", "value": "10000"}, {"field_name": "決済手段区分", "value": "クレジットカード"}]},
+        {"display_name": "B002引落指示", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "決済手段ID", "value": "PM002"}, {"field_name": "引落金額", "value": "108000"}, {"field_name": "決済手段区分", "value": "電子マネー"}]},
+        {"display_name": "B005引落指示", "dummy_data": [{"field_name": "予約ID", "value": "B005"}, {"field_name": "決済手段ID", "value": "PM005"}, {"field_name": "引落金額", "value": "10000"}, {"field_name": "決済手段区分", "value": "クレジットカード"}]}
+      ],
+      "operation": "登録"
+    },
+    {
+      "screen_name": "引落結果確認画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "決済手段ID", "type": "string", "tooltip": "決済手段のID"},
+        {"field_name": "決済状態", "type": "enum", "tooltip": "登録済、オーソリ済、引落済、失敗、返金済"},
+        {"field_name": "引落日時", "type": "string", "tooltip": "引落日時"}
+      ],
+      "screen_datas": [
+        {"display_name": "B001引落結果", "dummy_data": [{"field_name": "予約ID", "value": "B001"}, {"field_name": "決済手段ID", "value": "PM001"}, {"field_name": "決済状態", "value": "引落済"}, {"field_name": "引落日時", "value": "2025-02-16 02:00"}]},
+        {"display_name": "B002引落結果", "dummy_data": [{"field_name": "予約ID", "value": "B002"}, {"field_name": "決済手段ID", "value": "PM002"}, {"field_name": "決済状態", "value": "引落済"}, {"field_name": "引落日時", "value": "2025-02-21 02:00"}]},
+        {"display_name": "B006引落失敗", "dummy_data": [{"field_name": "予約ID", "value": "B006"}, {"field_name": "決済手段ID", "value": "PM006"}, {"field_name": "決済状態", "value": "失敗"}, {"field_name": "引落日時", "value": "2025-02-26 02:00"}]}
+      ],
+      "operation": "照会"
+    },
+    {
+      "screen_name": "引落失敗対応画面",
+      "fields": [
+        {"field_name": "予約ID", "type": "string", "tooltip": "予約の識別ID"},
+        {"field_name": "決済手段ID", "type": "string", "tooltip": "決済手段のID"},
+        {"field_name": "決済手段区分", "type": "enum", "tooltip": "クレジットカード、電子マネー"},
+        {"field_name": "再請求金額", "type": "number", "tooltip": "再請求する金額"},
+        {"field_name": "対応区分", "type": "enum", "tooltip": "再請求、返金、督促"}
+      ],
+      "screen_datas": [
+        {"display_name": "B006再請求", "dummy_data": [{"field_name": "予約ID", "value": "B006"}, {"field_name": "決済手段ID", "value": "PM006"}, {"field_name": "決済手段区分", "value": "クレジットカード"}, {"field_name": "再請求金額", "value": "10000"}, {"field_name": "対応区分", "value": "再請求"}]},
+        {"display_name": "B007返金", "dummy_data": [{"field_name": "予約ID", "value": "B007"}, {"field_name": "決済手段ID", "value": "PM007"}, {"field_name": "決済手段区分", "value": "電子マネー"}, {"field_name": "再請求金額", "value": "5000"}, {"field_name": "対応区分", "value": "返金"}]},
+        {"display_name": "B008督促", "dummy_data": [{"field_name": "予約ID", "value": "B008"}, {"field_name": "決済手段ID", "value": "PM008"}, {"field_name": "決済手段区分", "value": "クレジットカード"}, {"field_name": "再請求金額", "value": "15000"}, {"field_name": "対応区分", "value": "督促"}]}
+      ],
+      "operation": "登録"
+    }
+  ]
+}
