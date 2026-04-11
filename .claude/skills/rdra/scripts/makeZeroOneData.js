@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const rdraDir = path.resolve(__dirname, '..', '..', '1_RDRA');
-const outputFile = path.join(rdraDir, 'ZeroOne.txt');
+// 作業ディレクトリ（プロジェクトルート）を基準にする
+const rdraDir = path.resolve(process.cwd(), '1_RDRA');
+const outputDir = path.join(rdraDir, 'if');
+const outputFile = path.join(outputDir, 'ZeroOne.txt');
 
 function readSystemName() {
     const systemOverviewPath = path.join(rdraDir, 'システム概要.json');
@@ -55,7 +57,7 @@ function emitSection({ title, fileName, outHeader, mapRow }) {
         const cols = splitTsv(line);
         const outCols = mapRow(cols, inHeader);
 
-        // 列数を必ず outHeader に合わせる（足りない分は空文字で埋める）
+        // 列数を必ず outHeader に合わせる（足りない分は空フィールドで埋める）
         while (outCols.length < outHeader.length) outCols.push('');
         if (outCols.length > outHeader.length) outCols.length = outHeader.length;
 
@@ -73,6 +75,7 @@ function integrateAsRDRASheet() {
         {
             title: 'アクター',
             fileName: 'アクター.tsv',
+            // v0.7: アクター群, アクター, 役割, 社内外
             outHeader: ['アクター群', 'アクター', '説明'],
             mapRow: (cols) => {
                 const actorGroup = cols[0] ?? '';
@@ -80,13 +83,11 @@ function integrateAsRDRASheet() {
                 const role = cols[2] ?? '';
                 const inOut = cols[3] ?? '';
                 const stance = cols[4] ?? '';
-                const mainDuty = cols[5] ?? '';
 
                 const desc = joinNonEmpty([
                     role ? `役割:${role}` : '',
                     inOut ? `社内外:${inOut}` : '',
-                    stance ? `立場:${stance}` : '',
-                    mainDuty ? `主担当業務:${mainDuty}` : ''
+                    stance ? `立場:${stance}` : ''
                 ]);
 
                 return [actorGroup, actor, desc];
@@ -147,6 +148,7 @@ function integrateAsRDRASheet() {
         {
             title: 'BUC',
             fileName: 'BUC.tsv',
+            // makeBUC.js 出力の 12列から、画面要求(11)を除く 11列を使用
             outHeader: [
                 '業務',
                 'BUC',
@@ -187,6 +189,7 @@ function integrateAsRDRASheet() {
         integratedContent += emitSection(section);
     }
 
+    fs.mkdirSync(outputDir, { recursive: true });
     fs.writeFileSync(outputFile, integratedContent, 'utf-8');
     console.log(`統合ファイル ${outputFile} を作成しました`);
     return outputFile;
