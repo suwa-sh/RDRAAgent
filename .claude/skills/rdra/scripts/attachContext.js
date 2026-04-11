@@ -202,6 +202,21 @@ function main() {
   const varOutPath   = path.resolve(rdraDir, 'バリエーション.tsv');
   const stateOutPath = path.resolve(rdraDir, '状態.tsv');
 
+  // 入力ファイルの存在確認
+  const required = [
+    { file: infoPath,    phase: 'Phase4（情報生成）' },
+    { file: condInPath,  phase: 'Phase4（条件生成）' },
+    { file: varInPath,   phase: 'Phase3（バリエーション生成）' },
+    { file: stateInPath, phase: 'Phase4（状態生成）' },
+  ];
+  const missing = required.filter(r => !fs.existsSync(r.file));
+  if (missing.length > 0) {
+    console.error('[attachContext.js] 必要な入力ファイルが見つかりません:');
+    missing.forEach(r => console.error(`  - ${path.relative(root, r.file)}  ← ${r.phase} を先に実行してください`));
+    console.error(`\n作業ディレクトリ: ${root}`);
+    process.exit(1);
+  }
+
   const infoTsv = parseTsv(readText(infoPath));
   const infoIndex = buildInfoIndex(infoTsv);
 

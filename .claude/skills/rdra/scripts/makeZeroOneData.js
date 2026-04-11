@@ -6,6 +6,28 @@ const rdraDir = path.resolve(process.cwd(), '1_RDRA');
 const outputDir = path.join(rdraDir, 'if');
 const outputFile = path.join(outputDir, 'ZeroOne.txt');
 
+// 入力ファイルの存在確認
+(function validateInputs() {
+    const required = [
+        'システム概要.json',
+        'アクター.tsv',
+        '外部システム.tsv',
+        '情報.tsv',
+        '状態.tsv',
+        '条件.tsv',
+        'バリエーション.tsv',
+        'BUC.tsv',
+    ];
+    const missing = required.filter(f => !fs.existsSync(path.join(rdraDir, f)));
+    if (missing.length > 0) {
+        console.error('[makeZeroOneData.js] 必要な入力ファイルが見つかりません:');
+        missing.forEach(f => console.error(`  - 1_RDRA/${f}`));
+        console.error('\nRDRA統合の Step 1-3（makeBUC.js, attachContext.js, rdraFileCopy.js）を先に実行してください。');
+        console.error(`作業ディレクトリ: ${process.cwd()}`);
+        process.exit(1);
+    }
+})();
+
 function readSystemName() {
     const systemOverviewPath = path.join(rdraDir, 'システム概要.json');
     if (!fs.existsSync(systemOverviewPath)) return '';

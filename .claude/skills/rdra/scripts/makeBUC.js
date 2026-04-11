@@ -12,6 +12,23 @@ const INPUT_UC_EXTERNAL = path.join(projectRoot, '0_RDRAZeroOne', 'phase4', 'ph4
 const INPUT_UC_TIMER    = path.join(projectRoot, '0_RDRAZeroOne', 'phase4', 'ph4UCタイマー.tsv');
 const OUTPUT_BUC        = path.join(projectRoot, '1_RDRA', 'BUC.tsv');
 
+// 入力ファイルの存在確認
+(function validateInputs() {
+    const required = [
+        { file: INPUT_PH3_BUC,     phase: 'Phase3（BUC生成）' },
+        { file: INPUT_UC_ACTOR,    phase: 'Phase4（UCアクター生成）' },
+        { file: INPUT_UC_EXTERNAL, phase: 'Phase4（UC外部システム生成）' },
+        { file: INPUT_UC_TIMER,    phase: 'Phase4（UCタイマー生成）' },
+    ];
+    const missing = required.filter(r => !fs.existsSync(r.file));
+    if (missing.length > 0) {
+        console.error('[makeBUC.js] 必要な入力ファイルが見つかりません:');
+        missing.forEach(r => console.error(`  - ${path.relative(projectRoot, r.file)}  ← ${r.phase} を先に実行してください`));
+        console.error(`\n作業ディレクトリ: ${projectRoot}`);
+        process.exit(1);
+    }
+})();
+
 // ph3BUC.tsv カラムインデックス（0始まり）
 const PH3_COL = {
     業務:         0,

@@ -3032,7 +3032,6 @@ function main(rdraPath = "1_RDRA") {
       } catch (writeError) {
         console.error("ファイル出力エラー:", writeError.message);
       }
-      console.log(linkData);
     } catch (error) {
       console.error("makeConnectionでエラーが発生しました:", error);
       console.error("エラースタック:", error.stack);
@@ -3043,17 +3042,32 @@ function main(rdraPath = "1_RDRA") {
     console.error("エラースタック:", error.stack);
   }
 }
-console.log("=== スクリプト開始 ===");
-console.log("require.main:", require.main);
-console.log("module:", module);
-console.log("process.argv:", process.argv);
 if (require.main === module) {
-  console.log("スクリプトが直接実行されました");
+  const fs = require("fs");
+  const path = require("path");
   const rdraPath = process.argv[2] || "1_RDRA";
-  console.log("使用するRDRAパス:", rdraPath);
+  const required = [
+    "BUC.tsv",
+    "アクター.tsv",
+    "外部システム.tsv",
+    "情報.tsv",
+    "状態.tsv",
+    "条件.tsv",
+    "バリエーション.tsv",
+    "システム概要.json",
+  ];
+  const missing = required.filter(
+    (f) => !fs.existsSync(path.join(process.cwd(), rdraPath, f))
+  );
+  if (missing.length > 0) {
+    console.error("[makeGraphData.js] 必要な入力ファイルが見つかりません:");
+    missing.forEach((f) => console.error(`  - ${rdraPath}/${f}`));
+    console.error(
+      "\nRDRA統合の Step 1-3（makeBUC.js, attachContext.js, rdraFileCopy.js）を先に実行してください。"
+    );
+    console.error(`作業ディレクトリ: ${process.cwd()}`);
+    process.exit(1);
+  }
   main(rdraPath);
-} else {
-  console.log("スクリプトがモジュールとして読み込まれました");
 }
-console.log("=== スクリプト終了 ===");
 module.exports = { createRdraSheetDefT, parseTSVFile, main };
